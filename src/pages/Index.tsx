@@ -15,7 +15,7 @@ interface Note {
   status: NoteStatus;
 }
 
-const colors = ["yellow", "pink", "blue", "green", "purple"];
+const colors = ["yellow", "pink", "blue", "green", "purple", "orange", "teal", "lavender", "peach", "mint"];
 
 const statusColors: Record<NoteStatus, string> = {
   "To-Do": "bg-red-100 text-red-800 border-red-200",
@@ -30,12 +30,12 @@ const Index = () => {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const addNote = (content: string) => {
+  const addNote = (content: string, status: NoteStatus) => {
     const newNote: Note = {
       id: Date.now().toString(),
       content,
       color: colors[Math.floor(Math.random() * colors.length)],
-      status: "To-Do",
+      status,
     };
     setNotes([newNote, ...notes]);
     toast.success("Note added!");
@@ -133,6 +133,11 @@ const Index = () => {
                 blue: "border-l-[hsl(var(--note-blue))]",
                 green: "border-l-[hsl(var(--note-green))]",
                 purple: "border-l-[hsl(var(--note-purple))]",
+                orange: "border-l-[hsl(var(--note-orange))]",
+                teal: "border-l-[hsl(var(--note-teal))]",
+                lavender: "border-l-[hsl(var(--note-lavender))]",
+                peach: "border-l-[hsl(var(--note-peach))]",
+                mint: "border-l-[hsl(var(--note-mint))]",
               };
               
               return (

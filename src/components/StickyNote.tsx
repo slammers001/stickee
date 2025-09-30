@@ -18,6 +18,11 @@ const colorMap: Record<string, string> = {
   blue: "bg-[hsl(var(--note-blue))]",
   green: "bg-[hsl(var(--note-green))]",
   purple: "bg-[hsl(var(--note-purple))]",
+  orange: "bg-[hsl(var(--note-orange))]",
+  teal: "bg-[hsl(var(--note-teal))]",
+  lavender: "bg-[hsl(var(--note-lavender))]",
+  peach: "bg-[hsl(var(--note-peach))]",
+  mint: "bg-[hsl(var(--note-mint))]",
 };
 
 const statusColors: Record<NoteStatus, string> = {

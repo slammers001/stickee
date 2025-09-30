@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -43,14 +43,16 @@ export const NoteDetailDialog = ({
 }: NoteDetailDialogProps) => {
   const [content, setContent] = useState(note?.content || "");
   const [status, setStatus] = useState<NoteStatus>(note?.status || "To-Do");
+  const [initialStatus, setInitialStatus] = useState<NoteStatus>(note?.status || "To-Do");
 
   // Update local state when note prop changes
-  useState(() => {
+  useEffect(() => {
     if (note) {
       setContent(note.content);
       setStatus(note.status);
+      setInitialStatus(note.status);
     }
-  });
+  }, [note]);
 
   const handleSave = () => {
     if (note && content.trim()) {
@@ -117,7 +119,7 @@ export const NoteDetailDialog = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!content.trim()}>
+          <Button onClick={handleSave} disabled={!content.trim() && status === initialStatus}>
             Save Changes
           </Button>
         </DialogFooter>
