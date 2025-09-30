@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        handwriting: ['Caveat', 'cursive'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

@@ -1,10 +1,15 @@
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+
+export type NoteStatus = "To-Do" | "Doing" | "Done";
 
 interface StickyNoteProps {
   content: string;
   color: string;
+  status: NoteStatus;
   index: number;
+  onClick: () => void;
 }
 
 const colorMap: Record<string, string> = {
@@ -15,15 +20,24 @@ const colorMap: Record<string, string> = {
   purple: "bg-[hsl(var(--note-purple))]",
 };
 
-export const StickyNote = ({ content, color, index }: StickyNoteProps) => {
-  const rotation = (index % 3) - 1; // -1, 0, or 1 degree rotation for variety
+const statusColors: Record<NoteStatus, string> = {
+  "To-Do": "bg-red-100 text-red-800 border-red-200",
+  "Doing": "bg-blue-100 text-blue-800 border-blue-200",
+  "Done": "bg-green-100 text-green-800 border-green-200",
+};
+
+export const StickyNote = ({ content, color, status, index, onClick }: StickyNoteProps) => {
+  const rotation = ((index % 5) - 2) * 2; // -4, -2, 0, 2, 4 degree rotation for variety
+  
+  // Truncate content for preview
+  const displayContent = content.length > 120 ? content.substring(0, 120) + "..." : content;
   
   return (
     <Card
       className={cn(
-        "p-6 w-full h-48 flex items-start justify-start",
+        "p-5 w-full aspect-square max-w-[280px] mx-auto flex flex-col justify-between",
         "transition-all duration-200 hover:scale-105 cursor-pointer",
-        "border-0 animate-in fade-in-0 zoom-in-95",
+        "border-0 animate-in fade-in-0 zoom-in-95 relative",
         colorMap[color]
       )}
       style={{
@@ -36,10 +50,14 @@ export const StickyNote = ({ content, color, index }: StickyNoteProps) => {
       onMouseLeave={(e) => {
         e.currentTarget.style.boxShadow = "var(--shadow-sticky)";
       }}
+      onClick={onClick}
     >
-      <p className="text-foreground text-base leading-relaxed whitespace-pre-wrap break-words font-medium">
-        {content}
+      <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting font-semibold">
+        {displayContent}
       </p>
+      <Badge variant="outline" className={cn("self-start mt-2 text-xs font-handwriting", statusColors[status])}>
+        {status}
+      </Badge>
     </Card>
   );
 };

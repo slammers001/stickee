@@ -114,5 +114,13 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.02) 2px,
+        rgba(0, 0, 0, 0.02) 4px
+      );
   }
 }
