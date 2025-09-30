@@ -72,6 +72,13 @@ const Index = () => {
             </div>
             <div className="flex gap-2">
               <Button
+                onClick={() => setDialogOpen(true)}
+                className="font-handwriting"
+              >
+                <Plus className="h-5 w-5" />
+                Add Note
+              </Button>
+              <Button
                 variant={viewMode === "grid" ? "default" : "outline"}
                 size="icon"
                 onClick={() => setViewMode("grid")}
