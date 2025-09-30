@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        handwriting: ['Caveat', 'cursive'],
+        handwriting: ['Indie Flower', 'cursive'],
       },
       colors: {
         border: "hsl(var(--border))",
