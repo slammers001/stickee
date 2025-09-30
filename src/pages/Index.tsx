@@ -155,15 +155,6 @@ const Index = () => {
         )}
       </main>
 
-      {/* Floating Action Button */}
-      <Button
-        size="lg"
-        className="fixed bottom-8 right-8 h-16 w-16 rounded-full shadow-2xl hover:scale-110 transition-transform"
-        onClick={() => setDialogOpen(true)}
-      >
-        <Plus className="h-8 w-8" />
-      </Button>
-
       {/* Add Note Dialog */}
       <AddNoteDialog
         open={dialogOpen}

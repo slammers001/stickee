@@ -27,7 +27,9 @@ const statusColors: Record<NoteStatus, string> = {
 };
 
 export const StickyNote = ({ content, color, status, index, onClick }: StickyNoteProps) => {
-  const rotation = ((index % 5) - 2) * 2; // -4, -2, 0, 2, 4 degree rotation for variety
+  // Generate varied rotation based on index for more natural look
+  const rotations = [-6, -3, -1, 0, 2, 4, 6, -4, 3, -2];
+  const rotation = rotations[index % rotations.length];
   
   // Truncate content for preview
   const displayContent = content.length > 120 ? content.substring(0, 120) + "..." : content;
@@ -38,6 +40,8 @@ export const StickyNote = ({ content, color, status, index, onClick }: StickyNot
         "p-5 w-full aspect-square max-w-[280px] mx-auto flex flex-col justify-between",
         "transition-all duration-200 hover:scale-105 cursor-pointer",
         "border-0 animate-in fade-in-0 zoom-in-95 relative",
+        "before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-16 before:h-6",
+        "before:bg-background/40 before:shadow-sm before:-translate-y-2 before:rounded-sm",
         colorMap[color]
       )}
       style={{
