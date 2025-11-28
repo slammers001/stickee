@@ -48,14 +48,17 @@ export const StickyNote = ({ content, color, status, index, lastUpdated, pinned,
   
   // Format timestamp
   const formatTime = (timestamp: number) => {
-    const diff = Date.now() - timestamp;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
     
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
+    
+    // For older dates, show the actual date
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
   
   return (
@@ -89,7 +92,9 @@ export const StickyNote = ({ content, color, status, index, lastUpdated, pinned,
         <Badge variant="outline" className={cn("text-xs font-handwriting", statusColors[status])}>
           {status}
         </Badge>
-        <span className="text-xs text-foreground/60 font-handwriting">{formatTime(lastUpdated)}</span>
+        <span className="text-xs text-foreground/60 font-handwriting" title={new Date(lastUpdated).toLocaleString()}>
+          {formatTime(lastUpdated)}
+        </span>
       </div>
       <button
         onClick={(e) => {

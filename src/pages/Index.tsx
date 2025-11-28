@@ -101,6 +101,15 @@ const Index = () => {
             </div>
             <div className="flex items-center gap-2">
               <Button
+                variant="default"
+                size="icon"
+                onClick={() => setDialogOpen(true)}
+                className="bg-primary hover:bg-primary/90"
+              >
+                <Plus className="h-5 w-5" />
+              </Button>
+              <div className="h-6 w-px bg-border mx-1"></div>
+              <Button
                 variant={viewMode === "grid" ? "default" : "outline"}
                 size="icon"
                 onClick={() => setViewMode("grid")}
@@ -119,28 +128,38 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Add Note Button */}
-      <div className="fixed bottom-8 right-8 z-10">
-        <AddNoteButton onClick={() => setDialogOpen(true)} />
-      </div>
-
       {/* Main Board */}
       <main className="container mx-auto px-4 py-8">
         {notes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-            <div className="w-24 h-24 rounded-full bg-accent/20 flex items-center justify-center mb-6">
-              <Plus className="w-12 h-12 text-accent-foreground" />
-            </div>
+          <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
+            <button 
+              onClick={() => setDialogOpen(true)}
+              className="group w-48 h-48 mb-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800/50 transition-all duration-300 hover:-rotate-12 focus:outline-none"
+              aria-label="Add new note"
+            >
+              <img 
+                src="/stickee.png" 
+                alt="Stickee" 
+                className="w-5/6 h-5/6 object-contain transition-transform duration-300 group-hover:scale-105"
+              />
+            </button>
             <h2 className="text-2xl font-semibold text-foreground mb-2 font-handwriting">
               No sticky notes yet
             </h2>
             <p className="text-muted-foreground mb-6 max-w-md">
-              Click the + button below to create your first sticky note!
+              Click the Stickee icon to create your first sticky note!
             </p>
           </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-            {[...notes].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)).map((note, index) => (
+            {[...notes].sort((a, b) => {
+              // First sort by pinned status
+              if (a.pinned !== b.pinned) {
+                return b.pinned ? 1 : -1;
+              }
+              // Then sort by lastUpdated in descending order (newest first)
+              return b.lastUpdated - a.lastUpdated;
+            }).map((note, index) => (
               <StickyNote
                 key={note.id}
                 content={note.content}
@@ -156,7 +175,14 @@ const Index = () => {
           </div>
         ) : (
           <div className="max-w-4xl mx-auto space-y-3">
-            {[...notes].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)).map((note) => {
+            {[...notes].sort((a, b) => {
+              // First sort by pinned status
+              if (a.pinned !== b.pinned) {
+                return b.pinned ? 1 : -1;
+              }
+              // Then sort by lastUpdated in descending order (newest first)
+              return b.lastUpdated - a.lastUpdated;
+            }).map((note) => {
               const colorMap: Record<string, string> = {
                 yellow: "border-l-[hsl(var(--note-yellow))]",
                 pink: "border-l-[hsl(var(--note-pink))]",
