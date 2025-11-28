@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Grid3x3, List } from "lucide-react";
+import { Grid3x3, List, Plus } from "lucide-react";
 import { StickyNote, NoteStatus } from "@/components/StickyNote";
 import { AddNoteDialog } from "@/components/AddNoteDialog";
 import { NoteDetailDialog } from "@/components/NoteDetailDialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import AddNoteButton from "@/components/AddNoteButton";
 
 interface Note {
   id: string;
@@ -98,14 +99,7 @@ const Index = () => {
                 </a>
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => setDialogOpen(true)}
-                className="font-handwriting"
-              >
-                <Plus className="h-5 w-5" />
-                Add Note
-              </Button>
+            <div className="flex items-center gap-2">
               <Button
                 variant={viewMode === "grid" ? "default" : "outline"}
                 size="icon"
@@ -124,6 +118,11 @@ const Index = () => {
           </div>
         </div>
       </header>
+
+      {/* Add Note Button */}
+      <div className="fixed bottom-8 right-8 z-10">
+        <AddNoteButton onClick={() => setDialogOpen(true)} />
+      </div>
 
       {/* Main Board */}
       <main className="container mx-auto px-4 py-8">
