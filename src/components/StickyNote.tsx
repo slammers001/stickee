@@ -9,7 +9,10 @@ interface StickyNoteProps {
   color: string;
   status: NoteStatus;
   index: number;
+  lastUpdated: number;
+  pinned: boolean;
   onClick: () => void;
+  onTogglePin: () => void;
 }
 
 const colorMap: Record<string, string> = {
@@ -31,13 +34,29 @@ const statusColors: Record<NoteStatus, string> = {
   "Done": "bg-green-100 text-green-800 border-green-200",
 };
 
-export const StickyNote = ({ content, color, status, index, onClick }: StickyNoteProps) => {
+export const StickyNote = ({ content, color, status, index, lastUpdated, pinned, onClick, onTogglePin }: StickyNoteProps) => {
   // Generate varied rotation based on index for more natural look
-  const rotations = [-6, -3, -1, 0, 2, 4, 6, -4, 3, -2];
+  const rotations = [-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
   const rotation = rotations[index % rotations.length];
   
-  // Truncate content for preview
-  const displayContent = content.length > 120 ? content.substring(0, 120) + "..." : content;
+  // Limit to 10 lines
+  const lines = content.split('\n');
+  const limitedLines = lines.slice(0, 10);
+  const displayContent = limitedLines.length < lines.length 
+    ? limitedLines.join('\n') + '...' 
+    : content;
+  
+  // Format timestamp
+  const formatTime = (timestamp: number) => {
+    const diff = Date.now() - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+  };
   
   return (
     <Card
@@ -61,12 +80,30 @@ export const StickyNote = ({ content, color, status, index, onClick }: StickyNot
       }}
       onClick={onClick}
     >
-      <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting font-semibold">
-        {displayContent}
-      </p>
-      <Badge variant="outline" className={cn("self-start mt-2 text-xs font-handwriting", statusColors[status])}>
-        {status}
-      </Badge>
+      <div className="flex-1">
+        <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting font-semibold">
+          {displayContent}
+        </p>
+      </div>
+      <div className="flex items-center justify-between mt-2">
+        <Badge variant="outline" className={cn("text-xs font-handwriting", statusColors[status])}>
+          {status}
+        </Badge>
+        <span className="text-xs text-foreground/60 font-handwriting">{formatTime(lastUpdated)}</span>
+      </div>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onTogglePin();
+        }}
+        className={cn(
+          "absolute top-3 right-3 w-6 h-6 rounded-full transition-all",
+          pinned ? "text-red-500" : "text-foreground/40 hover:text-foreground/70"
+        )}
+        aria-label={pinned ? "Unpin note" : "Pin note"}
+      >
+        📌
+      </button>
     </Card>
   );
 };
