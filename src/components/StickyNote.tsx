@@ -1,6 +1,8 @@
+import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Pin } from "lucide-react";
 
 export type NoteStatus = "To-Do" | "Doing" | "Done";
 
@@ -35,9 +37,14 @@ const statusColors: Record<NoteStatus, string> = {
 };
 
 export const StickyNote = ({ content, color, status, index, lastUpdated, pinned, onClick, onTogglePin }: StickyNoteProps) => {
-  // Generate varied rotation based on index for more natural look
-  const rotations = [-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
-  const rotation = rotations[index % rotations.length];
+  // Generate unique random rotation between -4 and 4 degrees
+  const rotation = useMemo(() => {
+    // Generate a random angle between 1 and 4 degrees
+    const magnitude = Math.random() * 3 + 1; // 1 to 4 degrees
+    // Randomly choose left (-) or right (+) direction
+    const direction = Math.random() < 0.5 ? -1 : 1;
+    return magnitude * direction;
+  }, []);
   
   // Limit to 10 lines
   const lines = content.split('\n');
@@ -46,20 +53,6 @@ export const StickyNote = ({ content, color, status, index, lastUpdated, pinned,
     ? limitedLines.join('\n') + '...' 
     : content;
   
-  // Format timestamp
-  const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
-    
-    // For older dates, show the actual date
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
   
   return (
     <Card
@@ -88,13 +81,10 @@ export const StickyNote = ({ content, color, status, index, lastUpdated, pinned,
           {displayContent}
         </p>
       </div>
-      <div className="flex items-center justify-between mt-2">
+      <div className="flex items-center justify-center mt-2">
         <Badge variant="outline" className={cn("text-xs font-handwriting", statusColors[status])}>
           {status}
         </Badge>
-        <span className="text-xs text-foreground/60 font-handwriting" title={new Date(lastUpdated).toLocaleString()}>
-          {formatTime(lastUpdated)}
-        </span>
       </div>
       <button
         onClick={(e) => {
@@ -102,12 +92,13 @@ export const StickyNote = ({ content, color, status, index, lastUpdated, pinned,
           onTogglePin();
         }}
         className={cn(
-          "absolute top-3 right-3 w-6 h-6 rounded-full transition-all",
+          "absolute top-3 right-3 w-6 h-6 rounded-full transition-all flex items-center justify-center",
+          "hover:bg-foreground/5 active:scale-90",
           pinned ? "text-red-500" : "text-foreground/40 hover:text-foreground/70"
         )}
         aria-label={pinned ? "Unpin note" : "Pin note"}
       >
-        📌
+        <Pin size={16} fill={pinned ? "currentColor" : "none"} />
       </button>
     </Card>
   );
