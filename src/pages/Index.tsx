@@ -1,81 +1,157 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Grid3x3, List, Plus } from "lucide-react";
-import { StickyNote, NoteStatus } from "@/components/StickyNote";
+import { StickyNote } from "@/components/StickyNote";
+import type { NoteStatus as StickyNoteStatus } from "@/components/StickyNote";
 import { AddNoteDialog } from "@/components/AddNoteDialog";
 import { NoteDetailDialog } from "@/components/NoteDetailDialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import AddNoteButton from "@/components/AddNoteButton";
+import { Note } from "@/types/note";
+import { 
+  getNotes as fetchNotes, 
+  createNote as createNoteService, 
+  updateNote as updateNoteService, 
+  deleteNote as deleteNoteService,
+  updateNoteStatus as updateNoteStatusService,
+  updateNotePinStatus as updateNotePinStatusService
+} from "@/services/notesService";
 
-interface Note {
-  id: string;
-  content: string;
-  color: string;
-  status: NoteStatus;
-  lastUpdated: number;
-  pinned: boolean;
-}
+// Using the Note interface from types/note.ts
 
 const colors = ["yellow", "pink", "blue", "green", "purple", "orange", "teal", "lavender", "peach", "mint"];
 
-const statusColors: Record<NoteStatus, string> = {
+const statusColors: Record<StickyNoteStatus, string> = {
   "To-Do": "bg-red-100 text-red-800 border-red-200",
   "Doing": "bg-blue-100 text-blue-800 border-blue-200",
   "Done": "bg-green-100 text-green-800 border-green-200",
+  "Backlog": "bg-gray-100 text-gray-800 border-gray-200",
 };
 
 const Index = () => {
   const [notes, setNotes] = useState<Note[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const addNote = (content: string, status: NoteStatus, color: string) => {
-    const newNote: Note = {
-      id: Date.now().toString(),
-      content,
-      color,
-      status,
-      lastUpdated: Date.now(),
-      pinned: false,
-    };
-    setNotes([newNote, ...notes]);
-    toast.success("Note added!");
-  };
-
-  const updateNote = (id: string, content: string, status: NoteStatus, color: string) => {
-    setNotes(notes.map(note => 
-      note.id === id ? { ...note, content, status, color, lastUpdated: Date.now() } : note
-    ));
-    toast.success("Note updated!");
-  };
-
-  const togglePin = (id: string) => {
-    setNotes(notes.map(note => {
-      if (note.id === id) {
-        const pinnedCount = notes.filter(n => n.pinned).length;
-        if (!note.pinned && pinnedCount >= 5) {
-          toast.error("Maximum 5 notes can be pinned!");
-          return note;
-        }
-        return { ...note, pinned: !note.pinned };
+  // Load notes on component mount
+  useEffect(() => {
+    const loadNotes = async () => {
+      try {
+        const loadedNotes = await fetchNotes();
+        setNotes(loadedNotes);
+      } catch (error) {
+        console.error('Error loading notes:', error);
+        toast.error('Failed to load notes');
+      } finally {
+        setLoading(false);
       }
-      return note;
-    }));
+    };
+
+    loadNotes();
+  }, []);
+
+  const addNote = async (content: string, status: StickyNoteStatus, color: string) => {
+    try {
+      const newNote = await createNoteService({
+        content,
+        color,
+        status,
+        pinned: false
+      });
+      
+      setNotes(prevNotes => [newNote, ...prevNotes]);
+      setDialogOpen(false);
+      toast.success('Note added!');
+    } catch (error) {
+      console.error('Error adding note:', error);
+      toast.error('Failed to add note');
+    }
   };
 
-  const deleteNote = (id: string) => {
-    setNotes(notes.filter(note => note.id !== id));
-    toast.success("Note deleted!");
+  const updateNote = async (id: string, content: string, status: StickyNoteStatus, color: string) => {
+    try {
+      const updatedNote = await updateNoteService(id, { 
+        content, 
+        status, 
+        color
+      });
+      
+      if (updatedNote) {
+        setNotes(prevNotes => 
+          prevNotes.map(note => 
+            note.id === id ? { ...updatedNote } : note
+          )
+        );
+        setDetailDialogOpen(false);
+        toast.success('Note updated!');
+      }
+    } catch (error) {
+      console.error('Error updating note:', error);
+      toast.error('Failed to update note');
+    }
+  };
+
+  const handleStatusChange = async (id: string, status: StickyNoteStatus) => {
+    try {
+      const updatedNote = await updateNoteStatusService(id, status);
+
+      if (updatedNote) {
+        setNotes(prevNotes =>
+          prevNotes.map(note =>
+            note.id === id ? { ...updatedNote } : note
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error updating note status:', error);
+      toast.error('Failed to update note status');
+    }
+  };
+
+  const togglePin = async (id: string) => {
+    try {
+      const note = notes.find(n => n.id === id);
+      if (!note) return;
+
+      const updatedNote = await updateNotePinStatusService(id, !note.pinned);
+
+      if (updatedNote) {
+        setNotes(prevNotes =>
+          prevNotes.map(note =>
+            note.id === id ? { ...updatedNote } : note
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling pin:', error);
+      toast.error('Failed to update note');
+    }
+  };
+
+  const deleteNote = async (id: string) => {
+    try {
+      await deleteNoteService(id);
+      setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
+      setDetailDialogOpen(false);
+      toast.success('Note deleted!');
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      toast.error('Failed to delete note');
+    }
   };
 
   const openNoteDetail = (note: Note) => {
     setSelectedNote(note);
     setDetailDialogOpen(true);
   };
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -231,13 +307,15 @@ const Index = () => {
       />
 
       {/* Note Detail Dialog */}
-      <NoteDetailDialog
-        open={detailDialogOpen}
-        onOpenChange={setDetailDialogOpen}
-        note={selectedNote}
-        onSave={updateNote}
-        onDelete={deleteNote}
-      />
+      {selectedNote && (
+        <NoteDetailDialog
+          open={detailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
+          note={selectedNote}
+          onSave={updateNote}
+          onDelete={deleteNote}
+        />
+      )}
     </div>
   );
 };

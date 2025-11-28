@@ -6,6 +6,8 @@ export interface Note {
   color: string;
   status: NoteStatus;
   lastUpdated: number;
+  last_updated?: number; // For Supabase compatibility
   pinned: boolean;
-  user_id?: string;
+  user_id: string;
+  created_at?: string;
 }

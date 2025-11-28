@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Pin } from "lucide-react";
 
-export type NoteStatus = "To-Do" | "Doing" | "Done";
+export type NoteStatus = 'To-Do' | 'Doing' | 'Done' | 'Backlog';
 
 interface StickyNoteProps {
   content: string;
@@ -34,6 +34,7 @@ const statusColors: Record<NoteStatus, string> = {
   "To-Do": "bg-red-100 text-red-800 border-red-200",
   "Doing": "bg-blue-100 text-blue-800 border-blue-200",
   "Done": "bg-green-100 text-green-800 border-green-200",
+  "Backlog": "bg-gray-100 text-gray-800 border-gray-200",
 };
 
 export const StickyNote = ({ content, color, status, index, lastUpdated, pinned, onClick, onTogglePin }: StickyNoteProps) => {
