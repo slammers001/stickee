@@ -21,10 +21,14 @@ interface NoteDetailDialogProps {
     content: string;
     color: string;
     status: NoteStatus;
+    lastUpdated: number;
+    pinned: boolean;
   } | null;
-  onSave: (id: string, content: string, status: NoteStatus) => void;
+  onSave: (id: string, content: string, status: NoteStatus, color: string) => void;
   onDelete: (id: string) => void;
 }
+
+const colors = ["yellow", "pink", "blue", "green", "purple", "orange", "teal", "lavender", "peach", "mint"];
 
 const statuses: NoteStatus[] = ["To-Do", "Doing", "Done"];
 
@@ -43,20 +47,24 @@ export const NoteDetailDialog = ({
 }: NoteDetailDialogProps) => {
   const [content, setContent] = useState(note?.content || "");
   const [status, setStatus] = useState<NoteStatus>(note?.status || "To-Do");
+  const [color, setColor] = useState(note?.color || "yellow");
   const [initialStatus, setInitialStatus] = useState<NoteStatus>(note?.status || "To-Do");
+  const [initialColor, setInitialColor] = useState(note?.color || "yellow");
 
   // Update local state when note prop changes
   useEffect(() => {
     if (note) {
       setContent(note.content);
       setStatus(note.status);
+      setColor(note.color);
       setInitialStatus(note.status);
+      setInitialColor(note.color);
     }
   }, [note]);
 
   const handleSave = () => {
     if (note && content.trim()) {
-      onSave(note.id, content, status);
+      onSave(note.id, content, status, color);
       onOpenChange(false);
     }
   };
@@ -87,6 +95,37 @@ export const NoteDetailDialog = ({
           </DialogTitle>
         </DialogHeader>
         <div className="py-4 space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Color</label>
+            <div className="flex gap-2 flex-wrap">
+              {colors.map((c) => {
+                const colorMap: Record<string, string> = {
+                  yellow: "bg-[hsl(var(--note-yellow))]",
+                  pink: "bg-[hsl(var(--note-pink))]",
+                  blue: "bg-[hsl(var(--note-blue))]",
+                  green: "bg-[hsl(var(--note-green))]",
+                  purple: "bg-[hsl(var(--note-purple))]",
+                  orange: "bg-[hsl(var(--note-orange))]",
+                  teal: "bg-[hsl(var(--note-teal))]",
+                  lavender: "bg-[hsl(var(--note-lavender))]",
+                  peach: "bg-[hsl(var(--note-peach))]",
+                  mint: "bg-[hsl(var(--note-mint))]",
+                };
+                return (
+                  <button
+                    key={c}
+                    onClick={() => setColor(c)}
+                    className={cn(
+                      "w-8 h-8 rounded-full transition-all border-2",
+                      colorMap[c],
+                      color === c ? "border-foreground scale-110" : "border-border hover:scale-105"
+                    )}
+                    aria-label={`Select ${c} color`}
+                  />
+                );
+              })}
+            </div>
+          </div>
           <div>
             <label className="text-sm font-medium mb-2 block">Status</label>
             <div className="flex gap-2">
@@ -119,7 +158,7 @@ export const NoteDetailDialog = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!content.trim() && status === initialStatus}>
+          <Button onClick={handleSave} disabled={!content.trim() && status === initialStatus && color === initialColor}>
             Save Changes
           </Button>
         </DialogFooter>

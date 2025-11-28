@@ -13,6 +13,8 @@ interface Note {
   content: string;
   color: string;
   status: NoteStatus;
+  lastUpdated: number;
+  pinned: boolean;
 }
 
 const colors = ["yellow", "pink", "blue", "green", "purple", "orange", "teal", "lavender", "peach", "mint"];
@@ -30,22 +32,38 @@ const Index = () => {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const addNote = (content: string, status: NoteStatus) => {
+  const addNote = (content: string, status: NoteStatus, color: string) => {
     const newNote: Note = {
       id: Date.now().toString(),
       content,
-      color: colors[Math.floor(Math.random() * colors.length)],
+      color,
       status,
+      lastUpdated: Date.now(),
+      pinned: false,
     };
     setNotes([newNote, ...notes]);
     toast.success("Note added!");
   };
 
-  const updateNote = (id: string, content: string, status: NoteStatus) => {
+  const updateNote = (id: string, content: string, status: NoteStatus, color: string) => {
     setNotes(notes.map(note => 
-      note.id === id ? { ...note, content, status } : note
+      note.id === id ? { ...note, content, status, color, lastUpdated: Date.now() } : note
     ));
     toast.success("Note updated!");
+  };
+
+  const togglePin = (id: string) => {
+    setNotes(notes.map(note => {
+      if (note.id === id) {
+        const pinnedCount = notes.filter(n => n.pinned).length;
+        if (!note.pinned && pinnedCount >= 5) {
+          toast.error("Maximum 5 notes can be pinned!");
+          return note;
+        }
+        return { ...note, pinned: !note.pinned };
+      }
+      return note;
+    }));
   };
 
   const deleteNote = (id: string) => {
@@ -68,7 +86,17 @@ const Index = () => {
               <h1 className="text-4xl font-bold text-foreground tracking-tight font-handwriting">
                 Stickee
               </h1>
-              <p className="text-muted-foreground mt-1">Your digital sticky note board</p>
+              <p className="text-muted-foreground mt-1">
+                Made by{" "}
+                <a 
+                  href="https://github.com/slammers001" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:underline hover:text-foreground transition-colors"
+                >
+                  slammers001
+                </a>
+              </p>
             </div>
             <div className="flex gap-2">
               <Button
@@ -113,20 +141,23 @@ const Index = () => {
           </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-            {notes.map((note, index) => (
+            {[...notes].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)).map((note, index) => (
               <StickyNote
                 key={note.id}
                 content={note.content}
                 color={note.color}
                 status={note.status}
                 index={index}
+                lastUpdated={note.lastUpdated}
+                pinned={note.pinned}
                 onClick={() => openNoteDetail(note)}
+                onTogglePin={() => togglePin(note.id)}
               />
             ))}
           </div>
         ) : (
           <div className="max-w-4xl mx-auto space-y-3">
-            {notes.map((note) => {
+            {[...notes].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)).map((note) => {
               const colorMap: Record<string, string> = {
                 yellow: "border-l-[hsl(var(--note-yellow))]",
                 pink: "border-l-[hsl(var(--note-pink))]",

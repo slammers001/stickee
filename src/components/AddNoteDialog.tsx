@@ -15,8 +15,10 @@ import { cn } from "@/lib/utils";
 interface AddNoteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (content: string, status: NoteStatus) => void;
+  onSave: (content: string, status: NoteStatus, color: string) => void;
 }
+
+const colors = ["yellow", "pink", "blue", "green", "purple", "orange", "teal", "lavender", "peach", "mint"];
 
 const statuses: NoteStatus[] = ["To-Do", "Doing", "Done"];
 
@@ -29,12 +31,14 @@ const statusColors: Record<NoteStatus, string> = {
 export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps) => {
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<NoteStatus>("To-Do");
+  const [color, setColor] = useState(colors[0]);
 
   const handleSave = () => {
     if (content.trim()) {
-      onSave(content, status);
+      onSave(content, status, color);
       setContent("");
       setStatus("To-Do");
+      setColor(colors[0]);
       onOpenChange(false);
     }
   };
@@ -49,9 +53,40 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add a New Sticky Note</DialogTitle>
+          <DialogTitle>Add a New Stickee Note</DialogTitle>
         </DialogHeader>
         <div className="py-4 space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Color</label>
+            <div className="flex gap-2 flex-wrap">
+              {colors.map((c) => {
+                const colorMap: Record<string, string> = {
+                  yellow: "bg-[hsl(var(--note-yellow))]",
+                  pink: "bg-[hsl(var(--note-pink))]",
+                  blue: "bg-[hsl(var(--note-blue))]",
+                  green: "bg-[hsl(var(--note-green))]",
+                  purple: "bg-[hsl(var(--note-purple))]",
+                  orange: "bg-[hsl(var(--note-orange))]",
+                  teal: "bg-[hsl(var(--note-teal))]",
+                  lavender: "bg-[hsl(var(--note-lavender))]",
+                  peach: "bg-[hsl(var(--note-peach))]",
+                  mint: "bg-[hsl(var(--note-mint))]",
+                };
+                return (
+                  <button
+                    key={c}
+                    onClick={() => setColor(c)}
+                    className={cn(
+                      "w-8 h-8 rounded-full transition-all border-2",
+                      colorMap[c],
+                      color === c ? "border-foreground scale-110" : "border-border hover:scale-105"
+                    )}
+                    aria-label={`Select ${c} color`}
+                  />
+                );
+              })}
+            </div>
+          </div>
           <div>
             <label className="text-sm font-medium mb-2 block">Status</label>
             <div className="flex gap-2">
