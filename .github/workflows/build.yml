@@ -31,13 +31,24 @@ jobs:
     - name: Build application
       run: npm run build
     
+    - name: Install Electron and build tools
+      run: |
+        npm install --save-dev electron electron-builder
+        npm install -g @electron/rebuild
+    
+    - name: Rebuild native modules
+      run: electron-rebuild -f -w .
+    
     - name: Build Windows Installer
-      run: npx electron-builder --win --x64
+      run: |
+        $env:ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES="true"
+        npm run electron:package
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: 'true'
     
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: windows-installer
         path: dist/*.exe
