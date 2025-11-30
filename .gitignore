@@ -2,6 +2,7 @@
 /release
 /dist
 /node_modules
+/dist-electron
 
 # Environment variables
 .env
