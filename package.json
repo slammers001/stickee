@@ -96,6 +96,7 @@
     ],
     "win": {
       "target": "nsis",
+      "runnableAsNode": false,
       "publisherName": "slammers001",
       "verifyUpdateCodeSignature": false,
       "icon": "public/stickee.png"
