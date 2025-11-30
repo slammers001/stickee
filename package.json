@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "type": "module",
   "author": "slammers001",
-  "license": "AGPL-3.0",
+  "description": "A modern desktop application for managing and organizing your digital sticky notes and tasks",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/slammers001/stickee.git"
@@ -92,7 +93,10 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "public/icon.ico"
+      "publisherName": "slammers001",
+      "verifyUpdateCodeSignature": false,
+      "icon": "public/icon.ico",
+      "runnableAsNode": false
     },
     "nsis": {
       "oneClick": false,

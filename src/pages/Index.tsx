@@ -241,10 +241,10 @@ const Index = () => {
               />
             </button>
             <h2 className="text-2xl font-semibold text-foreground mb-2 font-handwriting">
-              No sticky notes yet
+              No Stickee notes yet
             </h2>
             <p className="text-muted-foreground mb-6 max-w-md">
-              Click the Stickee icon to create your first sticky note!
+              Click the Stickee icon to create your first Stickee note!
             </p>
           </div>
         ) : viewMode === "grid" ? (
