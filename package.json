@@ -109,26 +109,6 @@
       "dist/**/*",
       "dist-electron/**/*",
       "!**/node_modules/**/*"
-    ],
-    "win": {
-      "target": "nsis",
-      "publisherName": "slammers001",
-      "verifyUpdateCodeSignature": false,
-      "icon": "public/stickee.png"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "deleteAppDataOnUninstall": true
-    },
-    "extraResources": [
-      {
-        "from": "public",
-        "to": "public",
-        "filter": [
-          "**/*"
-        ]
-      }
     ]
   },
   "devDependencies": {
