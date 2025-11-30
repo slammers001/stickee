@@ -180,7 +180,12 @@ const Index = () => {
       <header className="border-b bg-card shadow-sm">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center space-x-2">
+              <img 
+                src="/stickee.png" 
+                alt="Stickee" 
+                className="h-10 w-10 object-contain"
+              />
               <h1 className="text-4xl font-bold text-foreground tracking-tight font-handwriting">
                 Stickee
               </h1>
