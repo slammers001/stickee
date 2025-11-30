@@ -103,13 +103,14 @@
       {
         "from": "public",
         "to": "public",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ]
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
-    "cross-env": "^7.0.3",
     "@tailwindcss/typography": "^0.5.16",
     "@types/electron": "^1.4.38",
     "@types/node": "^22.19.1",
@@ -117,6 +118,7 @@
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react-swc": "^3.11.0",
     "autoprefixer": "^10.4.21",
+    "cross-env": "^7.0.3",
     "electron": "^28.1.0",
     "electron-builder": "^24.9.1",
     "eslint": "^9.32.0",
