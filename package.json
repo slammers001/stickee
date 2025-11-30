@@ -82,8 +82,24 @@
   "build": {
     "appId": "com.stickee.app",
     "productName": "Stickee",
-    "extraMetadata": {
-      "runnableAsNode": false
+    "runnableAsNode": false,
+    "extraMetadata": {},
+    "extraResources": [
+      {
+        "from": "public",
+        "to": "public"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "publisherName": "slammers001",
+      "verifyUpdateCodeSignature": false,
+      "icon": "public/stickee.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": true
     },
     "directories": {
       "output": "release",
@@ -96,7 +112,6 @@
     ],
     "win": {
       "target": "nsis",
-      "runnableAsNode": false,
       "publisherName": "slammers001",
       "verifyUpdateCodeSignature": false,
       "icon": "public/stickee.png"
