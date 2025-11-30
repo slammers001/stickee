@@ -2,13 +2,13 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import type { PluginOption } from 'vite';
+import electron from "vite-plugin-electron";
+
 // @ts-ignore - lovable-tagger might not have types
 export const componentTagger = (): PluginOption => ({
   name: 'component-tagger',
   // Add any necessary implementation here
 });
-
-import electron from "vite-plugin-electron";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -26,33 +26,39 @@ export default defineConfig(({ mode }) => {
       isElectron && electron([
         {
           entry: 'electron/main.ts',
-          onstart(options) {
+          onstart: (options: { startup: () => void }) => {
             options.startup();
           },
           vite: {
             build: {
               outDir: 'dist-electron',
-              outFile: 'main.js',
               rollupOptions: {
                 external: ['electron'],
+                output: {
+                  entryFileNames: 'main.js'
+                }
               },
             },
           },
         },
         {
           entry: 'electron/preload.ts',
-          onstart(options) {
+          onstart: (options: { reload: () => void }) => {
             options.reload();
           },
           vite: {
             build: {
               outDir: 'dist-electron',
-              outFile: 'preload.js',
+              rollupOptions: {
+                output: {
+                  entryFileNames: 'preload.js'
+                }
+              }
             },
           },
         },
-      ])
-    ].filter(Boolean),
+      ] as any) // Type assertion to handle the electron plugin type
+    ].filter((p): p is Exclude<typeof p, boolean> => Boolean(p)),
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),

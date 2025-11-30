@@ -9,17 +9,17 @@
     "type": "git",
     "url": "https://github.com/slammers001/stickee.git"
   },
-  "main": "dist-electron/main.js",
+  "main": "./dist-electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "electron:serve": "vite dev",
-    "electron:build": "vite build",
+    "electron:serve": "cross-env ELECTRON=true vite",
+    "electron:build": "cross-env ELECTRON=true vite build",
     "electron:start": "electron .",
-    "electron:package": "npm run electron:build && electron-builder build --win --publish never"
+    "electron:package": "npm run electron:build && electron-builder build --win --x64 --publish never"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -82,16 +82,30 @@
     "appId": "com.stickee.app",
     "productName": "Stickee",
     "directories": {
-      "output": "dist"
+      "output": "release",
+      "buildResources": "public"
     },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "!**/node_modules/**/*"
+    ],
     "win": {
       "target": "nsis",
       "icon": "public/icon.ico"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": true
+    },
+    "extraResources": [
+      {
+        "from": "public",
+        "to": "public",
+        "filter": ["**/*"]
+      }
+    ]
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",

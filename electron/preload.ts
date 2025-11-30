@@ -4,7 +4,7 @@ declare global {
   interface Window {
     electron: {
       send: (channel: string, data: unknown) => void;
-      receive: (channel: string, func: (...args: unknown[]) => void) => void;
+      receive: (channel: string, func: (...args: unknown[]) => void) => () => void;
     };
   }
 }
@@ -19,7 +19,7 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send(channel, data);
     }
   },
-  receive: (channel: string, func: (...args: unknown[]) => void): void => {
+  receive: (channel: string, func: (...args: unknown[]) => void): (() => void) => {
     const validChannels = ['fromMain'];
     if (validChannels.includes(channel)) {
       // Deliberately strip event as it includes `sender`
@@ -31,5 +31,6 @@ contextBridge.exposeInMainWorld('electron', {
         ipcRenderer.removeListener(channel, subscription);
       };
     }
+    return () => {}; // Return empty cleanup function if channel is not valid
   }
 });
