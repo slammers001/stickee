@@ -52,7 +52,7 @@ export default defineConfig(({ mode }) => {
               rollupOptions: {
                 external: ['electron'],
                 output: {
-                  entryFileNames: 'preload.cjs',
+                  entryFileNames: 'preload.js',
                   format: 'cjs',
                   inlineDynamicImports: true,
                   exports: 'auto'
@@ -68,7 +68,7 @@ export default defineConfig(({ mode }) => {
               lib: {
                 entry: 'electron/preload.ts',
                 formats: ['cjs'],
-                fileName: () => 'preload.cjs'
+                fileName: () => 'preload.js'
               },
               // Ensure proper module type
               ssr: true
@@ -89,7 +89,17 @@ export default defineConfig(({ mode }) => {
         input: {
           main: path.resolve(__dirname, 'index.html'),
         },
+        output: {
+          // Ensure consistent file naming
+          entryFileNames: 'assets/[name]-[hash].js',
+          chunkFileNames: 'assets/[name]-[hash].js',
+          assetFileNames: 'assets/[name]-[hash][extname]',
+        },
       },
+      // Ensure the output is compatible with Electron
+      target: 'esnext',
+      minify: !isElectron, // Don't minify in Electron build for better debugging
+      sourcemap: isElectron, // Include sourcemaps in Electron build
     },
   };
 });

@@ -18,6 +18,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
+    "electron": "ELECTRON=true vite",
+    "electron:dev": "concurrently \"vite\" \"electron .\"",
     "electron:serve": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\" --kill-others --success first",
     "electron:build": "cross-env ELECTRON=true vite build",
     "electron:start": "electron .",
@@ -117,7 +119,7 @@
     ],
     "asar": true,
     "asarUnpack": [
-      "dist-electron/preload.cjs",
+      "dist-electron/preload.js",
       "dist/**/*"
     ]
   },
