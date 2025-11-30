@@ -82,6 +82,9 @@
   "build": {
     "appId": "com.stickee.app",
     "productName": "Stickee",
+    "extraMetadata": {
+      "runnableAsNode": false
+    },
     "directories": {
       "output": "release",
       "buildResources": "public"
@@ -95,8 +98,7 @@
       "target": "nsis",
       "publisherName": "slammers001",
       "verifyUpdateCodeSignature": false,
-      "icon": "public/icon.ico",
-      "runnableAsNode": false
+      "icon": "public/icon.ico"
     },
     "nsis": {
       "oneClick": false,
