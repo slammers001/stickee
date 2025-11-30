@@ -1,13 +1,18 @@
-import { contextBridge as t, ipcRenderer as i } from "electron";
-t.exposeInMainWorld("electron", {
-  send: (e, n) => {
-    ["toMain"].includes(e) && i.send(e, n);
+import { contextBridge, ipcRenderer } from "electron";
+contextBridge.exposeInMainWorld("electron", {
+  send: (channel, data) => {
+    const validChannels = ["toMain"];
+    if (validChannels.includes(channel)) {
+      ipcRenderer.send(channel, data);
+    }
   },
-  receive: (e, n) => {
-    if (["fromMain"].includes(e)) {
-      const r = (d, ...o) => n(...o);
-      return i.on(e, r), () => {
-        i.removeListener(e, r);
+  receive: (channel, func) => {
+    const validChannels = ["fromMain"];
+    if (validChannels.includes(channel)) {
+      const subscription = (_event, ...args) => func(...args);
+      ipcRenderer.on(channel, subscription);
+      return () => {
+        ipcRenderer.removeListener(channel, subscription);
       };
     }
     return () => {

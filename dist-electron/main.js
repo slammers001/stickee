@@ -1,23 +1,55 @@
-import { app as o, BrowserWindow as i } from "electron";
-import n from "path";
-let e = null;
-const t = async () => {
-  e = new i({
-    width: 1200,
-    height: 800,
-    webPreferences: {
-      nodeIntegration: !0,
-      contextIsolation: !1,
-      webSecurity: !1,
-      preload: n.join(__dirname, "preload.js")
+import { app, BrowserWindow } from "electron";
+import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+let mainWindow = null;
+const createWindow = async () => {
+  try {
+    mainWindow = new BrowserWindow({
+      width: 1200,
+      height: 800,
+      show: false,
+      // Don't show the window until it's ready
+      backgroundColor: "#ffffff",
+      // Set a background color
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+        webSecurity: false,
+        preload: path.join(__dirname, "preload.js")
+      }
+    });
+    mainWindow.once("ready-to-show", () => {
+      if (mainWindow) {
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    });
+    mainWindow.on("closed", () => {
+      mainWindow = null;
+    });
+    if (process.env.NODE_ENV === "development") {
+      await mainWindow.loadURL("http://localhost:5173");
+      mainWindow.webContents.openDevTools();
+    } else {
+      await mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
     }
-  }), process.env.NODE_ENV === "development" ? (await e.loadURL("http://localhost:5173"), e.webContents.openDevTools()) : await e.loadFile(n.join(__dirname, "../dist/index.html"));
+  } catch (error) {
+    console.error("Failed to create window:", error);
+    app.quit();
+  }
 };
-o.whenReady().then(() => {
-  t(), o.on("activate", () => {
-    i.getAllWindows().length === 0 && t();
+app.whenReady().then(() => {
+  createWindow();
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
   });
 });
-o.on("window-all-closed", () => {
-  process.platform !== "darwin" && o.quit();
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
 });
