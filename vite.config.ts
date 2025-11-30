@@ -50,10 +50,28 @@ export default defineConfig(({ mode }) => {
             build: {
               outDir: 'dist-electron',
               rollupOptions: {
+                external: ['electron'],
                 output: {
-                  entryFileNames: 'preload.js'
+                  entryFileNames: 'preload.cjs',
+                  format: 'cjs',
+                  inlineDynamicImports: true,
+                  exports: 'auto'
                 }
-              }
+              },
+              commonjsOptions: {
+                transformMixedEsModules: true,
+                esmExternals: true
+              },
+              // Ensure we don't have ESM-specific code in preload
+              target: 'node16',
+              minify: false,
+              lib: {
+                entry: 'electron/preload.ts',
+                formats: ['cjs'],
+                fileName: () => 'preload.cjs'
+              },
+              // Ensure proper module type
+              ssr: true
             },
           },
         },

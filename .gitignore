@@ -3,7 +3,7 @@
 /dist
 /node_modules
 /dist-electron
-/electron
+
 
 # Environment variables
 .env

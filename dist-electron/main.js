@@ -1,55 +1,41 @@
-import { app, BrowserWindow } from "electron";
-import path from "path";
-import { fileURLToPath } from "url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-let mainWindow = null;
-const createWindow = async () => {
+import { app as e, BrowserWindow as i } from "electron";
+import n from "path";
+import { fileURLToPath as r } from "url";
+const l = r(import.meta.url), s = n.dirname(l), c = !e.isPackaged;
+let o = null;
+const a = async () => {
   try {
-    mainWindow = new BrowserWindow({
+    if (o = new i({
       width: 1200,
       height: 800,
-      show: false,
+      show: !1,
       // Don't show the window until it's ready
       backgroundColor: "#ffffff",
-      // Set a background color
       webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false,
-        webSecurity: false,
-        preload: path.join(__dirname, "preload.js")
+        nodeIntegration: !1,
+        contextIsolation: !0,
+        webSecurity: !0,
+        preload: n.join(s, "preload.cjs")
       }
-    });
-    mainWindow.once("ready-to-show", () => {
-      if (mainWindow) {
-        mainWindow.show();
-        mainWindow.focus();
-      }
-    });
-    mainWindow.on("closed", () => {
-      mainWindow = null;
-    });
-    if (process.env.NODE_ENV === "development") {
-      await mainWindow.loadURL("http://localhost:5173");
-      mainWindow.webContents.openDevTools();
-    } else {
-      await mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
+    }), o.once("ready-to-show", () => {
+      o && (o.show(), o.focus());
+    }), o.on("closed", () => {
+      o = null;
+    }), c)
+      await o.loadURL("http://localhost:5173"), o.webContents.openDevTools();
+    else {
+      const t = n.join(process.resourcesPath, "app.asar/dist/index.html");
+      console.log("Loading index.html from:", t), await o.loadFile(t);
     }
-  } catch (error) {
-    console.error("Failed to create window:", error);
-    app.quit();
+  } catch (t) {
+    console.error("Failed to create window:", t), e.quit();
   }
 };
-app.whenReady().then(() => {
-  createWindow();
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+e.whenReady().then(() => {
+  a(), e.on("activate", () => {
+    i.getAllWindows().length === 0 && a();
   });
 });
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
+e.on("window-all-closed", () => {
+  process.platform !== "darwin" && e.quit();
 });

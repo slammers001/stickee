@@ -83,13 +83,9 @@
   "build": {
     "appId": "com.stickee.app",
     "productName": "Stickee",
-    "extraMetadata": {},
-    "extraResources": [
-      {
-        "from": "public",
-        "to": "public"
-      }
-    ],
+    "extraMetadata": {
+      "main": "dist-electron/main.js"
+    },
     "win": {
       "target": "nsis",
       "publisherName": "slammers001",
@@ -107,8 +103,22 @@
     },
     "files": [
       "dist/**/*",
-      "dist-electron/**/*",
-      "!**/node_modules/**/*"
+      "dist-electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "dist",
+        "to": "dist"
+      },
+      {
+        "from": "public",
+        "to": "public"
+      }
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "dist-electron/preload.cjs",
+      "dist/**/*"
     ]
   },
   "devDependencies": {

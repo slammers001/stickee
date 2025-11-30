@@ -1,17 +1,14 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+// This file is compiled to CommonJS format by Vite
+const { contextBridge, ipcRenderer } = require('electron');
 
-declare global {
-  interface Window {
-    electron: {
-      send: (channel: string, data: unknown) => void;
-      receive: (channel: string, func: (...args: unknown[]) => void) => () => void;
-    };
-  }
-}
+// Type declarations for TypeScript
+type IpcRendererEvent = Event & {
+  sender: any;
+  senderId: number;
+};
 
-// Expose protected methods that allow the renderer process to use
-// the ipcRenderer without exposing the entire object
-contextBridge.exposeInMainWorld('electron', {
+// Expose protected methods to the renderer process
+const electronAPI = {
   send: (channel: string, data: unknown): void => {
     // Whitelist channels
     const validChannels = ['toMain'];
@@ -33,4 +30,10 @@ contextBridge.exposeInMainWorld('electron', {
     }
     return () => {}; // Return empty cleanup function if channel is not valid
   }
-});
+};
+
+// Expose the API to the renderer process
+contextBridge.exposeInMainWorld('electron', electronAPI);
+
+// Export the API type for TypeScript
+export type ElectronAPI = typeof electronAPI;
