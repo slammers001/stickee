@@ -98,7 +98,7 @@
       "target": "nsis",
       "publisherName": "slammers001",
       "verifyUpdateCodeSignature": false,
-      "icon": "public/icon.ico"
+      "icon": "public/stickee.png"
     },
     "nsis": {
       "oneClick": false,
