@@ -82,7 +82,6 @@
   "build": {
     "appId": "com.stickee.app",
     "productName": "Stickee",
-    "runnableAsNode": false,
     "extraMetadata": {},
     "extraResources": [
       {
