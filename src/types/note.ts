@@ -8,6 +8,8 @@ export interface Note {
   lastUpdated: number;
   last_updated?: number; // For Supabase compatibility
   pinned: boolean;
-  user_id: string;
-  created_at?: string;
+  user_id?: string; // Made optional
+  created_at?: string; // For Supabase compatibility
 }
+
+export type StickyNoteStatus = NoteStatus;

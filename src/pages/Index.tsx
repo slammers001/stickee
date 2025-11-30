@@ -60,15 +60,36 @@ const Index = () => {
         content,
         color,
         status,
-        pinned: false
+        pinned: false,
+        lastUpdated: Date.now()
       });
       
       setNotes(prevNotes => [newNote, ...prevNotes]);
       setDialogOpen(false);
-      toast.success('Note added!');
+      toast.success('Note added successfully!');
     } catch (error) {
-      console.error('Error adding note:', error);
-      toast.error('Failed to add note');
+      console.error('Error in addNote:', {
+        error,
+        content,
+        status,
+        color,
+        timestamp: new Date().toISOString()
+      });
+      
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'An unknown error occurred while adding the note';
+      
+      toast.error(`Failed to add note: ${errorMessage}`, {
+        duration: 5000,
+        style: {
+          background: '#ffebee',
+          color: '#c62828',
+          border: '1px solid #ffcdd2',
+          padding: '12px',
+          borderRadius: '4px',
+        },
+      });
     }
   };
 

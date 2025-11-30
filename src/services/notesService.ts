@@ -2,130 +2,123 @@ import { v4 as uuidv4 } from 'uuid';
 import { Note, NoteStatus } from '@/types/note';
 import { supabase } from '@/lib/supabase';
 
-const STORAGE_KEY = 'stickee-notes';
-
-// Generate a unique user ID if it doesn't exist
-const getOrCreateUserId = (): string => {
-  let userId = localStorage.getItem('stickee-user-id');
-  if (!userId) {
-    userId = `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem('stickee-user-id', userId);
-  }
-  return userId;
+// Helper function to map Supabase note to our Note type
+const mapSupabaseNote = (note: any): Note => {
+  // Safely get the timestamp, trying different possible column names
+  const timestamp = note.last_updated || note.updated_at || note.created_at || new Date().toISOString();
+  
+  return {
+    id: note.id,
+    content: note.content || '',
+    color: note.color || '#ffffff',
+    status: (note.status as NoteStatus) || 'To-Do',
+    lastUpdated: typeof timestamp === 'string' ? Date.parse(timestamp) : timestamp,
+    pinned: Boolean(note.pinned),
+    last_updated: timestamp, // For Supabase compatibility
+    created_at: note.created_at || timestamp, // For Supabase compatibility
+    user_id: note.user_id // Include user_id in the returned object
+  };
 };
 
-// Helper function to map Supabase note to our Note type
-const mapSupabaseNote = (note: any): Note => ({
-  id: note.id,
-  content: note.content,
-  color: note.color,
-  status: note.status as NoteStatus,
-  lastUpdated: note.last_updated || Date.now(),
-  pinned: note.pinned || false,
-  user_id: note.user_id || getOrCreateUserId()
-});
-
-// Get all notes for the current user
+// Get all notes
 export const getNotes = async (): Promise<Note[]> => {
   try {
-    // Try to fetch from Supabase first
     const { data: notes, error } = await supabase
       .from('notes')
       .select('*')
       .order('pinned', { ascending: false })
-      .order('last_updated', { ascending: false });
+      .order('updated_at', { ascending: false }); // Changed from last_updated to updated_at
 
     if (error) throw error;
-    
-    // If we have notes from Supabase, return them
-    if (notes && notes.length > 0) {
-      return notes.map(mapSupabaseNote);
-    }
-    
-    // Fallback to local storage if no notes in Supabase
-    const userId = getOrCreateUserId();
-    const localData = localStorage.getItem(`${STORAGE_KEY}-${userId}`);
-    return localData ? JSON.parse(localData) : [];
+    return notes ? notes.map(mapSupabaseNote) : [];
   } catch (error) {
-    console.error('Error fetching notes from Supabase, falling back to local storage:', error);
-    // Fallback to local storage on error
-    const userId = getOrCreateUserId();
-    const localData = localStorage.getItem(`${STORAGE_KEY}-${userId}`);
-    return localData ? JSON.parse(localData) : [];
+    console.error('Error fetching notes:', error);
+    return [];
   }
 };
 
-// Save all notes for the current user to local storage
-const saveNotesToLocal = async (notes: Note[]): Promise<void> => {
-  const userId = getOrCreateUserId();
-  localStorage.setItem(`${STORAGE_KEY}-${userId}`, JSON.stringify(notes));
-};
-
 // Create a new note
-export const createNote = async (noteData: Omit<Note, 'id' | 'lastUpdated' | 'user_id'>): Promise<Note> => {
-  const newNote = {
-    ...noteData,
-    id: uuidv4(),
-    last_updated: Date.now(),
-    user_id: getOrCreateUserId(),
-  };
-
+export const createNote = async (noteData: Omit<Note, 'id'>): Promise<Note> => {
+  // Declare cleanNote in the outer scope so it's available in the catch block
+  let cleanNote: Record<string, any> | null = null;
+  
   try {
+    // Get current user if available
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Prepare the note data to send to Supabase
+    const noteDataToSend = {
+      content: noteData.content,
+      color: noteData.color,
+      status: noteData.status,
+      pinned: noteData.pinned,
+      updated_at: new Date().toISOString(),
+      // Only include user_id if we have a valid user
+      ...(user?.id && { user_id: user.id })
+    };
+
+    // Remove undefined values
+    cleanNote = Object.fromEntries(
+      Object.entries(noteDataToSend)
+        .filter(([_, v]) => v !== undefined)
+    ) as Record<string, any>;
+
     const { data, error } = await supabase
       .from('notes')
-      .insert([newNote])
+      .insert([cleanNote])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error:', error);
+      throw new Error(`Failed to create note: ${error.message}`);
+    }
+    
+    if (!data) {
+      throw new Error('No data returned from Supabase');
+    }
+    
     return mapSupabaseNote(data);
   } catch (error) {
-    console.error('Error creating note in Supabase, falling back to local storage:', error);
-    // Fallback to local storage
-    const notes = await getNotes();
-    const localNote: Note = {
-      ...newNote,
-      lastUpdated: Date.now(),
-    };
-    await saveNotesToLocal([localNote, ...notes]);
-    return localNote;
+    console.error('Error in createNote:', {
+      error,
+      cleanNote,
+      timestamp: new Date().toISOString()
+    });
+    throw error;
   }
 };
 
 // Update an existing note
 export const updateNote = async (id: string, updates: Partial<Omit<Note, 'id'>>): Promise<Note | null> => {
-  const updateData = {
+  // Create update data with proper field names for Supabase
+  const updateData: any = {
     ...updates,
-    last_updated: Date.now(),
+    updated_at: new Date().toISOString(),
   };
+
+  // Remove fields that shouldn't be sent to Supabase
+  delete updateData.lastUpdated;
+  delete updateData.last_updated;
+  
+  // Remove any undefined values
+  const cleanUpdateData = Object.fromEntries(
+    Object.entries(updateData).filter(([_, v]) => v !== undefined)
+  );
 
   try {
     const { data, error } = await supabase
       .from('notes')
-      .update(updateData)
+      .update(cleanUpdateData)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
-    return mapSupabaseNote(data);
+    return data ? mapSupabaseNote(data) : null;
   } catch (error) {
-    console.error('Error updating note in Supabase, falling back to local storage:', error);
-    // Fallback to local storage
-    const notes = await getNotes();
-    const noteIndex = notes.findIndex(note => note.id === id);
-    
-    if (noteIndex === -1) return null;
-    
-    const updatedNote = {
-      ...notes[noteIndex],
-      ...updates,
-      lastUpdated: Date.now(),
-    };
-    
-    notes[noteIndex] = updatedNote;
-    await saveNotesToLocal(notes);
-    return updatedNote;
+    console.error('Error updating note:', error);
+    throw error;
   }
 };
 
@@ -140,12 +133,8 @@ export const deleteNote = async (id: string): Promise<boolean> => {
     if (error) throw error;
     return true;
   } catch (error) {
-    console.error('Error deleting note from Supabase, falling back to local storage:', error);
-    // Fallback to local storage
-    const notes = await getNotes();
-    const filteredNotes = notes.filter(note => note.id !== id);
-    await saveNotesToLocal(filteredNotes);
-    return true;
+    console.error('Error deleting note:', error);
+    throw error;
   }
 };
 
