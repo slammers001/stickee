@@ -109,6 +109,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
+    "cross-env": "^7.0.3",
     "@tailwindcss/typography": "^0.5.16",
     "@types/electron": "^1.4.38",
     "@types/node": "^22.19.1",
