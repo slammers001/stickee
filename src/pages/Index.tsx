@@ -9,18 +9,16 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Note } from "@/types/note";
+import { UserProfile } from "@/components/UserProfile";
 import { 
   getNotes as fetchNotes, 
   createNote as createNoteService, 
   updateNote as updateNoteService, 
   deleteNote as deleteNoteService,
-  updateNoteStatus as updateNoteStatusService,
   updateNotePinStatus as updateNotePinStatusService
 } from "@/services/notesService";
 
 // Using the Note interface from types/note.ts
-
-const colors = ["yellow", "pink", "blue", "green", "purple", "orange", "teal", "lavender", "peach", "mint"];
 
 const statusColors: Record<StickyNoteStatus, string> = {
   "To-Do": "bg-red-100 text-red-800 border-red-200",
@@ -116,23 +114,6 @@ const Index = () => {
     }
   };
 
-  const handleStatusChange = async (id: string, status: StickyNoteStatus) => {
-    try {
-      const updatedNote = await updateNoteStatusService(id, status);
-
-      if (updatedNote) {
-        setNotes(prevNotes =>
-          prevNotes.map(note =>
-            note.id === id ? { ...updatedNote } : note
-          )
-        );
-      }
-    } catch (error) {
-      console.error('Error updating note status:', error);
-      toast.error('Failed to update note status');
-    }
-  };
-
   const togglePin = async (id: string) => {
     try {
       const note = notes.find(n => n.id === id);
@@ -201,7 +182,9 @@ const Index = () => {
                 </a>
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
+              <UserProfile />
+              <div className="h-6 w-px bg-border"></div>
               <Button
                 variant="default"
                 size="icon"
