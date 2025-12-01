@@ -48,7 +48,7 @@ All colors MUST be HSL.
     --note-teal: 180 70% 75%;
     --note-lavender: 260 60% 82%;
     --note-peach: 20 100% 85%;
-    --note-mint: 150 60% 80%;
+    --note-mint: 150 80% 80%;
     
     /* Custom shadows */
     --shadow-sticky: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.05);
@@ -127,5 +127,16 @@ All colors MUST be HSL.
         rgba(0, 0, 0, 0.02) 2px,
         rgba(0, 0, 0, 0.02) 4px
       );
+  }
+}
+
+@layer utilities {
+  .icon-crisp {
+    /* Fallback for browsers that don't support image-rendering */
+    image-rendering: auto;
+    /* Edge 79+ */
+    image-rendering: -webkit-optimize-contrast;
+    /* Pixelated fallback for other browsers */
+    image-rendering: pixelated;
   }
 }

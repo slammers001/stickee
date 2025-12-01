@@ -34,6 +34,16 @@ const Index = () => {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [iconPath, setIconPath] = useState("/stickee.png");
+
+  // Fix icon path for Electron
+  useEffect(() => {
+    // Check if we're in Electron and adjust the path
+    if ((window as any).electronAPI?.isElectron) {
+      // In Electron, use relative path
+      setIconPath("./stickee.png");
+    }
+  }, []);
 
   // Load notes on component mount
   useEffect(() => {
@@ -163,9 +173,18 @@ const Index = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <img 
-                src="/stickee.png" 
+                src={iconPath} 
                 alt="Stickee" 
-                className="h-10 w-10 object-contain"
+                className="h-10 w-10 object-contain icon-crisp"
+                onError={(e) => {
+                  // Fallback to different path if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  if (target.src.includes("/stickee.png")) {
+                    target.src = "./stickee.png";
+                  } else if (target.src.includes("./stickee.png")) {
+                    target.src = "stickee.png";
+                  }
+                }}
               />
               <h1 className="text-4xl font-bold text-foreground tracking-tight font-handwriting">
                 Stickee
@@ -219,13 +238,22 @@ const Index = () => {
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
             <button 
               onClick={() => setDialogOpen(true)}
-              className="group w-48 h-48 mb-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800/50 transition-all duration-300 hover:-rotate-12 focus:outline-none"
+              className="group w-48 h-48 mb-8 flex items-center justify-center rounded-full bg-gradient-to-br from-yellow-100 to-yellow-200 shadow-lg transition-all duration-500 hover:shadow-xl hover:-rotate-12 focus:outline-none focus:ring-4 focus:ring-yellow-300"
               aria-label="Add new note"
             >
               <img 
-                src="/stickee.png" 
+                src={iconPath} 
                 alt="Stickee" 
-                className="w-5/6 h-5/6 object-contain transition-transform duration-300 group-hover:scale-105"
+                className="w-5/6 h-5/6 object-contain transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-lg icon-crisp"
+                onError={(e) => {
+                  // Fallback to different path if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  if (target.src.includes("/stickee.png")) {
+                    target.src = "./stickee.png";
+                  } else if (target.src.includes("./stickee.png")) {
+                    target.src = "stickee.png";
+                  }
+                }}
               />
             </button>
             <h2 className="text-2xl font-semibold text-foreground mb-2 font-handwriting">

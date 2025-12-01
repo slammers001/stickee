@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import type { PluginOption } from 'vite';
 import electron from "vite-plugin-electron";
+import viteCompression from 'vite-plugin-compression';
 
 // @ts-ignore - lovable-tagger might not have types
 export const componentTagger = (): PluginOption => ({
@@ -23,6 +24,10 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(), 
       mode === "development" && componentTagger(),
+      !isElectron && viteCompression({
+        algorithm: 'gzip',
+        ext: '.gz'
+      }),
       isElectron && electron([
         {
           entry: 'electron/main.ts',
@@ -85,6 +90,8 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       emptyOutDir: true,
+      minify: 'esbuild', // Use esbuild for faster minification
+      target: 'esnext',
       rollupOptions: {
         input: {
           main: path.resolve(__dirname, 'index.html'),
@@ -94,12 +101,21 @@ export default defineConfig(({ mode }) => {
           entryFileNames: 'assets/[name]-[hash].js',
           chunkFileNames: 'assets/[name]-[hash].js',
           assetFileNames: 'assets/[name]-[hash][extname]',
+          // Manual chunking for better code splitting
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            ui: ['@radix-ui/react-dialog', '@radix-ui/react-toast', 'sonner'],
+            router: ['react-router-dom'],
+            utils: ['clsx', 'tailwind-merge', 'class-variance-authority']
+          }
         },
+        // External dependencies that shouldn't be bundled
+        external: ['electron'],
       },
-      // Ensure the output is compatible with Electron
-      target: 'esnext',
-      minify: !isElectron, // Don't minify in Electron build for better debugging
-      sourcemap: isElectron, // Include sourcemaps in Electron build
+      // Enable compression
+      cssCodeSplit: true,
+      // Don't generate sourcemaps in production to reduce size
+      sourcemap: false,
     },
   };
 });
