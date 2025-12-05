@@ -37,14 +37,14 @@ const Index = () => {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [iconPath, setIconPath] = useState("/stickee.png");
+  const [iconPath, setIconPath] = useState("/favicons/stickee.png");
 
   // Fix icon path for Electron
   useEffect(() => {
     // Check if we're in Electron and adjust the path
     if ((window as any).electronAPI?.isElectron) {
       // In Electron, use relative path
-      setIconPath("./stickee.png");
+      setIconPath("./favicons/stickee.png");
     }
   }, []);
 
@@ -232,14 +232,18 @@ const Index = () => {
               <img 
                 src={iconPath} 
                 alt="Stickee" 
-                className="h-10 w-10 object-contain icon-crisp"
+                className="h-14 w-14 object-contain icon-crisp"
                 onError={(e) => {
-                  // Fallback to different path if image fails to load
+                  // Prevent infinite loop by setting a flag
                   const target = e.target as HTMLImageElement;
-                  if (target.src.includes("/stickee.png")) {
-                    target.src = "./stickee.png";
-                  } else if (target.src.includes("./stickee.png")) {
-                    target.src = "stickee.png";
+                  if (!target.dataset.errorHandled) {
+                    target.dataset.errorHandled = "true";
+                    // Try fallback once
+                    if (target.src.includes("/favicons/")) {
+                      target.src = "./stickee.png";
+                    } else if (target.src.includes("./")) {
+                      target.src = "/stickee.png";
+                    }
                   }
                 }}
               />
@@ -297,20 +301,24 @@ const Index = () => {
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
             <button 
               onClick={() => setDialogOpen(true)}
-              className="group w-48 h-48 mb-8 flex items-center justify-center rounded-full bg-gradient-to-br from-yellow-100 to-yellow-200 shadow-lg transition-all duration-500 hover:shadow-xl hover:-rotate-12 focus:outline-none focus:ring-4 focus:ring-yellow-300"
+              className="group w-48 h-48 mb-8 flex items-center justify-center transition-all duration-500 hover:scale-110 hover:-rotate-12 focus:outline-none"
               aria-label="Add new note"
             >
               <img 
                 src={iconPath} 
                 alt="Stickee" 
-                className="w-5/6 h-5/6 object-contain transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-lg icon-crisp"
+                className="w-full h-full p-2 object-contain transition-all duration-500 group-hover:drop-shadow-lg icon-crisp scale-150 group-hover:-rotate-6"
                 onError={(e) => {
-                  // Fallback to different path if image fails to load
+                  // Prevent infinite loop by setting a flag
                   const target = e.target as HTMLImageElement;
-                  if (target.src.includes("/stickee.png")) {
-                    target.src = "./stickee.png";
-                  } else if (target.src.includes("./stickee.png")) {
-                    target.src = "stickee.png";
+                  if (!target.dataset.errorHandled) {
+                    target.dataset.errorHandled = "true";
+                    // Try fallback once
+                    if (target.src.includes("/favicons/")) {
+                      target.src = "./stickee.png";
+                    } else if (target.src.includes("./")) {
+                      target.src = "/stickee.png";
+                    }
                   }
                 }}
               />

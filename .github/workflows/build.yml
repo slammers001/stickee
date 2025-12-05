@@ -1,55 +1,55 @@
-name: Build Windows Executable
+#name: Build Windows Executable
 
-on:
-  workflow_dispatch:
-  push:
-    branches: [ main, feature/* ]
-    paths:
-      - '**'
-      - '!.github/**'
-  pull_request:
-    branches: [ main ]
+#on:
+  #workflow_dispatch:
+  #push:
+    #branches: [ main, feature/* ]
+    #paths:
+      #- '**'
+      #- '!.github/**'
+  #pull_request:
+    #branches: [ main ]
 
-jobs:
-  build:
-    name: Build for Windows
-    runs-on: windows-latest
+#jobs:
+  #build:
+    #name: Build for Windows
+    #runs-on: windows-latest
     
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    #steps:
+    #- name: Checkout code
+      #uses: actions/checkout@v3
     
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
-        cache: 'npm'
+    #- name: Set up Node.js
+      #uses: actions/setup-node@v3
+      #with:
+        #node-version: '20'
+        #cache: 'npm'
     
-    - name: Install dependencies
-      run: npm ci
+    #- name: Install dependencies
+      #run: npm ci
     
-    - name: Install build tools
-      run: |
-        npm install --save-dev electron electron-builder cross-env
-        npm install -g @electron/rebuild
+    #- name: Install build tools
+      #run: |
+        #npm install --save-dev electron electron-builder cross-env
+        #npm install -g @electron/rebuild
     
-    - name: Rebuild native modules
-      run: electron-rebuild -f -w .
+    #- name: Rebuild native modules
+      #run: electron-rebuild -f -w .
     
-    - name: Build application
-      run: npm run build
+    #- name: Build application
+      #run: npm run build
     
-    - name: Build Windows Installer
-      run: |
-        $env:ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES="true"
-        npx electron-builder --win --x64 --publish never
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: 'true'
+    #- name: Build Windows Installer
+      #run: |
+        #$env:ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES="true"
+        #npx electron-builder --win --x64 --publish never
+      #env:
+        #GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        #ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: 'true'
     
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: windows-installer
-        path: release/*.exe
-        retention-days: 5
+    #- name: Upload Artifacts
+      #uses: actions/upload-artifact@v4
+      #with:
+        #name: windows-installer
+        #path: release/*.exe
+        #retention-days: 5
