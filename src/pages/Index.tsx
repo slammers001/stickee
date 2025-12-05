@@ -211,7 +211,7 @@ const Index = () => {
                   href="https://github.com/slammers001" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="hover:underline hover:text-foreground transition-colors"
+                  className="underline hover:text-foreground transition-colors"
                 >
                   slammers001
                 </a>
