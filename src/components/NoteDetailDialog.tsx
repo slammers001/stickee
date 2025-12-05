@@ -36,6 +36,7 @@ const statusColors: Record<NoteStatus, string> = {
   "To-Do": "bg-red-100 text-red-800 border-red-200 hover:bg-red-200",
   "Doing": "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200",
   "Done": "bg-green-100 text-green-800 border-green-200 hover:bg-green-200",
+  "Backlog": "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200",
 };
 
 export const NoteDetailDialog = ({
@@ -82,17 +83,7 @@ export const NoteDetailDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>View & Edit Note</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleDelete}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="h-5 w-5" />
-            </Button>
-          </DialogTitle>
+          <DialogTitle>View & Edit Note</DialogTitle>
         </DialogHeader>
         <div className="py-4 space-y-4">
           <div>
@@ -134,7 +125,8 @@ export const NoteDetailDialog = ({
                   key={s}
                   variant="outline"
                   className={cn(
-                    "cursor-pointer transition-all font-handwriting text-base px-3 py-1",
+                    "cursor-pointer transition-all font-handwriting text-base px-3 py-1 status-text",
+                    status === s ? "selected" : "",
                     status === s ? statusColors[s] : "hover:bg-muted"
                   )}
                   onClick={() => setStatus(s)}
@@ -149,14 +141,19 @@ export const NoteDetailDialog = ({
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="min-h-[300px] resize-none font-handwriting text-lg"
+              className="min-h-[300px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400"
               placeholder="Type your note here..."
             />
           </div>
         </div>
         <DialogFooter className="flex gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDelete}
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="h-5 w-5" />
           </Button>
           <Button onClick={handleSave} disabled={!content.trim() && status === initialStatus && color === initialColor}>
             Save Changes

@@ -10,6 +10,9 @@ All colors MUST be HSL.
   :root {
     --background: 0 0% 97%;
     --foreground: 0 0% 15%;
+    
+    --font-family-base: 'Indie Flower', cursive;
+    --font-family-handwriting: 'Indie Flower', cursive;
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 15%;
@@ -17,8 +20,8 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 15%;
 
-    --primary: 262 83% 58%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 350 100% 88%;
+    --primary-foreground: 0 0% 15%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 0 0% 15%;
@@ -34,7 +37,7 @@ All colors MUST be HSL.
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 262 83% 58%;
+    --ring: 350 100% 88%;
 
     --radius: 0.5rem;
     
@@ -48,7 +51,7 @@ All colors MUST be HSL.
     --note-teal: 180 70% 75%;
     --note-lavender: 260 60% 82%;
     --note-peach: 20 100% 85%;
-    --note-mint: 150 60% 80%;
+    --note-mint: 150 80% 80%;
     
     /* Custom shadows */
     --shadow-sticky: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.05);
@@ -83,8 +86,8 @@ All colors MUST be HSL.
     --popover: 0 0% 15%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 262 83% 58%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 350 100% 88%;
+    --primary-foreground: 0 0% 15%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 0 0% 95%;
@@ -100,7 +103,7 @@ All colors MUST be HSL.
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 262 83% 58%;
+    --ring: 350 100% 88%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -127,5 +130,68 @@ All colors MUST be HSL.
         rgba(0, 0, 0, 0.02) 2px,
         rgba(0, 0, 0, 0.02) 4px
       );
+  }
+}
+
+@layer utilities {
+  .icon-crisp {
+    /* Fallback for browsers that don't support image-rendering */
+    image-rendering: auto;
+    /* Edge 79+ */
+    image-rendering: -webkit-optimize-contrast;
+    /* Pixelated fallback for other browsers */
+    image-rendering: pixelated;
+  }
+
+  .dark .font-handwriting {
+    color: inherit;
+  }
+
+  .dark .font-handwriting.note-text {
+    color: #000000 !important;
+  }
+
+  .dark .font-handwriting.status-text {
+    color: inherit;
+  }
+
+  .dark .font-handwriting.status-text.selected {
+    color: #000000 !important;
+  }
+
+  .dark .note-status {
+    color: #000000 !important;
+  }
+
+  .dark .note-text {
+    color: #ffffff !important;
+  }
+
+  .dark p.note-text {
+    color: #ffffff !important;
+  }
+
+  .dark .text-foreground.note-text {
+    color: #ffffff !important;
+  }
+
+  .dark .sticky-note .text-foreground {
+    color: #000000 !important;
+  }
+
+  .dark .sticky-note .pin-icon {
+    color: #000000 !important;
+  }
+
+  .dark .pin-icon {
+    color: #ffffff !important;
+  }
+
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;
   }
 }

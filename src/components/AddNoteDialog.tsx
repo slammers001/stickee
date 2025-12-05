@@ -26,6 +26,7 @@ const statusColors: Record<NoteStatus, string> = {
   "To-Do": "bg-red-100 text-red-800 border-red-200 hover:bg-red-200",
   "Doing": "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200",
   "Done": "bg-green-100 text-green-800 border-green-200 hover:bg-green-200",
+  "Backlog": "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200",
 };
 
 export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps) => {
@@ -95,7 +96,8 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
                   key={s}
                   variant="outline"
                   className={cn(
-                    "cursor-pointer transition-all font-handwriting text-base px-3 py-1",
+                    "cursor-pointer transition-all font-handwriting text-base px-3 py-1 status-text",
+                    status === s ? "selected" : "",
                     status === s ? statusColors[s] : "hover:bg-muted"
                   )}
                   onClick={() => setStatus(s)}
@@ -112,7 +114,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="min-h-[150px] resize-none font-handwriting text-lg"
+              className="min-h-[150px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400"
               autoFocus
             />
             <p className="text-xs text-muted-foreground mt-2">

@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        handwriting: ['Indie Flower', 'cursive'],
+        handwriting: ['var(--font-family-handwriting)', 'cursive'],
+        serif: ['Georgia', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -90,5 +91,8 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("./src/lib/plugins/text-size-adjust").textSizeAdjust,
+  ],
 } satisfies Config;
