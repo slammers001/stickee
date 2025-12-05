@@ -114,7 +114,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="min-h-[150px] resize-none font-handwriting text-lg"
+              className="min-h-[150px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400"
               autoFocus
             />
             <p className="text-xs text-muted-foreground mt-2">

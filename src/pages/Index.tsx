@@ -63,6 +63,14 @@ const Index = () => {
     }
   }, []);
 
+  // Apply saved default view preference on component mount
+  useEffect(() => {
+    const savedView = localStorage.getItem("stickee-default-view") as "grid" | "list";
+    if (savedView) {
+      setViewMode(savedView);
+    }
+  }, []);
+
   // Load notes on component mount
   useEffect(() => {
     const loadNotes = async () => {
@@ -425,7 +433,7 @@ const Index = () => {
                     </div>
                     <Badge
                       variant="outline"
-                      className={cn("text-xs font-handwriting shrink-0 note-status", statusColors[note.status])}
+                      className={cn("text-xs font-handwriting shrink-0 note-status dark:text-white", statusColors[note.status])}
                     >
                       {note.status}
                     </Badge>
@@ -493,7 +501,7 @@ const Index = () => {
                       </div>
                       <Badge
                         variant="outline"
-                        className={cn("text-xs font-handwriting shrink-0 note-status", statusColors[note.status])}
+                        className={cn("text-xs font-handwriting shrink-0 note-status dark:text-white", statusColors[note.status])}
                       >
                         {note.status}
                       </Badge>

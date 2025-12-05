@@ -104,9 +104,12 @@ export default defineConfig(({ mode }) => {
           // Manual chunking for better code splitting
           manualChunks: {
             vendor: ['react', 'react-dom'],
-            ui: ['@radix-ui/react-dialog', '@radix-ui/react-toast', 'sonner'],
+            ui: ['@radix-ui/react-dialog', '@radix-ui/react-toast', '@radix-ui/react-label', '@radix-ui/react-scroll-area', '@radix-ui/react-slot', '@radix-ui/react-tooltip', 'sonner'],
             router: ['react-router-dom'],
-            utils: ['clsx', 'tailwind-merge', 'class-variance-authority']
+            utils: ['clsx', 'tailwind-merge', 'class-variance-authority'],
+            query: ['@tanstack/react-query'],
+            theme: ['next-themes'],
+            icons: ['lucide-react']
           }
         },
         // External dependencies that shouldn't be bundled

@@ -58,7 +58,7 @@ export const StickyNote = ({ content, color, status, pinned, onClick, onTogglePi
   return (
     <Card
       className={cn(
-        "p-5 w-full aspect-square max-w-[280px] mx-auto flex flex-col justify-between",
+        "p-5 w-full aspect-square max-w-[280px] mx-auto flex flex-col justify-between sticky-note",
         "transition-all duration-200 hover:scale-105 cursor-pointer",
         "border-0 animate-in fade-in-0 zoom-in-95 relative",
         "before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-16 before:h-6",
@@ -78,12 +78,12 @@ export const StickyNote = ({ content, color, status, pinned, onClick, onTogglePi
       onClick={onClick}
     >
       <div className="flex-1">
-        <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting note-text">
+        <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting">
           {displayContent}
         </p>
       </div>
       <div className="flex items-center justify-center mt-2">
-        <Badge variant="outline" className={cn("text-xs font-handwriting shrink-0 note-status", statusColors[status])}>
+        <Badge variant="outline" className={cn("text-xs font-handwriting shrink-0 note-status dark:text-white", statusColors[status])}>
           {status}
         </Badge>
       </div>

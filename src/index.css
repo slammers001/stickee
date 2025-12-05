@@ -163,8 +163,28 @@ All colors MUST be HSL.
     color: #000000 !important;
   }
 
-  .dark .pin-icon {
+  .dark .note-text {
+    color: #ffffff !important;
+  }
+
+  .dark p.note-text {
+    color: #ffffff !important;
+  }
+
+  .dark .text-foreground.note-text {
+    color: #ffffff !important;
+  }
+
+  .dark .sticky-note .text-foreground {
     color: #000000 !important;
+  }
+
+  .dark .sticky-note .pin-icon {
+    color: #000000 !important;
+  }
+
+  .dark .pin-icon {
+    color: #ffffff !important;
   }
 
   .no-select {

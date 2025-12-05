@@ -14,6 +14,7 @@ import {
 import { Settings } from "lucide-react";
 
 type FontFamily = "handwriting" | "serif";
+type ViewMode = "grid" | "list";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -22,12 +23,18 @@ interface SettingsDialogProps {
 
 export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const [fontFamily, setFontFamily] = useState<FontFamily>("handwriting");
+  const [defaultView, setDefaultView] = useState<ViewMode>("grid");
 
   useEffect(() => {
     const savedFont = localStorage.getItem("stickee-font-family") as FontFamily;
     if (savedFont) {
       setFontFamily(savedFont);
       applyFontFamily(savedFont);
+    }
+    
+    const savedView = localStorage.getItem("stickee-default-view") as ViewMode;
+    if (savedView) {
+      setDefaultView(savedView);
     }
   }, []);
 
@@ -46,6 +53,11 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     setFontFamily(value);
     localStorage.setItem("stickee-font-family", value);
     applyFontFamily(value);
+  };
+
+  const handleViewChange = (value: ViewMode) => {
+    setDefaultView(value);
+    localStorage.setItem("stickee-default-view", value);
   };
 
   return (
@@ -82,6 +94,28 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
               </div>
             </RadioGroup>
           </div>
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Default View</h3>
+            <RadioGroup value={defaultView} onValueChange={handleViewChange}>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="grid" id="grid" />
+                <Label htmlFor="grid">
+                  Notes (Grid view)
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="list" id="list" />
+                <Label htmlFor="list">
+                  List (Compact view)
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+        </div>
+        <div className="pt-4 border-t">
+          <p className="text-xs text-muted-foreground text-center">
+            By using this app you agree to the Terms of Service
+          </p>
         </div>
       </DialogContent>
     </Dialog>
