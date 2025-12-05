@@ -82,17 +82,7 @@ export const NoteDetailDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>View & Edit Note</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleDelete}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="h-5 w-5" />
-            </Button>
-          </DialogTitle>
+          <DialogTitle>View & Edit Note</DialogTitle>
         </DialogHeader>
         <div className="py-4 space-y-4">
           <div>
@@ -155,8 +145,13 @@ export const NoteDetailDialog = ({
           </div>
         </div>
         <DialogFooter className="flex gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDelete}
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="h-5 w-5" />
           </Button>
           <Button onClick={handleSave} disabled={!content.trim() && status === initialStatus && color === initialColor}>
             Save Changes

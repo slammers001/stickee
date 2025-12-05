@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Note } from "@/types/note";
 import { UserProfile } from "@/components/UserProfile";
+import { SettingsButton } from "@/components/SettingsDialog";
 import { 
   getNotes as fetchNotes, 
   createNote as createNoteService, 
@@ -42,6 +43,21 @@ const Index = () => {
     if ((window as any).electronAPI?.isElectron) {
       // In Electron, use relative path
       setIconPath("./stickee.png");
+    }
+  }, []);
+
+  // Apply saved font preference on component mount
+  useEffect(() => {
+    const savedFont = localStorage.getItem("stickee-font-family") as "handwriting" | "serif";
+    if (savedFont) {
+      const root = document.documentElement;
+      if (savedFont === "serif") {
+        root.style.setProperty('--font-family-base', 'Georgia, serif');
+        root.style.setProperty('--font-family-handwriting', 'Georgia, serif');
+      } else {
+        root.style.setProperty('--font-family-base', 'Indie Flower, cursive');
+        root.style.setProperty('--font-family-handwriting', 'Indie Flower, cursive');
+      }
     }
   }, []);
 
@@ -204,6 +220,8 @@ const Index = () => {
             <div className="flex items-center gap-4">
               <UserProfile />
               <div className="h-6 w-px bg-border"></div>
+              <SettingsButton />
+              <div className="h-6 w-px bg-border mx-1"></div>
               <Button
                 variant="default"
                 size="icon"
@@ -272,14 +290,12 @@ const Index = () => {
               }
               // Then sort by lastUpdated in descending order (newest first)
               return b.lastUpdated - a.lastUpdated;
-            }).map((note, index) => (
+            }).map((note) => (
               <StickyNote
                 key={note.id}
                 content={note.content}
                 color={note.color}
                 status={note.status}
-                index={index}
-                lastUpdated={note.lastUpdated}
                 pinned={note.pinned}
                 onClick={() => openNoteDetail(note)}
                 onTogglePin={() => togglePin(note.id)}

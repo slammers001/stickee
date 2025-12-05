@@ -10,6 +10,9 @@ All colors MUST be HSL.
   :root {
     --background: 0 0% 97%;
     --foreground: 0 0% 15%;
+    
+    --font-family-base: 'Indie Flower', cursive;
+    --font-family-handwriting: 'Indie Flower', cursive;
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 15%;

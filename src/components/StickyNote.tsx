@@ -37,7 +37,7 @@ const statusColors: Record<NoteStatus, string> = {
   "Backlog": "bg-gray-100 text-gray-800 border-gray-200",
 };
 
-export const StickyNote = ({ content, color, status, index, lastUpdated, pinned, onClick, onTogglePin }: StickyNoteProps) => {
+export const StickyNote = ({ content, color, status, pinned, onClick, onTogglePin }: Omit<StickyNoteProps, 'index' | 'lastUpdated'>) => {
   // Generate unique random rotation between -4 and 4 degrees
   const rotation = useMemo(() => {
     // Generate a random angle between 1 and 4 degrees
@@ -78,7 +78,7 @@ export const StickyNote = ({ content, color, status, index, lastUpdated, pinned,
       onClick={onClick}
     >
       <div className="flex-1">
-        <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting font-semibold">
+        <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting">
           {displayContent}
         </p>
       </div>
