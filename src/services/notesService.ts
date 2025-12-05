@@ -29,7 +29,7 @@ export const getNotes = async (): Promise<Note[]> => {
       .select('*')
       .eq('user_id', userId) // Only get notes for current user
       .order('pinned', { ascending: false })
-      .order('updated_at', { ascending: false });
+      .order('updated_at', { ascending: true }); // Use updated_at instead of last_updated
 
     if (error) throw error;
     return notes ? notes.map(mapSupabaseNote) : [];
@@ -153,4 +153,30 @@ export const updateNoteStatus = async (id: string, status: NoteStatus): Promise<
 // Toggle pin status
 export const updateNotePinStatus = async (id: string, pinned: boolean): Promise<Note | null> => {
   return updateNote(id, { pinned });
+};
+
+// Reorder notes (update lastUpdated to maintain new order)
+export const reorderNotes = async (notes: Note[]): Promise<void> => {
+  try {
+    const userId = getUserId();
+    
+    // Use a base timestamp and add index to create sequential order
+    const baseTimestamp = Date.now() - 1000000; // Base timestamp in the past
+    
+    // Update all notes with new timestamps to reflect order
+    const updates = notes.map((note, index) => {
+      // Create sequential timestamps based on position
+      const newTimestamp = baseTimestamp + (index * 1000); // 1 second intervals
+      return supabase
+        .from('notes')
+        .update({ updated_at: new Date(newTimestamp).toISOString() }) // Use updated_at instead of last_updated
+        .eq('id', note.id)
+        .eq('user_id', userId);
+    });
+
+    await Promise.all(updates);
+  } catch (error) {
+    console.error('Error reordering notes:', error);
+    throw error;
+  }
 };

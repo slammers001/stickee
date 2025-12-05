@@ -11,12 +11,14 @@ import { cn } from "@/lib/utils";
 import { Note } from "@/types/note";
 import { UserProfile } from "@/components/UserProfile";
 import { SettingsButton } from "@/components/SettingsDialog";
+import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { 
   getNotes as fetchNotes, 
   createNote as createNoteService, 
   updateNote as updateNoteService, 
   deleteNote as deleteNoteService,
-  updateNotePinStatus as updateNotePinStatusService
+  updateNotePinStatus as updateNotePinStatusService,
+  reorderNotes as reorderNotesService
 } from "@/services/notesService";
 
 // Using the Note interface from types/note.ts
@@ -172,6 +174,45 @@ const Index = () => {
     }
   };
 
+  const reorderNotes = async (fromIndex: number, toIndex: number) => {
+    try {
+      const unpinnedNotes = notes.filter(note => !note.pinned);
+      const pinnedNotes = notes.filter(note => note.pinned);
+      
+      // Create a copy of unpinned notes and reorder them
+      const reorderedUnpinned = [...unpinnedNotes];
+      const [movedNote] = reorderedUnpinned.splice(fromIndex, 1);
+      reorderedUnpinned.splice(toIndex, 0, movedNote);
+      
+      // Combine pinned notes (always first) with reordered unpinned notes
+      const newOrder = [...pinnedNotes, ...reorderedUnpinned];
+      
+      // Update the database
+      await reorderNotesService(newOrder);
+      
+      // Update local state
+      setNotes(newOrder);
+      toast.success('Notes reordered!');
+    } catch (error) {
+      console.error('Error reordering notes:', error);
+      toast.error('Failed to reorder notes');
+    }
+  };
+
+  // Separate pinned and unpinned notes for drag and drop
+  const pinnedNotes = notes.filter(note => note.pinned);
+  const unpinnedNotes = notes.filter(note => !note.pinned);
+  
+  const {
+    draggedItem,
+    dragOverIndex,
+    handleDragStart,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    handleDragEnd,
+  } = useDragAndDrop(unpinnedNotes, reorderNotes);
+
   const openNoteDetail = (note: Note) => {
     setSelectedNote(note);
     setDetailDialogOpen(true);
@@ -283,14 +324,8 @@ const Index = () => {
           </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-            {[...notes].sort((a, b) => {
-              // First sort by pinned status
-              if (a.pinned !== b.pinned) {
-                return b.pinned ? 1 : -1;
-              }
-              // Then sort by lastUpdated in descending order (newest first)
-              return b.lastUpdated - a.lastUpdated;
-            }).map((note) => (
+            {/* Pinned notes - not draggable */}
+            {pinnedNotes.map((note) => (
               <StickyNote
                 key={note.id}
                 content={note.content}
@@ -301,17 +336,40 @@ const Index = () => {
                 onTogglePin={() => togglePin(note.id)}
               />
             ))}
+            {/* Unpinned notes - draggable */}
+            {unpinnedNotes.map((note, index) => (
+              <div
+                key={note.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index, note.id)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                className={cn(
+                  "transition-all duration-200 relative",
+                  draggedItem?.index === index ? "opacity-50" : ""
+                )}
+              >
+                {/* Drop indicator line */}
+                {dragOverIndex === index && (
+                  <div className="absolute left-2 top-0 bottom-0 w-1 bg-primary rounded-full transition-all duration-200 z-10" />
+                )}
+                <StickyNote
+                  content={note.content}
+                  color={note.color}
+                  status={note.status}
+                  pinned={note.pinned}
+                  onClick={() => openNoteDetail(note)}
+                  onTogglePin={() => togglePin(note.id)}
+                />
+              </div>
+            ))}
           </div>
         ) : (
           <div className="max-w-4xl mx-auto space-y-3">
-            {[...notes].sort((a, b) => {
-              // First sort by pinned status
-              if (a.pinned !== b.pinned) {
-                return b.pinned ? 1 : -1;
-              }
-              // Then sort by lastUpdated in descending order (newest first)
-              return b.lastUpdated - a.lastUpdated;
-            }).map((note) => {
+            {/* Pinned notes - not draggable */}
+            {pinnedNotes.map((note) => {
               const colorMap: Record<string, string> = {
                 yellow: "border-l-[hsl(var(--note-yellow))]",
                 pink: "border-l-[hsl(var(--note-pink))]",
@@ -363,6 +421,75 @@ const Index = () => {
                     >
                       {note.status}
                     </Badge>
+                  </div>
+                </div>
+              );
+            })}
+            {/* Unpinned notes - draggable */}
+            {unpinnedNotes.map((note, index) => {
+              const colorMap: Record<string, string> = {
+                yellow: "border-l-[hsl(var(--note-yellow))]",
+                pink: "border-l-[hsl(var(--note-pink))]",
+                blue: "border-l-[hsl(var(--note-blue))]",
+                green: "border-l-[hsl(var(--note-green))]",
+                purple: "border-l-[hsl(var(--note-purple))]",
+                orange: "border-l-[hsl(var(--note-orange))]",
+                teal: "border-l-[hsl(var(--note-teal))]",
+                lavender: "border-l-[hsl(var(--note-lavender))]",
+                peach: "border-l-[hsl(var(--note-peach))]",
+                mint: "border-l-[hsl(var(--note-mint))]",
+              };
+              
+              return (
+                <div key={note.id} className="relative">
+                  {/* Drop indicator line */}
+                  {dragOverIndex === index && (
+                    <div className="absolute -top-1 left-0 right-0 h-1 bg-primary rounded-full transition-all duration-200 z-10" />
+                  )}
+                  <div
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index, note.id)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
+                    className={cn(
+                      "p-4 bg-card border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer",
+                      colorMap[note.color],
+                      draggedItem?.index === index ? "opacity-50" : ""
+                    )}
+                    onClick={() => openNoteDetail(note)}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3 flex-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            togglePin(note.id);
+                          }}
+                          className={cn(
+                            "mt-1 flex-shrink-0 transition-colors pin-icon",
+                            note.pinned 
+                              ? "text-red-500 hover:text-red-600" 
+                              : "text-foreground/40 hover:text-foreground/70"
+                          )}
+                        >
+                          <Pin 
+                            size={16} 
+                            fill={note.pinned ? "currentColor" : "none"} 
+                          />
+                        </button>
+                        <p className="text-foreground font-handwriting text-lg flex-1 line-clamp-2 note-text">
+                          {note.content}
+                        </p>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={cn("text-xs font-handwriting shrink-0 note-status", statusColors[note.status])}
+                      >
+                        {note.status}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               );
