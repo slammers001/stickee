@@ -342,7 +342,7 @@ const Index = () => {
                           togglePin(note.id);
                         }}
                         className={cn(
-                          "mt-1 flex-shrink-0 transition-colors",
+                          "mt-1 flex-shrink-0 transition-colors pin-icon",
                           note.pinned 
                             ? "text-red-500 hover:text-red-600" 
                             : "text-foreground/40 hover:text-foreground/70"
@@ -353,13 +353,13 @@ const Index = () => {
                           fill={note.pinned ? "currentColor" : "none"} 
                         />
                       </button>
-                      <p className="text-foreground font-handwriting text-lg flex-1 line-clamp-2">
+                      <p className="text-foreground font-handwriting text-lg flex-1 line-clamp-2 note-text">
                         {note.content}
                       </p>
                     </div>
                     <Badge
                       variant="outline"
-                      className={cn("text-xs font-handwriting shrink-0", statusColors[note.status])}
+                      className={cn("text-xs font-handwriting shrink-0 note-status", statusColors[note.status])}
                     >
                       {note.status}
                     </Badge>

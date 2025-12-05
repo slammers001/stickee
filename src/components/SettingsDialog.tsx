@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Dialog,
   DialogContent,
@@ -57,6 +58,13 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Theme</h3>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Toggle between light and dark theme</span>
+              <ThemeToggle />
+            </div>
+          </div>
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Font Family</h3>
             <RadioGroup value={fontFamily} onValueChange={handleFontChange}>

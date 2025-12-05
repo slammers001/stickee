@@ -78,12 +78,12 @@ export const StickyNote = ({ content, color, status, pinned, onClick, onTogglePi
       onClick={onClick}
     >
       <div className="flex-1">
-        <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting">
+        <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting note-text">
           {displayContent}
         </p>
       </div>
       <div className="flex items-center justify-center mt-2">
-        <Badge variant="outline" className={cn("text-xs font-handwriting", statusColors[status])}>
+        <Badge variant="outline" className={cn("text-xs font-handwriting shrink-0 note-status", statusColors[status])}>
           {status}
         </Badge>
       </div>
@@ -93,7 +93,7 @@ export const StickyNote = ({ content, color, status, pinned, onClick, onTogglePi
           onTogglePin();
         }}
         className={cn(
-          "absolute top-3 right-3 w-6 h-6 rounded-full transition-all flex items-center justify-center",
+          "absolute top-3 right-3 w-6 h-6 rounded-full transition-all flex items-center justify-center pin-icon",
           "hover:bg-foreground/5 active:scale-90",
           pinned ? "text-red-500" : "text-foreground/40 hover:text-foreground/70"
         )}

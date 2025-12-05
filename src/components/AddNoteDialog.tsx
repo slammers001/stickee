@@ -96,7 +96,8 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
                   key={s}
                   variant="outline"
                   className={cn(
-                    "cursor-pointer transition-all font-handwriting text-base px-3 py-1",
+                    "cursor-pointer transition-all font-handwriting text-base px-3 py-1 status-text",
+                    status === s ? "selected" : "",
                     status === s ? statusColors[s] : "hover:bg-muted"
                   )}
                   onClick={() => setStatus(s)}

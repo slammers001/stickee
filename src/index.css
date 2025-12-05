@@ -20,8 +20,8 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 15%;
 
-    --primary: 262 83% 58%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 350 100% 88%;
+    --primary-foreground: 0 0% 15%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 0 0% 15%;
@@ -86,8 +86,8 @@ All colors MUST be HSL.
     --popover: 0 0% 15%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 262 83% 58%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 350 100% 88%;
+    --primary-foreground: 0 0% 15%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 0 0% 95%;
@@ -141,5 +141,29 @@ All colors MUST be HSL.
     image-rendering: -webkit-optimize-contrast;
     /* Pixelated fallback for other browsers */
     image-rendering: pixelated;
+  }
+
+  .dark .font-handwriting {
+    color: inherit;
+  }
+
+  .dark .font-handwriting.note-text {
+    color: #000000 !important;
+  }
+
+  .dark .font-handwriting.status-text {
+    color: inherit;
+  }
+
+  .dark .font-handwriting.status-text.selected {
+    color: #000000 !important;
+  }
+
+  .dark .note-status {
+    color: #000000 !important;
+  }
+
+  .dark .pin-icon {
+    color: #000000 !important;
   }
 }
