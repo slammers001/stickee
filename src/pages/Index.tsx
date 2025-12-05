@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Grid3x3, List, Plus } from "lucide-react";
+import { Grid3x3, List, Plus, Pin } from "lucide-react";
 import { StickyNote } from "@/components/StickyNote";
 import type { NoteStatus as StickyNoteStatus } from "@/components/StickyNote";
 import { AddNoteDialog } from "@/components/AddNoteDialog";
@@ -335,9 +335,28 @@ const Index = () => {
                   onClick={() => openNoteDetail(note)}
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <p className="text-foreground font-handwriting text-lg flex-1 line-clamp-2">
-                      {note.content}
-                    </p>
+                    <div className="flex items-start gap-3 flex-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          togglePin(note.id);
+                        }}
+                        className={cn(
+                          "mt-1 flex-shrink-0 transition-colors",
+                          note.pinned 
+                            ? "text-red-500 hover:text-red-600" 
+                            : "text-foreground/40 hover:text-foreground/70"
+                        )}
+                      >
+                        <Pin 
+                          size={16} 
+                          fill={note.pinned ? "currentColor" : "none"} 
+                        />
+                      </button>
+                      <p className="text-foreground font-handwriting text-lg flex-1 line-clamp-2">
+                        {note.content}
+                      </p>
+                    </div>
                     <Badge
                       variant="outline"
                       className={cn("text-xs font-handwriting shrink-0", statusColors[note.status])}
