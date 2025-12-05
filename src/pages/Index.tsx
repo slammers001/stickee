@@ -232,7 +232,7 @@ const Index = () => {
               <img 
                 src={iconPath} 
                 alt="Stickee" 
-                className="h-14 w-14 object-contain icon-crisp"
+                className="h-14 w-14 object-contain icon-crisp no-select"
                 onError={(e) => {
                   // Prevent infinite loop by setting a flag
                   const target = e.target as HTMLImageElement;
@@ -307,7 +307,7 @@ const Index = () => {
               <img 
                 src={iconPath} 
                 alt="Stickee" 
-                className="w-full h-full p-2 object-contain transition-all duration-500 group-hover:drop-shadow-lg icon-crisp scale-150 group-hover:-rotate-6"
+                className="w-full h-full p-2 object-contain transition-all duration-500 group-hover:drop-shadow-lg icon-crisp scale-150 group-hover:-rotate-6 no-select"
                 onError={(e) => {
                   // Prevent infinite loop by setting a flag
                   const target = e.target as HTMLImageElement;

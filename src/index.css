@@ -166,4 +166,12 @@ All colors MUST be HSL.
   .dark .pin-icon {
     color: #000000 !important;
   }
+
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;
+  }
 }
