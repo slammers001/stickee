@@ -74,6 +74,29 @@ const Index = () => {
     }
   }, []);
 
+  // Keyboard shortcut for new note
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only trigger 'n' key if no input fields are focused and no dialogs are open
+      if (
+        e.key === 'n' && 
+        !e.ctrlKey && 
+        !e.metaKey && 
+        !e.altKey &&
+        !dialogOpen &&
+        !detailDialogOpen &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        setDialogOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [dialogOpen, detailDialogOpen]);
+
   // Load notes on component mount
   useEffect(() => {
     const loadNotes = async () => {
