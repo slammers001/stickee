@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Note } from "@/types/note";
 import { UserProfile } from "@/components/UserProfile";
 import { SettingsButton } from "@/components/SettingsDialog";
+import { SearchBar } from "@/components/SearchBar";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { 
   getNotes as fetchNotes, 
@@ -32,6 +33,8 @@ const statusColors: Record<StickyNoteStatus, string> = {
 
 const Index = () => {
   const [notes, setNotes] = useState<Note[]>([]);
+  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -77,6 +80,7 @@ const Index = () => {
       try {
         const loadedNotes = await fetchNotes();
         setNotes(loadedNotes);
+        setFilteredNotes(loadedNotes);
       } catch (error) {
         console.error('Error loading notes:', error);
         toast.error('Failed to load notes');
@@ -87,6 +91,22 @@ const Index = () => {
 
     loadNotes();
   }, []);
+
+  // Filter notes based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredNotes(notes);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = notes.filter(note => 
+      note.content.toLowerCase().includes(query) ||
+      note.status.toLowerCase().includes(query) ||
+      note.color.toLowerCase().includes(query)
+    );
+    setFilteredNotes(filtered);
+  }, [searchQuery, notes]);
 
   const addNote = async (content: string, status: StickyNoteStatus, color: string) => {
     try {
@@ -99,6 +119,7 @@ const Index = () => {
       });
       
       setNotes(prevNotes => [newNote, ...prevNotes]);
+      setFilteredNotes(prevNotes => [newNote, ...prevNotes]);
       setDialogOpen(false);
       toast.success('Note added successfully!');
     } catch (error) {
@@ -141,6 +162,11 @@ const Index = () => {
             note.id === id ? { ...updatedNote } : note
           )
         );
+        setFilteredNotes(prevNotes => 
+          prevNotes.map(note => 
+            note.id === id ? { ...updatedNote } : note
+          )
+        );
         setDetailDialogOpen(false);
         toast.success('Note updated!');
       }
@@ -163,6 +189,11 @@ const Index = () => {
             note.id === id ? { ...updatedNote } : note
           )
         );
+        setFilteredNotes(prevNotes =>
+          prevNotes.map(note =>
+            note.id === id ? { ...updatedNote } : note
+          )
+        );
       }
     } catch (error) {
       console.error('Error toggling pin:', error);
@@ -174,6 +205,7 @@ const Index = () => {
     try {
       await deleteNoteService(id);
       setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
+      setFilteredNotes(prevNotes => prevNotes.filter(note => note.id !== id));
       setDetailDialogOpen(false);
       toast.success('Note deleted!');
     } catch (error) {
@@ -184,22 +216,33 @@ const Index = () => {
 
   const reorderNotes = async (fromIndex: number, toIndex: number) => {
     try {
-      const unpinnedNotes = notes.filter(note => !note.pinned);
-      const pinnedNotes = notes.filter(note => note.pinned);
+      const allUnpinnedNotes = notes.filter(note => !note.pinned);
+      const allPinnedNotes = notes.filter(note => note.pinned);
       
-      // Create a copy of unpinned notes and reorder them
-      const reorderedUnpinned = [...unpinnedNotes];
-      const [movedNote] = reorderedUnpinned.splice(fromIndex, 1);
-      reorderedUnpinned.splice(toIndex, 0, movedNote);
+      // Find the actual note being moved by getting the corresponding note from the full notes list
+      const filteredUnpinnedNotes = filteredNotes.filter(note => !note.pinned);
+      const movedNote = filteredUnpinnedNotes[fromIndex];
+      const actualNote = allUnpinnedNotes.find(n => n.id === movedNote.id);
+      
+      if (!actualNote) return;
+      
+      // Find the actual index in the full notes array
+      const actualFromIndex = allUnpinnedNotes.findIndex(n => n.id === actualNote.id);
+      
+      // Create a copy of all unpinned notes and reorder them
+      const reorderedUnpinned = [...allUnpinnedNotes];
+      reorderedUnpinned.splice(actualFromIndex, 1);
+      reorderedUnpinned.splice(toIndex, 0, actualNote);
       
       // Combine pinned notes (always first) with reordered unpinned notes
-      const newOrder = [...pinnedNotes, ...reorderedUnpinned];
+      const newOrder = [...allPinnedNotes, ...reorderedUnpinned];
       
       // Update the database
       await reorderNotesService(newOrder);
       
       // Update local state
       setNotes(newOrder);
+      setFilteredNotes(newOrder);
       toast.success('Notes reordered!');
     } catch (error) {
       console.error('Error reordering notes:', error);
@@ -208,8 +251,8 @@ const Index = () => {
   };
 
   // Separate pinned and unpinned notes for drag and drop
-  const pinnedNotes = notes.filter(note => note.pinned);
-  const unpinnedNotes = notes.filter(note => !note.pinned);
+  const pinnedNotes = filteredNotes.filter(note => note.pinned);
+  const unpinnedNotes = filteredNotes.filter(note => !note.pinned);
   
   const {
     draggedItem,
@@ -224,6 +267,10 @@ const Index = () => {
   const openNoteDetail = (note: Note) => {
     setSelectedNote(note);
     setDetailDialogOpen(true);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
   };
 
   if (loading) {
@@ -271,6 +318,8 @@ const Index = () => {
               </p>
             </div>
             <div className="flex items-center gap-4">
+              <SearchBar onSearch={handleSearch} />
+              <div className="h-6 w-px bg-border"></div>
               <UserProfile />
               <div className="h-6 w-px bg-border"></div>
               <SettingsButton />
@@ -305,7 +354,7 @@ const Index = () => {
 
       {/* Main Board */}
       <main className="container mx-auto px-4 py-8">
-        {notes.length === 0 ? (
+        {filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
             <button 
               onClick={() => setDialogOpen(true)}
@@ -332,10 +381,13 @@ const Index = () => {
               />
             </button>
             <h2 className="text-2xl font-semibold text-foreground mb-2 font-handwriting">
-              No Stickee notes yet
+              {searchQuery ? "No matching notes found" : "No Stickee notes yet"}
             </h2>
             <p className="text-muted-foreground mb-6 max-w-md">
-              Click the Stickee icon to create your first Stickee note!
+              {searchQuery 
+                ? `No notes found matching "${searchQuery}". Try a different search term or clear the search.`
+                : "Click the Stickee icon to create your first Stickee note!"
+              }
             </p>
           </div>
         ) : viewMode === "grid" ? (
