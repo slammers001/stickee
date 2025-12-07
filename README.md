@@ -1,6 +1,6 @@
 
 ### Future ideas:
-Search bar
+[-] Search bar
 Icon fix
-Title for notes
+[-] Title for notes
 Can do markdown
