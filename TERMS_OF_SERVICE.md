@@ -133,19 +133,13 @@ You agree to:
 
 ---
 
-## 13. Support and Maintenance
-
-As an initial release, Stickee v0.0.3 is provided without guaranteed support or maintenance. Users may seek community support or wait for future updates.
-
----
-
-## 15. Severability
+## 13. Severability
 
 If any provision of these Terms is found invalid or unenforceable, the remaining provisions will remain in full effect.
 
 ---
 
-## 16. Contact Information
+## 14. Contact Information
 
 For questions about these Terms, contact: [github.com/slammers001](github.com/slammers001)
 
