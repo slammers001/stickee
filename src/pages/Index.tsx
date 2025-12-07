@@ -12,6 +12,7 @@ import { Note } from "@/types/note";
 import { UserProfile } from "@/components/UserProfile";
 import { SettingsButton } from "@/components/SettingsDialog";
 import { SearchBar } from "@/components/SearchBar";
+import { StickyNoteWindow } from "@/components/StickyNoteWindow";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { 
   getNotes as fetchNotes, 
@@ -38,6 +39,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [stickyNoteWindowOpen, setStickyNoteWindowOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [iconPath, setIconPath] = useState("/favicons/stickee.png");
@@ -85,17 +87,34 @@ const Index = () => {
         !e.altKey &&
         !dialogOpen &&
         !detailDialogOpen &&
+        !stickyNoteWindowOpen &&
         document.activeElement?.tagName !== 'INPUT' &&
         document.activeElement?.tagName !== 'TEXTAREA'
       ) {
         e.preventDefault();
         setDialogOpen(true);
       }
+      
+      // Sticky note window shortcut - 'p' key
+      if (
+        e.key === 'p' && 
+        !e.ctrlKey && 
+        !e.metaKey && 
+        !e.altKey &&
+        !dialogOpen &&
+        !detailDialogOpen &&
+        !stickyNoteWindowOpen &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        setStickyNoteWindowOpen(true);
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [dialogOpen, detailDialogOpen]);
+  }, [dialogOpen, detailDialogOpen, stickyNoteWindowOpen]);
 
   // Load notes on component mount
   useEffect(() => {
@@ -297,6 +316,29 @@ const Index = () => {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+  };
+
+  const handleQuickNote = async (content: string) => {
+    setStickyNoteWindowOpen(false);
+    
+    if (content.trim()) {
+      try {
+        const newNote = await createNoteService({
+          content: content.trim(),
+          color: "yellow",
+          status: "To-Do",
+          pinned: false,
+          lastUpdated: Date.now()
+        });
+        
+        setNotes(prevNotes => [newNote, ...prevNotes]);
+        setFilteredNotes(prevNotes => [newNote, ...prevNotes]);
+        toast.success('Sticky note added!');
+      } catch (error) {
+        console.error('Error creating sticky note:', error);
+        toast.error('Failed to add sticky note');
+      }
+    }
   };
 
   if (loading) {
@@ -625,6 +667,12 @@ const Index = () => {
           onDelete={deleteNote}
         />
       )}
+
+      {/* Sticky Note Window */}
+      <StickyNoteWindow
+        isOpen={stickyNoteWindowOpen}
+        onClose={handleQuickNote}
+      />
     </div>
   );
 };
