@@ -1,15 +1,19 @@
 import { Note, NoteStatus } from '@/types/note';
 import { supabase } from '@/lib/supabase';
 import { getUserId } from './userService';
+import { encryptContent, decryptContent, encryptTitle, decryptTitle } from '@/utils/encryption';
 
 // Helper function to map Supabase note to our Note type
 const mapSupabaseNote = (note: any): Note => {
   // Safely get the timestamp, trying different possible column names
   const timestamp = note.last_updated || note.updated_at || note.created_at || new Date().toISOString();
   
+  console.log('Loading note from database:', note);
+  
   return {
     id: note.id,
-    content: note.content || '',
+    title: decryptTitle(note.title),
+    content: decryptContent(note.content),
     color: note.color || '#ffffff',
     status: (note.status as NoteStatus) || 'To-Do',
     lastUpdated: typeof timestamp === 'string' ? Date.parse(timestamp) : timestamp,
@@ -29,7 +33,7 @@ export const getNotes = async (): Promise<Note[]> => {
       .select('*')
       .eq('user_id', userId) // Only get notes for current user
       .order('pinned', { ascending: false })
-      .order('updated_at', { ascending: true }); // Use updated_at instead of last_updated
+      .order('updated_at', { ascending: false }); // Newest first
 
     if (error) throw error;
     return notes ? notes.map(mapSupabaseNote) : [];
@@ -50,7 +54,8 @@ export const createNote = async (noteData: Omit<Note, 'id'>): Promise<Note> => {
     
     // Prepare the note data to send to Supabase
     const noteDataToSend = {
-      content: noteData.content,
+      title: encryptTitle(noteData.title),
+      content: encryptContent(noteData.content),
       color: noteData.color,
       status: noteData.status,
       pinned: noteData.pinned,
@@ -58,7 +63,9 @@ export const createNote = async (noteData: Omit<Note, 'id'>): Promise<Note> => {
       user_id: userId // Always include user_id from our local service
     };
 
-    // Remove undefined values
+    console.log('Saving note with data:', noteDataToSend);
+
+    // Remove undefined values but keep null values for database
     cleanNote = Object.fromEntries(
       Object.entries(noteDataToSend)
         .filter(([_, v]) => v !== undefined)
@@ -96,9 +103,15 @@ export const updateNote = async (id: string, updates: Partial<Omit<Note, 'id'>>)
   
   // Create update data with proper field names for Supabase
   const updateData: any = {
-    ...updates,
     updated_at: new Date().toISOString(),
   };
+
+  // Only include fields that exist in the database schema
+  if (updates.content !== undefined) updateData.content = encryptContent(updates.content);
+  if (updates.color !== undefined) updateData.color = updates.color;
+  if (updates.status !== undefined) updateData.status = updates.status;
+  if (updates.pinned !== undefined) updateData.pinned = updates.pinned;
+  if (updates.title !== undefined) updateData.title = encryptTitle(updates.title);
 
   // Remove fields that shouldn't be sent to Supabase
   delete updateData.lastUpdated;

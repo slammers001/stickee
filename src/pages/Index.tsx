@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 import { Note } from "@/types/note";
 import { UserProfile } from "@/components/UserProfile";
 import { SettingsButton } from "@/components/SettingsDialog";
+import { SearchBar } from "@/components/SearchBar";
+import { StickyNoteWindow } from "@/components/StickyNoteWindow";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { 
   getNotes as fetchNotes, 
@@ -32,9 +34,12 @@ const statusColors: Record<StickyNoteStatus, string> = {
 
 const Index = () => {
   const [notes, setNotes] = useState<Note[]>([]);
+  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [stickyNoteWindowOpen, setStickyNoteWindowOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [iconPath, setIconPath] = useState("/favicons/stickee.png");
@@ -71,12 +76,53 @@ const Index = () => {
     }
   }, []);
 
+  // Keyboard shortcut for new note
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only trigger 'n' key if no input fields are focused and no dialogs are open
+      if (
+        e.key === 'n' && 
+        !e.ctrlKey && 
+        !e.metaKey && 
+        !e.altKey &&
+        !dialogOpen &&
+        !detailDialogOpen &&
+        !stickyNoteWindowOpen &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        setDialogOpen(true);
+      }
+      
+      // Sticky note window shortcut - 'p' key
+      if (
+        e.key === 'p' && 
+        !e.ctrlKey && 
+        !e.metaKey && 
+        !e.altKey &&
+        !dialogOpen &&
+        !detailDialogOpen &&
+        !stickyNoteWindowOpen &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        setStickyNoteWindowOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [dialogOpen, detailDialogOpen, stickyNoteWindowOpen]);
+
   // Load notes on component mount
   useEffect(() => {
     const loadNotes = async () => {
       try {
         const loadedNotes = await fetchNotes();
         setNotes(loadedNotes);
+        setFilteredNotes(loadedNotes);
       } catch (error) {
         console.error('Error loading notes:', error);
         toast.error('Failed to load notes');
@@ -88,9 +134,27 @@ const Index = () => {
     loadNotes();
   }, []);
 
-  const addNote = async (content: string, status: StickyNoteStatus, color: string) => {
+  // Filter notes based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredNotes(notes);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = notes.filter(note => 
+      note.content.toLowerCase().includes(query) ||
+      note.status.toLowerCase().includes(query) ||
+      note.color.toLowerCase().includes(query) ||
+      (note.title && note.title.toLowerCase().includes(query))
+    );
+    setFilteredNotes(filtered);
+  }, [searchQuery, notes]);
+
+  const addNote = async (title: string, content: string, status: StickyNoteStatus, color: string) => {
     try {
       const newNote = await createNoteService({
+        title: title || undefined,
         content,
         color,
         status,
@@ -99,6 +163,7 @@ const Index = () => {
       });
       
       setNotes(prevNotes => [newNote, ...prevNotes]);
+      setFilteredNotes(prevNotes => [newNote, ...prevNotes]);
       setDialogOpen(false);
       toast.success('Note added successfully!');
     } catch (error) {
@@ -127,9 +192,10 @@ const Index = () => {
     }
   };
 
-  const updateNote = async (id: string, content: string, status: StickyNoteStatus, color: string) => {
+  const updateNote = async (id: string, title: string, content: string, status: StickyNoteStatus, color: string) => {
     try {
       const updatedNote = await updateNoteService(id, { 
+        title: title || undefined,
         content, 
         status, 
         color
@@ -137,6 +203,11 @@ const Index = () => {
       
       if (updatedNote) {
         setNotes(prevNotes => 
+          prevNotes.map(note => 
+            note.id === id ? { ...updatedNote } : note
+          )
+        );
+        setFilteredNotes(prevNotes => 
           prevNotes.map(note => 
             note.id === id ? { ...updatedNote } : note
           )
@@ -163,6 +234,11 @@ const Index = () => {
             note.id === id ? { ...updatedNote } : note
           )
         );
+        setFilteredNotes(prevNotes =>
+          prevNotes.map(note =>
+            note.id === id ? { ...updatedNote } : note
+          )
+        );
       }
     } catch (error) {
       console.error('Error toggling pin:', error);
@@ -174,6 +250,7 @@ const Index = () => {
     try {
       await deleteNoteService(id);
       setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
+      setFilteredNotes(prevNotes => prevNotes.filter(note => note.id !== id));
       setDetailDialogOpen(false);
       toast.success('Note deleted!');
     } catch (error) {
@@ -184,22 +261,33 @@ const Index = () => {
 
   const reorderNotes = async (fromIndex: number, toIndex: number) => {
     try {
-      const unpinnedNotes = notes.filter(note => !note.pinned);
-      const pinnedNotes = notes.filter(note => note.pinned);
+      const allUnpinnedNotes = notes.filter(note => !note.pinned);
+      const allPinnedNotes = notes.filter(note => note.pinned);
       
-      // Create a copy of unpinned notes and reorder them
-      const reorderedUnpinned = [...unpinnedNotes];
-      const [movedNote] = reorderedUnpinned.splice(fromIndex, 1);
-      reorderedUnpinned.splice(toIndex, 0, movedNote);
+      // Find the actual note being moved by getting the corresponding note from the full notes list
+      const filteredUnpinnedNotes = filteredNotes.filter(note => !note.pinned);
+      const movedNote = filteredUnpinnedNotes[fromIndex];
+      const actualNote = allUnpinnedNotes.find(n => n.id === movedNote.id);
+      
+      if (!actualNote) return;
+      
+      // Find the actual index in the full notes array
+      const actualFromIndex = allUnpinnedNotes.findIndex(n => n.id === actualNote.id);
+      
+      // Create a copy of all unpinned notes and reorder them
+      const reorderedUnpinned = [...allUnpinnedNotes];
+      reorderedUnpinned.splice(actualFromIndex, 1);
+      reorderedUnpinned.splice(toIndex, 0, actualNote);
       
       // Combine pinned notes (always first) with reordered unpinned notes
-      const newOrder = [...pinnedNotes, ...reorderedUnpinned];
+      const newOrder = [...allPinnedNotes, ...reorderedUnpinned];
       
       // Update the database
       await reorderNotesService(newOrder);
       
       // Update local state
       setNotes(newOrder);
+      setFilteredNotes(newOrder);
       toast.success('Notes reordered!');
     } catch (error) {
       console.error('Error reordering notes:', error);
@@ -208,8 +296,8 @@ const Index = () => {
   };
 
   // Separate pinned and unpinned notes for drag and drop
-  const pinnedNotes = notes.filter(note => note.pinned);
-  const unpinnedNotes = notes.filter(note => !note.pinned);
+  const pinnedNotes = filteredNotes.filter(note => note.pinned);
+  const unpinnedNotes = filteredNotes.filter(note => !note.pinned);
   
   const {
     draggedItem,
@@ -224,6 +312,33 @@ const Index = () => {
   const openNoteDetail = (note: Note) => {
     setSelectedNote(note);
     setDetailDialogOpen(true);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleQuickNote = async (content: string) => {
+    setStickyNoteWindowOpen(false);
+    
+    if (content.trim()) {
+      try {
+        const newNote = await createNoteService({
+          content: content.trim(),
+          color: "yellow",
+          status: "To-Do",
+          pinned: false,
+          lastUpdated: Date.now()
+        });
+        
+        setNotes(prevNotes => [newNote, ...prevNotes]);
+        setFilteredNotes(prevNotes => [newNote, ...prevNotes]);
+        toast.success('Sticky note added!');
+      } catch (error) {
+        console.error('Error creating sticky note:', error);
+        toast.error('Failed to add sticky note');
+      }
+    }
   };
 
   if (loading) {
@@ -271,6 +386,8 @@ const Index = () => {
               </p>
             </div>
             <div className="flex items-center gap-4">
+              <SearchBar onSearch={handleSearch} />
+              <div className="h-6 w-px bg-border"></div>
               <UserProfile />
               <div className="h-6 w-px bg-border"></div>
               <SettingsButton />
@@ -305,7 +422,7 @@ const Index = () => {
 
       {/* Main Board */}
       <main className="container mx-auto px-4 py-8">
-        {notes.length === 0 ? (
+        {filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
             <button 
               onClick={() => setDialogOpen(true)}
@@ -332,10 +449,13 @@ const Index = () => {
               />
             </button>
             <h2 className="text-2xl font-semibold text-foreground mb-2 font-handwriting">
-              No Stickee notes yet
+              {searchQuery ? "No matching notes found" : "No Stickee notes yet"}
             </h2>
             <p className="text-muted-foreground mb-6 max-w-md">
-              Click the Stickee icon to create your first Stickee note!
+              {searchQuery 
+                ? `No notes found matching "${searchQuery}". Try a different search term or clear the search.`
+                : "Click the Stickee icon to create your first Stickee note!"
+              }
             </p>
           </div>
         ) : viewMode === "grid" ? (
@@ -344,6 +464,7 @@ const Index = () => {
             {pinnedNotes.map((note) => (
               <StickyNote
                 key={note.id}
+                title={note.title}
                 content={note.content}
                 color={note.color}
                 status={note.status}
@@ -372,6 +493,7 @@ const Index = () => {
                   <div className="absolute left-2 top-0 bottom-0 w-1 bg-primary rounded-full transition-all duration-200 z-10" />
                 )}
                 <StickyNote
+                  title={note.title}
                   content={note.content}
                   color={note.color}
                   status={note.status}
@@ -427,9 +549,16 @@ const Index = () => {
                           fill={note.pinned ? "currentColor" : "none"} 
                         />
                       </button>
-                      <p className="text-foreground font-handwriting text-lg flex-1 line-clamp-2 note-text">
-                        {note.content}
-                      </p>
+                      <div className="flex-1">
+                        {note.title && (
+                          <h4 className="text-foreground font-handwriting text-xl font-bold mb-1 leading-tight">
+                            {note.title.length > 12 ? `${note.title.substring(0, 12)}...` : note.title}
+                          </h4>
+                        )}
+                        <p className="text-foreground font-handwriting text-lg line-clamp-2 note-text">
+                          {note.content}
+                        </p>
+                      </div>
                     </div>
                     <Badge
                       variant="outline"
@@ -495,9 +624,16 @@ const Index = () => {
                             fill={note.pinned ? "currentColor" : "none"} 
                           />
                         </button>
-                        <p className="text-foreground font-handwriting text-lg flex-1 line-clamp-2 note-text">
+                        <div className="flex-1">
+                        {note.title && (
+                          <h4 className="text-foreground font-handwriting text-xl font-bold mb-1 leading-tight">
+                            {note.title.length > 12 ? `${note.title.substring(0, 12)}...` : note.title}
+                          </h4>
+                        )}
+                        <p className="text-foreground font-handwriting text-lg line-clamp-2 note-text">
                           {note.content}
                         </p>
+                      </div>
                       </div>
                       <Badge
                         variant="outline"
@@ -531,6 +667,12 @@ const Index = () => {
           onDelete={deleteNote}
         />
       )}
+
+      {/* Sticky Note Window */}
+      <StickyNoteWindow
+        isOpen={stickyNoteWindowOpen}
+        onClose={handleQuickNote}
+      />
     </div>
   );
 };
