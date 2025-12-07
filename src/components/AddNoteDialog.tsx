@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { NoteStatus } from "@/components/StickyNote";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,7 @@ import { cn } from "@/lib/utils";
 interface AddNoteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (content: string, status: NoteStatus, color: string) => void;
+  onSave: (title: string, content: string, status: NoteStatus, color: string) => void;
 }
 
 const colors = ["yellow", "pink", "blue", "green", "purple", "orange", "teal", "lavender", "peach", "mint"];
@@ -30,13 +31,15 @@ const statusColors: Record<NoteStatus, string> = {
 };
 
 export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps) => {
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<NoteStatus>("To-Do");
   const [color, setColor] = useState(colors[0]);
 
   const handleSave = () => {
     if (content.trim()) {
-      onSave(content, status, color);
+      onSave(title.trim(), content, status, color);
+      setTitle("");
       setContent("");
       setStatus("To-Do");
       setColor(colors[0]);
@@ -57,6 +60,15 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
           <DialogTitle>Add a New Stickee Note</DialogTitle>
         </DialogHeader>
         <div className="py-4 space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Title (Optional)</label>
+            <Input
+              placeholder="Add a title..."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400"
+            />
+          </div>
           <div>
             <label className="text-sm font-medium mb-2 block">Color</label>
             <div className="flex gap-2 flex-wrap">

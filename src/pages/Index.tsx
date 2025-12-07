@@ -103,14 +103,16 @@ const Index = () => {
     const filtered = notes.filter(note => 
       note.content.toLowerCase().includes(query) ||
       note.status.toLowerCase().includes(query) ||
-      note.color.toLowerCase().includes(query)
+      note.color.toLowerCase().includes(query) ||
+      (note.title && note.title.toLowerCase().includes(query))
     );
     setFilteredNotes(filtered);
   }, [searchQuery, notes]);
 
-  const addNote = async (content: string, status: StickyNoteStatus, color: string) => {
+  const addNote = async (title: string, content: string, status: StickyNoteStatus, color: string) => {
     try {
       const newNote = await createNoteService({
+        title: title || undefined,
         content,
         color,
         status,
@@ -148,9 +150,10 @@ const Index = () => {
     }
   };
 
-  const updateNote = async (id: string, content: string, status: StickyNoteStatus, color: string) => {
+  const updateNote = async (id: string, title: string, content: string, status: StickyNoteStatus, color: string) => {
     try {
       const updatedNote = await updateNoteService(id, { 
+        title: title || undefined,
         content, 
         status, 
         color
@@ -396,6 +399,7 @@ const Index = () => {
             {pinnedNotes.map((note) => (
               <StickyNote
                 key={note.id}
+                title={note.title}
                 content={note.content}
                 color={note.color}
                 status={note.status}
@@ -424,6 +428,7 @@ const Index = () => {
                   <div className="absolute left-2 top-0 bottom-0 w-1 bg-primary rounded-full transition-all duration-200 z-10" />
                 )}
                 <StickyNote
+                  title={note.title}
                   content={note.content}
                   color={note.color}
                   status={note.status}
@@ -479,9 +484,16 @@ const Index = () => {
                           fill={note.pinned ? "currentColor" : "none"} 
                         />
                       </button>
-                      <p className="text-foreground font-handwriting text-lg flex-1 line-clamp-2 note-text">
-                        {note.content}
-                      </p>
+                      <div className="flex-1">
+                        {note.title && (
+                          <h4 className="text-foreground font-handwriting text-xl font-bold mb-1 leading-tight">
+                            {note.title.length > 12 ? `${note.title.substring(0, 12)}...` : note.title}
+                          </h4>
+                        )}
+                        <p className="text-foreground font-handwriting text-lg line-clamp-2 note-text">
+                          {note.content}
+                        </p>
+                      </div>
                     </div>
                     <Badge
                       variant="outline"
@@ -547,9 +559,16 @@ const Index = () => {
                             fill={note.pinned ? "currentColor" : "none"} 
                           />
                         </button>
-                        <p className="text-foreground font-handwriting text-lg flex-1 line-clamp-2 note-text">
+                        <div className="flex-1">
+                        {note.title && (
+                          <h4 className="text-foreground font-handwriting text-xl font-bold mb-1 leading-tight">
+                            {note.title.length > 12 ? `${note.title.substring(0, 12)}...` : note.title}
+                          </h4>
+                        )}
+                        <p className="text-foreground font-handwriting text-lg line-clamp-2 note-text">
                           {note.content}
                         </p>
+                      </div>
                       </div>
                       <Badge
                         variant="outline"

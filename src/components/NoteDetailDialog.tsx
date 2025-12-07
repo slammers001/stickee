@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Trash2 } from "lucide-react";
 import { NoteStatus } from "./StickyNote";
@@ -18,13 +19,14 @@ interface NoteDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   note: {
     id: string;
+    title?: string;
     content: string;
     color: string;
     status: NoteStatus;
     lastUpdated: number;
     pinned: boolean;
   } | null;
-  onSave: (id: string, content: string, status: NoteStatus, color: string) => void;
+  onSave: (id: string, title: string, content: string, status: NoteStatus, color: string) => void;
   onDelete: (id: string) => void;
 }
 
@@ -46,26 +48,30 @@ export const NoteDetailDialog = ({
   onSave,
   onDelete,
 }: NoteDetailDialogProps) => {
+  const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
   const [status, setStatus] = useState<NoteStatus>(note?.status || "To-Do");
   const [color, setColor] = useState(note?.color || "yellow");
   const [initialStatus, setInitialStatus] = useState<NoteStatus>(note?.status || "To-Do");
   const [initialColor, setInitialColor] = useState(note?.color || "yellow");
+  const [initialTitle, setInitialTitle] = useState(note?.title || "");
 
   // Update local state when note prop changes
   useEffect(() => {
     if (note) {
+      setTitle(note.title || "");
       setContent(note.content);
       setStatus(note.status);
       setColor(note.color);
       setInitialStatus(note.status);
       setInitialColor(note.color);
+      setInitialTitle(note.title || "");
     }
   }, [note]);
 
   const handleSave = () => {
     if (note && content.trim()) {
-      onSave(note.id, content, status, color);
+      onSave(note.id, title.trim(), content, status, color);
       onOpenChange(false);
     }
   };
@@ -86,6 +92,15 @@ export const NoteDetailDialog = ({
           <DialogTitle>View & Edit Note</DialogTitle>
         </DialogHeader>
         <div className="py-4 space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Title (Optional)</label>
+            <Input
+              placeholder="Add a title..."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400"
+            />
+          </div>
           <div>
             <label className="text-sm font-medium mb-2 block">Color</label>
             <div className="flex gap-2 flex-wrap">
@@ -155,7 +170,7 @@ export const NoteDetailDialog = ({
           >
             <Trash2 className="h-5 w-5" />
           </Button>
-          <Button onClick={handleSave} disabled={!content.trim() && status === initialStatus && color === initialColor}>
+          <Button onClick={handleSave} disabled={!content.trim() && title === initialTitle && status === initialStatus && color === initialColor}>
             Save Changes
           </Button>
         </DialogFooter>

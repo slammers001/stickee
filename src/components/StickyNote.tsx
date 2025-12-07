@@ -7,6 +7,7 @@ import { Pin } from "lucide-react";
 export type NoteStatus = 'To-Do' | 'Doing' | 'Done' | 'Backlog';
 
 interface StickyNoteProps {
+  title?: string;
   content: string;
   color: string;
   status: NoteStatus;
@@ -37,7 +38,7 @@ const statusColors: Record<NoteStatus, string> = {
   "Backlog": "bg-gray-100 text-gray-800 border-gray-200",
 };
 
-export const StickyNote = ({ content, color, status, pinned, onClick, onTogglePin }: Omit<StickyNoteProps, 'index' | 'lastUpdated'>) => {
+export const StickyNote = ({ title, content, color, status, pinned, onClick, onTogglePin }: Omit<StickyNoteProps, 'index' | 'lastUpdated'>) => {
   // Generate unique random rotation between -4 and 4 degrees
   const rotation = useMemo(() => {
     // Generate a random angle between 1 and 4 degrees
@@ -78,6 +79,11 @@ export const StickyNote = ({ content, color, status, pinned, onClick, onTogglePi
       onClick={onClick}
     >
       <div className="flex-1">
+        {title && (
+          <h3 className="text-foreground text-xl font-bold mb-2 font-handwriting leading-tight">
+            {title.length > 12 ? `${title.substring(0, 12)}...` : title}
+          </h3>
+        )}
         <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting">
           {displayContent}
         </p>
