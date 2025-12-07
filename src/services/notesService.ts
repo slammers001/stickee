@@ -1,6 +1,7 @@
 import { Note, NoteStatus } from '@/types/note';
 import { supabase } from '@/lib/supabase';
 import { getUserId } from './userService';
+import { encryptContent, decryptContent, encryptTitle, decryptTitle } from '@/utils/encryption';
 
 // Helper function to map Supabase note to our Note type
 const mapSupabaseNote = (note: any): Note => {
@@ -11,8 +12,8 @@ const mapSupabaseNote = (note: any): Note => {
   
   return {
     id: note.id,
-    title: note.title || undefined, // Will be undefined until database supports it
-    content: note.content || '',
+    title: decryptTitle(note.title),
+    content: decryptContent(note.content),
     color: note.color || '#ffffff',
     status: (note.status as NoteStatus) || 'To-Do',
     lastUpdated: typeof timestamp === 'string' ? Date.parse(timestamp) : timestamp,
@@ -53,8 +54,8 @@ export const createNote = async (noteData: Omit<Note, 'id'>): Promise<Note> => {
     
     // Prepare the note data to send to Supabase
     const noteDataToSend = {
-      title: noteData.title || null,
-      content: noteData.content,
+      title: encryptTitle(noteData.title),
+      content: encryptContent(noteData.content),
       color: noteData.color,
       status: noteData.status,
       pinned: noteData.pinned,
@@ -106,11 +107,11 @@ export const updateNote = async (id: string, updates: Partial<Omit<Note, 'id'>>)
   };
 
   // Only include fields that exist in the database schema
-  if (updates.content !== undefined) updateData.content = updates.content;
+  if (updates.content !== undefined) updateData.content = encryptContent(updates.content);
   if (updates.color !== undefined) updateData.color = updates.color;
   if (updates.status !== undefined) updateData.status = updates.status;
   if (updates.pinned !== undefined) updateData.pinned = updates.pinned;
-  if (updates.title !== undefined) updateData.title = updates.title || null;
+  if (updates.title !== undefined) updateData.title = encryptTitle(updates.title);
 
   // Remove fields that shouldn't be sent to Supabase
   delete updateData.lastUpdated;
