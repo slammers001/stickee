@@ -9,3 +9,4 @@
 - [x] New note shortcut n
 - [x] Popup with typing p shortcut without entire app design
 - [x] better encryption
+
