@@ -1,6 +1,10 @@
 
 ### Future ideas:
+
 [-] Search bar
-Icon fix
+- Icon fix
 [-] Title for notes
-Can do markdown
+- markdown style
+[-] Title for notes
+[-] New note shortcut n
+[-] Popup with typing p shortcut without entire app design
