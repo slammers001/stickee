@@ -1,10 +1,11 @@
 
 ### Future ideas:
 
-[-] Search bar
+- [x] Search bar
 - Icon fix
-[-] Title for notes
+- [x] Title for notes
 - markdown style
-[-] Title for notes
-[-] New note shortcut n
-[-] Popup with typing p shortcut without entire app design
+- [x] Title for notes
+- [x] New note shortcut n
+- [x] Popup with typing p shortcut without entire app design
+- [x] better encryption
