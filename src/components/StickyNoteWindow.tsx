@@ -126,30 +126,6 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
                 color: hsl(var(--foreground));
               }
               
-              .header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                gap: 1rem;
-              }
-              
-              .close-button {
-                background: none;
-                border: none;
-                font-size: 1.5rem;
-                color: hsl(var(--foreground) / 0.7);
-                cursor: pointer;
-                padding: 0.25rem;
-                border-radius: var(--radius);
-                transition: all 0.2s ease;
-                line-height: 1;
-              }
-              
-              .close-button:hover {
-                color: hsl(var(--foreground));
-                background-color: hsl(var(--foreground) / 0.1);
-              }
-              
               .color-picker {
                 display: flex;
                 gap: 0.5rem;
@@ -251,13 +227,10 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
           </head>
           <body>
             <div class="app-container">
-              <div class="header">
-                <div class="color-picker" id="colorPicker">
-                  ${Object.entries(colorMap).map(([color]) => 
-                    `<div class="color-option color-${color} ${color === '${selectedColor}' ? 'selected' : ''}" data-color="${color}"></div>`
-                  ).join('')}
-                </div>
-                <button id="closeButton" class="close-button" title="Close without saving">×</button>
+              <div class="color-picker" id="colorPicker">
+                ${Object.entries(colorMap).map(([color]) => 
+                  `<div class="color-option color-${color} ${color === '${selectedColor}' ? 'selected' : ''}" data-color="${color}"></div>`
+                ).join('')}
               </div>
               <div class="note-container" id="noteContainer">
                 <textarea 
@@ -293,21 +266,6 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
               
               // Apply theme on load
               applyTheme(themeData.theme);
-              
-              // Get close button
-              const closeButton = document.getElementById('closeButton');
-              
-              // Close without saving
-              const closeWithoutSave = () => {
-                if (!isClosing) {
-                  isClosing = true;
-                  window.opener.postMessage({ type: 'quickNoteCancel' }, '*');
-                  window.close();
-                }
-              };
-              
-              // Handle close button click
-              closeButton.addEventListener('click', closeWithoutSave);
               
               // Update character count
               const updateCharCount = () => {
@@ -374,12 +332,8 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
                 }
               });
               
-              // Save on window close
-              window.addEventListener('beforeunload', () => {
-                if (!isClosing) {
-                  saveAndClose();
-                }
-              });
+              // Save on window close - only save if user explicitly saves (Ctrl+Enter or Escape)
+              // Don't auto-save when window is closed via native X button
               
               // Focus the textarea
               textarea.focus();
