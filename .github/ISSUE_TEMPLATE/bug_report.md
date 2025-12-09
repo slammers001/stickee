@@ -24,5 +24,5 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 
-**Additional context**
-Add any other context about the problem here.
+**Stickee Version**
+What version of Stickee was this in?
