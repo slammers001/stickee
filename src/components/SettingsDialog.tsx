@@ -304,12 +304,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                       Monospace (Code style)
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="give-you-glory" id="give-you-glory" />
-                    <Label htmlFor="give-you-glory" className="text-lg" style={{ fontFamily: '"Give You Glory", cursive' }}>
-                      Give You Glory (Decorative)
-                    </Label>
-                  </div>
                 </RadioGroup>
               </div>
             )}
@@ -321,6 +315,12 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     <RadioGroupItem value="indie-flower" id="indie-flower" />
                     <Label htmlFor="indie-flower" className="text-lg" style={{ fontFamily: "'Indie Flower', cursive" }}>
                       Indie Flower (Default)
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="give-you-glory" id="give-you-glory" />
+                    <Label htmlFor="give-you-glory" className="text-lg" style={{ fontFamily: '"Give You Glory", cursive' }}>
+                      Give You Glory (Decorative)
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
