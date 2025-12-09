@@ -56,6 +56,13 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
         const theme = localStorage.getItem("theme") || (isDark ? "dark" : "light");
         const isDarkTheme = theme === "dark" || (theme === "system" && isDark);
         
+        // Pass theme info to popup window
+        const themeData = {
+          theme: theme,
+          isDark: isDarkTheme,
+          systemDark: isDark
+        };
+        
         // Write the sticky note HTML to the new window
         windowRef.current.document.write(`
           <!DOCTYPE html>
@@ -117,6 +124,30 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
                 gap: 1rem;
                 background-color: hsl(var(--background));
                 color: hsl(var(--foreground));
+              }
+              
+              .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 1rem;
+              }
+              
+              .close-button {
+                background: none;
+                border: none;
+                font-size: 1.5rem;
+                color: hsl(var(--foreground) / 0.7);
+                cursor: pointer;
+                padding: 0.25rem;
+                border-radius: var(--radius);
+                transition: all 0.2s ease;
+                line-height: 1;
+              }
+              
+              .close-button:hover {
+                color: hsl(var(--foreground));
+                background-color: hsl(var(--foreground) / 0.1);
               }
               
               .color-picker {
@@ -220,10 +251,13 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
           </head>
           <body>
             <div class="app-container">
-              <div class="color-picker" id="colorPicker">
-                ${Object.entries(colorMap).map(([color]) => 
-                  `<div class="color-option color-${color} ${color === '${selectedColor}' ? 'selected' : ''}" data-color="${color}"></div>`
-                ).join('')}
+              <div class="header">
+                <div class="color-picker" id="colorPicker">
+                  ${Object.entries(colorMap).map(([color]) => 
+                    `<div class="color-option color-${color} ${color === '${selectedColor}' ? 'selected' : ''}" data-color="${color}"></div>`
+                  ).join('')}
+                </div>
+                <button id="closeButton" class="close-button" title="Close without saving">×</button>
               </div>
               <div class="note-container" id="noteContainer">
                 <textarea 
@@ -247,6 +281,33 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
               const charCount = document.getElementById('charCount');
               const colorOptions = document.querySelectorAll('.color-option');
               const noteContainer = document.getElementById('noteContainer');
+              
+              // Theme data from parent window
+              const themeData = ${JSON.stringify(themeData)};
+              
+              // Apply initial theme
+              function applyTheme(theme) {
+                const isDarkTheme = theme === "dark" || (theme === "system" && themeData.systemDark);
+                document.documentElement.className = isDarkTheme ? 'dark' : '';
+              }
+              
+              // Apply theme on load
+              applyTheme(themeData.theme);
+              
+              // Get close button
+              const closeButton = document.getElementById('closeButton');
+              
+              // Close without saving
+              const closeWithoutSave = () => {
+                if (!isClosing) {
+                  isClosing = true;
+                  window.opener.postMessage({ type: 'quickNoteCancel' }, '*');
+                  window.close();
+                }
+              };
+              
+              // Handle close button click
+              closeButton.addEventListener('click', closeWithoutSave);
               
               // Update character count
               const updateCharCount = () => {
@@ -323,15 +384,6 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
               // Focus the textarea
               textarea.focus();
               updateCharCount();
-              
-              // Listen for theme changes from the parent window
-              window.addEventListener('storage', (e) => {
-                if (e.key === 'theme') {
-                  const newTheme = e.newValue || 'light';
-                  const isDarkTheme = newTheme === 'dark' || (newTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                  document.documentElement.className = isDarkTheme ? 'dark' : '';
-                }
-              });
             </script>
           </body>
           </html>
