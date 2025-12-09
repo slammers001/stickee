@@ -18,3 +18,7 @@ A clear and concise description of any alternative solutions or features you've 
 
 **Screenshots**
 Add screenshots relating to the problem or what you would like to implement here
+
+
+**Stickee Version**
+What version of Stickee was this in?
