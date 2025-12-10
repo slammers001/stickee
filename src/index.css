@@ -13,6 +13,7 @@ All colors MUST be HSL.
     
     --font-family-base: 'Indie Flower', cursive;
     --font-family-handwriting: 'Indie Flower', cursive;
+    --font-family-title: 'Arbutus', serif;
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 15%;
@@ -143,8 +144,16 @@ All colors MUST be HSL.
     image-rendering: pixelated;
   }
 
+  .font-handwriting {
+    font-family: var(--font-family-handwriting), cursive;
+  }
+
+  .font-title {
+    font-family: var(--font-family-title), serif;
+  }
+
   .dark .font-handwriting {
-    color: inherit;
+    font-family: var(--font-family-handwriting), cursive;
   }
 
   .dark .font-handwriting.note-text {

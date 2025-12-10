@@ -26,31 +26,48 @@ export const getCurrentUser = () => {
 };
 
 // Create user in Supabase if they don't exist
-export const ensureUserExists = async () => {
+export const ensureUserExists = async (): Promise<boolean> => {
   const userId = getUserId();
+  console.log('Ensuring user exists for ID:', userId);
   
   try {
     // Check if user exists
-    const { data: existingUser } = await supabase
+    const { data: existingUser, error: checkError } = await supabase
       .from('users')
       .select('id')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error('Error checking user existence:', checkError);
+      return false;
+    }
+    
+    console.log('Existing user:', existingUser);
     
     // If user doesn't exist, create them
     if (!existingUser) {
-      const { error } = await supabase
+      console.log('Creating new user with ID:', userId);
+      const { error: insertError } = await supabase
         .from('users')
         .insert({
           id: userId,
           created_at: new Date().toISOString()
         });
       
-      if (error) {
-        console.error('Error creating user:', error);
+      if (insertError) {
+        console.error('Error creating user:', insertError);
+        return false;
       }
+      
+      console.log('User created successfully');
+    } else {
+      console.log('User already exists');
     }
+    
+    return true;
   } catch (error) {
     console.error('Error ensuring user exists:', error);
+    return false;
   }
 };

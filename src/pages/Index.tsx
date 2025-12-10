@@ -318,14 +318,14 @@ const Index = () => {
     setSearchQuery(query);
   };
 
-  const handleQuickNote = async (content: string) => {
+  const handleQuickNote = async (content: string, color: string) => {
     setStickyNoteWindowOpen(false);
     
     if (content.trim()) {
       try {
         const newNote = await createNoteService({
           content: content.trim(),
-          color: "yellow",
+          color: color || "yellow",
           status: "To-Do",
           pinned: false,
           lastUpdated: Date.now()
