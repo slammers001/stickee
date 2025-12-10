@@ -1,17 +1,12 @@
 import { useState, useEffect } from "react";
+import { Heart, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Settings } from "lucide-react";
+import { getFontSettings, saveFontSettings, updateCurrentFont, updateTitleFont, updateFavoriteFonts } from "@/services/fontSettingsService";
+import { ensureUserExists } from "@/services/userService";
 
 type FontFamily = "serif" | "sans-serif" | "monospace" | 
   "abeezee" | "aclonica" | "advent-pro" | "anonymous-pro" | "tenali-ramakrishna" | "truculenta" | "ubuntu-sans-mono" | "unbounded" | "nova-mono" | "orbitron" | "bahianita" | "syne-mono" | "vt323" | "xanh-mono" | "cutive-mono" | "arbutus-slab" | "nixie-one" | "noticia-text" | "arvo" | "oi" | "oldenburg" | "orelega-one" | "nova-oval" | "atma" | "butcherman" | "cherry-bomb-one" |
@@ -21,10 +16,12 @@ type FontFamily = "serif" | "sans-serif" | "monospace" |
   "solitreo" | "sue-ellen-francisco" | "sunshiney" | "swanky-and-moo-moo" | "the-girl-next-door" | 
   "tillana" | "unkempt" | "waiting-for-the-sunrise" | "beth-ellen" | "homemade-apple" | 
   "zeyada" | "cedarville-cursive" | "coming-soon" | "covered-by-your-grace" | "crafty-girls" | 
-  "comforter" | "indie-flower" | "give-you-glory" | "oregano" | "protest-revolution" | "protest-riot" | "rancho" | "sarina" | "single-day" |
-  "arbutus" | "agbalumo" | "walter-turncoat" | "yatra-one";
+  "comforter" | "indie-flower" | "give-you-glory" | "oregano" | "protest-revolution" | "protest-riot" | "rancho" | "sarina" | "single-day";
 
-type FontMode = "basic" | "handwriting" | "title";
+type TitleFontFamily = "arbutus" | "agbalumo" | "walter-turncoat" | "yatra-one";
+
+type FontMode = "basic" | "handwriting";
+type ActiveTab = "themes" | "fonts" | "bookmarks" | "titles";
 type ViewMode = "grid" | "list";
 
 interface SettingsDialogProps {
@@ -35,7 +32,58 @@ interface SettingsDialogProps {
 export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const [fontMode, setFontMode] = useState<FontMode>("basic");
   const [fontFamily, setFontFamily] = useState<FontFamily>("indie-flower");
+  const [titleFont, setTitleFont] = useState<TitleFontFamily>("arbutus");
   const [defaultView, setDefaultView] = useState<ViewMode>("grid");
+  const [favoriteFonts, setFavoriteFonts] = useState<FontFamily[]>([]);
+  const [activeTab, setActiveTab] = useState<ActiveTab>("themes");
+  const [visibleFontCount, setVisibleFontCount] = useState(20); // Lazy loading state
+
+  // Organized font arrays for lazy loading
+  const basicFonts: FontFamily[] = [
+    "serif", "sans-serif", "monospace", "abeezee", "aclonica", "advent-pro", 
+    "anonymous-pro", "tenali-ramakrishna", "truculenta", "ubuntu-sans-mono", 
+    "unbounded", "nova-mono", "orbitron", "bahianita", "syne-mono", "vt323", 
+    "xanh-mono", "cutive-mono", "arbutus-slab", "nixie-one", "noticia-text", 
+    "arvo", "oi", "oldenburg", "orelega-one", "nova-oval", "atma", "butcherman", 
+    "cherry-bomb-one"
+  ];
+
+  const handwritingFonts: FontFamily[] = [
+    "indie-flower", "give-you-glory", "annie-use-your-telescope", 
+    "nothing-you-could-do", "oooh-baby", "over-the-rainbow", "pangolin", 
+    "autour-one", "permanent-marker", "reenie-beanie", "rock-salt", 
+    "schoolbell", "sedgwick-ave", "shadows-into-light", "short-stack", 
+    "shantell-sans", "solitreo", "sue-ellen-francisco", "sunshiney", 
+    "swanky-and-moo-moo", "the-girl-next-door", "tillana", "unkempt", 
+    "waiting-for-the-sunrise", "beth-ellen", "homemade-apple", "zeyada", 
+    "cedarville-cursive", "coming-soon", "covered-by-your-grace", 
+    "crafty-girls", "comforter", "oregano", "protest-revolution", 
+    "protest-riot", "rancho", "sarina", "single-day"
+  ];
+
+  // Get visible fonts based on mode and lazy loading
+  const getVisibleFonts = () => {
+    let fonts: FontFamily[] = [];
+    if (fontMode === "basic") {
+      fonts = basicFonts;
+    } else if (fontMode === "handwriting") {
+      fonts = handwritingFonts;
+    }
+    
+    // Sort alphabetically
+    const sortedFonts = [...fonts].sort((a, b) => {
+      const nameA = getFontDisplayName(a).toLowerCase();
+      const nameB = getFontDisplayName(b).toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+    
+    return sortedFonts.slice(0, visibleFontCount);
+  };
+
+  // Load more fonts on scroll
+  const loadMoreFonts = () => {
+    setVisibleFontCount(prev => prev + 20);
+  };
 
   // Preload common Google Fonts
   const preloadGoogleFonts = () => {
@@ -127,22 +175,84 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   useEffect(() => {
     preloadGoogleFonts();
     
-    const savedFont = localStorage.getItem("stickee-font-family") as FontFamily;
-    const savedFontMode = localStorage.getItem("stickee-font-mode") as FontMode;
+    // Load font settings from Supabase
+    const loadFontSettings = async () => {
+      const userExists = await ensureUserExists(); // Ensure user exists in Supabase
+      
+      if (!userExists) {
+        console.error('Failed to create user in Supabase');
+        // Fallback to localStorage
+        const savedFont = localStorage.getItem("stickee-font-family") as FontFamily;
+        const savedTitleFont = localStorage.getItem("stickee-title-font") as TitleFontFamily;
+        const savedFontMode = localStorage.getItem("stickee-font-mode") as FontMode;
+        const savedView = localStorage.getItem("stickee-default-view") as ViewMode;
+        
+        if (savedFontMode) setFontMode(savedFontMode);
+        if (savedFont) {
+          setFontFamily(savedFont);
+          applyFontFamily(savedFont);
+        }
+        if (savedTitleFont) {
+          setTitleFont(savedTitleFont);
+          applyTitleFont(savedTitleFont);
+        }
+        if (savedView) setDefaultView(savedView);
+        return;
+      }
+      
+      // First try to get existing settings
+      const settings = await getFontSettings();
+      
+      if (settings) {
+        // Load from Supabase if settings exist
+        if (settings.current_font) {
+          setFontFamily(settings.current_font as FontFamily);
+          applyFontFamily(settings.current_font as FontFamily);
+          localStorage.setItem("stickee-font-family", settings.current_font);
+        }
+        if (settings.title_font) {
+          setTitleFont(settings.title_font as TitleFontFamily);
+          applyTitleFont(settings.title_font as TitleFontFamily);
+          localStorage.setItem("stickee-title-font", settings.title_font);
+        }
+        if (settings.favorite_fonts && settings.favorite_fonts.length > 0) {
+          setFavoriteFonts(settings.favorite_fonts as FontFamily[]);
+        }
+      } else {
+        // Create default settings if none exist
+        const defaultFont = localStorage.getItem("stickee-font-family") as FontFamily || "indie-flower";
+        const defaultTitleFont = localStorage.getItem("stickee-title-font") as TitleFontFamily || "arbutus";
+        const defaultFavorites = JSON.parse(localStorage.getItem("stickee-favorite-fonts") || "[]");
+        
+        // Save defaults to Supabase
+        try {
+          await saveFontSettings(defaultFont, defaultTitleFont, defaultFavorites);
+        } catch (error) {
+          console.error('Failed to create default font settings:', error);
+        }
+        
+        // Apply defaults
+        setFontFamily(defaultFont);
+        applyFontFamily(defaultFont);
+        setTitleFont(defaultTitleFont);
+        applyTitleFont(defaultTitleFont);
+        setFavoriteFonts(defaultFavorites);
+      }
+      
+      // Load font mode from localStorage
+      const savedFontMode = localStorage.getItem("stickee-font-mode") as FontMode;
+      if (savedFontMode) {
+        setFontMode(savedFontMode);
+      }
+      
+      // Load view settings from localStorage (keep this local)
+      const savedView = localStorage.getItem("stickee-default-view") as ViewMode;
+      if (savedView) {
+        setDefaultView(savedView);
+      }
+    };
     
-    if (savedFontMode) {
-      setFontMode(savedFontMode);
-    }
-    
-    if (savedFont) {
-      setFontFamily(savedFont);
-      applyFontFamily(savedFont);
-    }
-    
-    const savedView = localStorage.getItem("stickee-default-view") as ViewMode;
-    if (savedView) {
-      setDefaultView(savedView);
-    }
+    loadFontSettings();
   }, []);
 
   const applyFontFamily = (font: FontFamily) => {
@@ -252,7 +362,24 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       case "comforter":
         fontValue = 'Comforter, cursive';
         break;
-      // New basic fonts
+      case "oregano":
+        fontValue = 'Oregano, cursive';
+        break;
+      case "protest-revolution":
+        fontValue = '"Protest Revolution", cursive';
+        break;
+      case "protest-riot":
+        fontValue = '"Protest Riot", cursive';
+        break;
+      case "rancho":
+        fontValue = 'Rancho, cursive';
+        break;
+      case "sarina":
+        fontValue = 'Sarina, cursive';
+        break;
+      case "single-day":
+        fontValue = '"Single Day", cursive';
+        break;
       case "abeezee":
         fontValue = 'ABeeZee, sans-serif';
         break;
@@ -287,40 +414,40 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         fontValue = 'Bahianita, cursive';
         break;
       case "syne-mono":
-        fontValue = '"Syne Mono", monospace';
+        fontValue = 'Syne Mono, monospace';
         break;
       case "vt323":
         fontValue = 'VT323, monospace';
         break;
       case "xanh-mono":
-        fontValue = '"Xanh Mono", monospace';
+        fontValue = 'Xanh Mono, monospace';
         break;
       case "cutive-mono":
-        fontValue = '"Cutive Mono", monospace';
+        fontValue = 'Cutive Mono, monospace';
         break;
       case "arbutus-slab":
-        fontValue = '"Arbutus Slab", serif';
+        fontValue = 'Arbutus Slab, serif';
         break;
       case "nixie-one":
-        fontValue = '"Nixie One", cursive';
+        fontValue = 'Nixie One, serif';
         break;
       case "noticia-text":
-        fontValue = '"Noticia Text", serif';
+        fontValue = 'Noticia Text, serif';
         break;
       case "arvo":
         fontValue = 'Arvo, serif';
         break;
       case "oi":
-        fontValue = 'Oi, cursive';
+        fontValue = 'Oi, serif';
         break;
       case "oldenburg":
         fontValue = 'Oldenburg, cursive';
         break;
       case "orelega-one":
-        fontValue = '"Orelega One", cursive';
+        fontValue = 'Orelega One, cursive';
         break;
       case "nova-oval":
-        fontValue = '"Nova Oval", cursive';
+        fontValue = 'Nova Oval, cursive';
         break;
       case "atma":
         fontValue = 'Atma, cursive';
@@ -331,37 +458,8 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       case "cherry-bomb-one":
         fontValue = '"Cherry Bomb One", cursive';
         break;
-      // New handwriting fonts
-      case "oregano":
-        fontValue = 'Oregano, cursive';
-        break;
-      case "protest-revolution":
-        fontValue = '"Protest Revolution", cursive';
-        break;
-      case "protest-riot":
-        fontValue = '"Protest Riot", cursive';
-        break;
-      case "rancho":
-        fontValue = 'Rancho, cursive';
-        break;
-      case "sarina":
-        fontValue = 'Sarina, cursive';
-        break;
-      case "single-day":
-        fontValue = '"Single Day", cursive';
-        break;
-      // Title fonts
-      case "arbutus":
-        fontValue = 'Arbutus, serif';
-        break;
-      case "agbalumo":
-        fontValue = 'Agbalumo, display';
-        break;
-      case "walter-turncoat":
-        fontValue = '"Walter Turncoat", cursive';
-        break;
-      case "yatra-one":
-        fontValue = '"Yatra One", cursive';
+      case "indie-flower":
+        fontValue = '"Indie Flower", cursive';
         break;
       default: // indie-flower
         fontValue = 'Indie Flower, cursive';
@@ -385,10 +483,52 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     root.style.setProperty('--font-family-handwriting', fontValue);
   };
 
-  const handleFontChange = (value: FontFamily) => {
+  const applyTitleFont = (font: TitleFontFamily) => {
+    const root = document.documentElement;
+    let fontValue = '';
+    
+    switch (font) {
+      case "arbutus":
+        fontValue = 'Arbutus, serif';
+        break;
+      case "agbalumo":
+        fontValue = 'Agbalumo, display';
+        break;
+      case "walter-turncoat":
+        fontValue = '"Walter Turncoat", cursive';
+        break;
+      case "yatra-one":
+        fontValue = '"Yatra One", cursive';
+        break;
+    }
+    
+    root.style.setProperty('--font-family-title', fontValue);
+  };
+
+  const handleFontChange = async (value: FontFamily) => {
     setFontFamily(value);
     localStorage.setItem("stickee-font-family", value);
     applyFontFamily(value);
+    
+    // Save to Supabase
+    try {
+      await updateCurrentFont(value);
+    } catch (error) {
+      console.error('Failed to save font to Supabase:', error);
+    }
+  };
+
+  const handleTitleFontChange = async (value: TitleFontFamily) => {
+    setTitleFont(value);
+    localStorage.setItem("stickee-title-font", value);
+    applyTitleFont(value);
+    
+    // Save to Supabase
+    try {
+      await updateTitleFont(value);
+    } catch (error) {
+      console.error('Failed to save title font to Supabase:', error);
+    }
   };
 
   const handleFontModeChange = (mode: FontMode) => {
@@ -401,510 +541,413 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     localStorage.setItem("stickee-default-view", value);
   };
 
+  const toggleFavoriteFont = async (font: FontFamily) => {
+    const newFavorites = favoriteFonts.includes(font) 
+      ? favoriteFonts.filter(f => f !== font)
+      : favoriteFonts.length >= 10 
+        ? favoriteFonts 
+        : [...favoriteFonts, font];
+    
+    setFavoriteFonts(newFavorites);
+    
+    // Save to Supabase
+    try {
+      await updateFavoriteFonts(newFavorites);
+    } catch (error) {
+      console.error('Failed to save favorite fonts to Supabase:', error);
+    }
+  };
+
+  const isFavorite = (font: FontFamily) => favoriteFonts.includes(font);
+
+  const getFontLabelClasses = (font: string) => {
+    return `text-lg ${fontFamily === font ? "bg-primary text-primary-foreground px-2 py-1 rounded-md font-semibold" : ""}`;
+  };
+
+  const getTitleFontLabelClasses = (font: string) => {
+    return `text-lg ${titleFont === font ? "bg-primary text-primary-foreground px-2 py-1 rounded-md font-semibold" : ""}`;
+  };
+
+  // Helper functions to sort fonts alphabetically
+  const sortFontsAlphabetically = (fonts: FontFamily[]) => {
+    return [...fonts].sort((a, b) => {
+      const nameA = getFontDisplayName(a).toLowerCase();
+      const nameB = getFontDisplayName(b).toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  };
+
+  const sortTitleFontsAlphabetically = (fonts: TitleFontFamily[]) => {
+    return [...fonts].sort((a, b) => {
+      const nameA = a === "arbutus" ? "Arbutus" : 
+                   a === "agbalumo" ? "Agbalumo" :
+                   a === "walter-turncoat" ? "Walter Turncoat" :
+                   "Yatra One";
+      const nameB = b === "arbutus" ? "Arbutus" : 
+                   b === "agbalumo" ? "Agbalumo" :
+                   b === "walter-turncoat" ? "Walter Turncoat" :
+                   "Yatra One";
+      return nameA.localeCompare(nameB);
+    });
+  };
+
+  const getFontDisplayValue = (font: FontFamily): string => {
+    switch (font) {
+      case "serif":
+        return 'Georgia, serif';
+      case "sans-serif":
+        return 'Arial, sans-serif';
+      case "monospace":
+        return 'Courier New, monospace';
+      case "give-you-glory":
+        return '"Give You Glory", cursive';
+      case "indie-flower":
+        return '"Indie Flower", cursive';
+      default:
+        // For Google Fonts, use the display name directly
+        return getFontDisplayName(font);
+    }
+  };
+
+  const getFontDisplayName = (font: FontFamily): string => {
+    const displayNames: Record<FontFamily, string> = {
+      "serif": "Serif",
+      "sans-serif": "Sans-serif", 
+      "monospace": "Monospace",
+      "abeezee": "ABeeZee",
+      "aclonica": "Aclonica",
+      "advent-pro": "Advent Pro",
+      "anonymous-pro": "Anonymous Pro",
+      "tenali-ramakrishna": "Tenali Ramakrishna",
+      "truculenta": "Truculenta",
+      "ubuntu-sans-mono": "Ubuntu Sans Mono",
+      "unbounded": "Unbounded",
+      "nova-mono": "Nova Mono",
+      "orbitron": "Orbitron",
+      "bahianita": "Bahianita",
+      "syne-mono": "Syne Mono",
+      "vt323": "VT323",
+      "xanh-mono": "Xanh Mono",
+      "cutive-mono": "Cutive Mono",
+      "arbutus-slab": "Arbutus Slab",
+      "nixie-one": "Nixie One",
+      "noticia-text": "Noticia Text",
+      "arvo": "Arvo",
+      "oi": "Oi",
+      "oldenburg": "Oldenburg",
+      "orelega-one": "Orelega One",
+      "nova-oval": "Nova Oval",
+      "atma": "Atma",
+      "butcherman": "Butcherman",
+      "cherry-bomb-one": "Cherry Bomb One",
+      "annie-use-your-telescope": "Annie Use Your Telescope",
+      "nothing-you-could-do": "Nothing You Could Do",
+      "oooh-baby": "Oooh Baby",
+      "over-the-rainbow": "Over the Rainbow",
+      "pangolin": "Pangolin",
+      "autour-one": "Autour One",
+      "permanent-marker": "Permanent Marker",
+      "reenie-beanie": "Reenie Beanie",
+      "rock-salt": "Rock Salt",
+      "schoolbell": "Schoolbell",
+      "sedgwick-ave": "Sedgwick Ave",
+      "shadows-into-light": "Shadows Into Light",
+      "short-stack": "Short Stack",
+      "shantell-sans": "Shantell Sans",
+      "solitreo": "Solitreo",
+      "sue-ellen-francisco": "Sue Ellen Francisco",
+      "sunshiney": "Sunshiney",
+      "swanky-and-moo-moo": "Swanky and Moo Moo",
+      "the-girl-next-door": "The Girl Next Door",
+      "tillana": "Tillana",
+      "unkempt": "Unkempt",
+      "waiting-for-the-sunrise": "Waiting for the Sunrise",
+      "beth-ellen": "Beth Ellen",
+      "homemade-apple": "Homemade Apple",
+      "zeyada": "Zeyada",
+      "cedarville-cursive": "Cedarville Cursive",
+      "coming-soon": "Coming Soon",
+      "covered-by-your-grace": "Covered By Your Grace",
+      "crafty-girls": "Crafty Girls",
+      "comforter": "Comforter",
+      "indie-flower": "Indie Flower",
+      "give-you-glory": "Give You Glory",
+      "oregano": "Oregano",
+      "protest-revolution": "Protest Revolution",
+      "protest-riot": "Protest Riot",
+      "rancho": "Rancho",
+      "sarina": "Sarina",
+      "single-day": "Single Day"
+    };
+    return displayNames[font] || font;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>
             Customize your Stickee experience
           </DialogDescription>
         </DialogHeader>
+        
+        {/* Tab Navigation */}
+        <div className="flex space-x-1 p-1 bg-muted rounded-lg">
+          <Button
+            variant={activeTab === "themes" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setActiveTab("themes")}
+            className="flex-1"
+          >
+            Themes
+          </Button>
+          <Button
+            variant={activeTab === "fonts" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setActiveTab("fonts")}
+            className="flex-1"
+          >
+            Fonts
+          </Button>
+          <Button
+            variant={activeTab === "titles" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setActiveTab("titles")}
+            className="flex-1"
+          >
+            Titles
+          </Button>
+          <Button
+            variant={activeTab === "bookmarks" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setActiveTab("bookmarks")}
+            className="flex-1"
+          >
+            Bookmarks ({favoriteFonts.length}/10)
+          </Button>
+        </div>
+
         <div className="grid gap-6 py-4">
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium">Theme</h3>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Toggle between light and dark theme</span>
-              <ThemeToggle />
+          {activeTab === "themes" && (
+            <>
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">Theme</h3>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Toggle between light and dark theme</span>
+                  <ThemeToggle />
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">Default View</h3>
+                <RadioGroup value={defaultView} onValueChange={handleViewChange}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="grid" id="grid" />
+                    <Label htmlFor="grid">
+                      Notes (Grid view)
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="list" id="list" />
+                    <Label htmlFor="list">
+                      List (Compact view)
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </>
+          )}
+          
+          {activeTab === "fonts" && (
+            <div className="space-y-4">
+              <div className="bg-muted p-3 rounded-lg">
+                <p className="text-sm font-medium">Currently Using:</p>
+                <p className="text-lg" style={{ fontFamily: getFontDisplayValue(fontFamily) }}>
+                  {getFontDisplayName(fontFamily)}
+                </p>
+              </div>
+              <h3 className="text-sm font-medium">Font Family</h3>
+              <RadioGroup value={fontMode} onValueChange={handleFontModeChange}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="basic" id="basic" />
+                  <Label htmlFor="basic" className="text-lg">
+                    Basic Fonts
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="handwriting" id="handwriting" />
+                  <Label htmlFor="handwriting" className="text-lg" style={{ fontFamily: '"Indie Flower", cursive' }}>
+                    Handwriting
+                  </Label>
+                </div>
+              </RadioGroup>
+              
+              {fontMode === "basic" && (
+                <div className="ml-6 space-y-2 max-h-60 overflow-y-auto">
+                  <RadioGroup value={fontFamily} onValueChange={handleFontChange}>
+                    {getVisibleFonts().map((font) => (
+                      <div key={font} className="flex items-center justify-between space-x-2">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value={font} id={font} />
+                          <Label 
+                            htmlFor={font} 
+                            className={`${font === "serif" ? "font-serif" : ""} ${getFontLabelClasses(font)}`}
+                            style={{ fontFamily: getFontDisplayValue(font) }}
+                          >
+                            {getFontDisplayName(font)}
+                          </Label>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleFavoriteFont(font)}
+                          className={isFavorite(font) ? "text-red-500" : ""}
+                        >
+                          <Heart className={`h-4 w-4 ${isFavorite(font) ? "fill-current" : ""}`} />
+                        </Button>
+                      </div>
+                    ))}
+                    {getVisibleFonts().length < sortFontsAlphabetically(basicFonts).length && (
+                      <div className="text-center py-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={loadMoreFonts}
+                          className="w-full"
+                        >
+                          Load More Fonts
+                        </Button>
+                      </div>
+                    )}
+                  </RadioGroup>
+                </div>
+              )}
+              
+              {fontMode === "handwriting" && (
+                <div className="ml-6 space-y-2 max-h-60 overflow-y-auto">
+                  <RadioGroup value={fontFamily} onValueChange={handleFontChange}>
+                    {getVisibleFonts().map((font) => (
+                      <div key={font} className="flex items-center justify-between space-x-2">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value={font} id={font} />
+                          <Label 
+                            htmlFor={font} 
+                            className={getFontLabelClasses(font)}
+                            style={{ fontFamily: getFontDisplayValue(font) }}
+                          >
+                            {getFontDisplayName(font)}
+                          </Label>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleFavoriteFont(font)}
+                          className={isFavorite(font) ? "text-red-500" : ""}
+                        >
+                          <Heart className={`h-4 w-4 ${isFavorite(font) ? "fill-current" : ""}`} />
+                        </Button>
+                      </div>
+                    ))}
+                    {getVisibleFonts().length < sortFontsAlphabetically(handwritingFonts).length && (
+                      <div className="text-center py-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={loadMoreFonts}
+                          className="w-full"
+                        >
+                          Load More Fonts
+                        </Button>
+                      </div>
+                    )}
+                  </RadioGroup>
+                </div>
+              )}
             </div>
-          </div>
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium">Font Family</h3>
-            <RadioGroup value={fontMode} onValueChange={handleFontModeChange}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="basic" id="basic" />
-                <Label htmlFor="basic" className="text-lg">
-                  Basic Fonts
-                </Label>
+          )}
+          
+          {activeTab === "bookmarks" && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium">Favorite Fonts ({favoriteFonts.length}/10)</h3>
+              {favoriteFonts.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No favorite fonts yet. Click the heart icon on any font to add it to your bookmarks.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {favoriteFonts.map((font) => (
+                    <div key={font} className="flex items-center justify-between p-2 border rounded">
+                      <span style={{ fontFamily: getFontDisplayValue(font) }}>
+                        {getFontDisplayName(font)}
+                      </span>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleFontChange(font)}
+                        >
+                          Apply
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleFavoriteFont(font)}
+                          className="text-red-500"
+                        >
+                          <Heart className="h-4 w-4 fill-current" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {activeTab === "titles" && (
+            <div className="space-y-4">
+              <div className="bg-muted p-3 rounded-lg">
+                <p className="text-sm font-medium">Currently Using:</p>
+                <p className="text-lg" style={{ 
+                  fontFamily: titleFont === "arbutus" ? 'Arbutus, serif' : 
+                            titleFont === "agbalumo" ? 'Agbalumo, display' :
+                            titleFont === "walter-turncoat" ? '"Walter Turncoat", cursive' :
+                            '"Yatra One", cursive'
+                }}>
+                  {titleFont === "arbutus" ? "Arbutus" :
+                   titleFont === "agbalumo" ? "Agbalumo" :
+                   titleFont === "walter-turncoat" ? "Walter Turncoat" :
+                   "Yatra One"}
+                </p>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="handwriting" id="handwriting" />
-                <Label htmlFor="handwriting" className="text-lg" style={{ fontFamily: "'Indie Flower', cursive" }}>
-                  Handwriting Fonts
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="title" id="title" />
-                <Label htmlFor="title" className="text-lg" style={{ fontFamily: '"Yatra One", cursive' }}>
-                  Title Fonts
-                </Label>
-              </div>
-            </RadioGroup>
-            
-            {fontMode === "basic" && (
-              <div className="ml-6 space-y-2 max-h-60 overflow-y-auto">
-                <RadioGroup value={fontFamily} onValueChange={handleFontChange}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="serif" id="serif" />
-                    <Label htmlFor="serif" className="font-serif text-lg">
-                      Serif (Better readability)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="sans-serif" id="sans-serif" />
-                    <Label htmlFor="sans-serif" className="text-lg" style={{ fontFamily: 'Arial, sans-serif' }}>
-                      Sans-serif (Clean modern)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="monospace" id="monospace" />
-                    <Label htmlFor="monospace" className="text-lg" style={{ fontFamily: 'Courier New, monospace' }}>
-                      Monospace (Code style)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="abeezee" id="abeezee" />
-                    <Label htmlFor="abeezee" className="text-lg" style={{ fontFamily: 'ABeeZee, sans-serif' }}>
-                      ABeeZee
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="aclonica" id="aclonica" />
-                    <Label htmlFor="aclonica" className="text-lg" style={{ fontFamily: 'Aclonica, sans-serif' }}>
-                      Aclonica
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="advent-pro" id="advent-pro" />
-                    <Label htmlFor="advent-pro" className="text-lg" style={{ fontFamily: '"Advent Pro", sans-serif' }}>
-                      Advent Pro
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="anonymous-pro" id="anonymous-pro" />
-                    <Label htmlFor="anonymous-pro" className="text-lg" style={{ fontFamily: '"Anonymous Pro", monospace' }}>
-                      Anonymous Pro
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="tenali-ramakrishna" id="tenali-ramakrishna" />
-                    <Label htmlFor="tenali-ramakrishna" className="text-lg" style={{ fontFamily: '"Tenali Ramakrishna", sans-serif' }}>
-                      Tenali Ramakrishna
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="truculenta" id="truculenta" />
-                    <Label htmlFor="truculenta" className="text-lg" style={{ fontFamily: 'Truculenta, sans-serif' }}>
-                      Truculenta
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="ubuntu-sans-mono" id="ubuntu-sans-mono" />
-                    <Label htmlFor="ubuntu-sans-mono" className="text-lg" style={{ fontFamily: '"Ubuntu Sans Mono", monospace' }}>
-                      Ubuntu Sans Mono
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="unbounded" id="unbounded" />
-                    <Label htmlFor="unbounded" className="text-lg" style={{ fontFamily: 'Unbounded, sans-serif' }}>
-                      Unbounded
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="nova-mono" id="nova-mono" />
-                    <Label htmlFor="nova-mono" className="text-lg" style={{ fontFamily: '"Nova Mono", monospace' }}>
-                      Nova Mono
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="orbitron" id="orbitron" />
-                    <Label htmlFor="orbitron" className="text-lg" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                      Orbitron
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="bahianita" id="bahianita" />
-                    <Label htmlFor="bahianita" className="text-lg" style={{ fontFamily: 'Bahianita, cursive' }}>
-                      Bahianita
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="syne-mono" id="syne-mono" />
-                    <Label htmlFor="syne-mono" className="text-lg" style={{ fontFamily: '"Syne Mono", monospace' }}>
-                      Syne Mono
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="vt323" id="vt323" />
-                    <Label htmlFor="vt323" className="text-lg" style={{ fontFamily: 'VT323, monospace' }}>
-                      VT323
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="xanh-mono" id="xanh-mono" />
-                    <Label htmlFor="xanh-mono" className="text-lg" style={{ fontFamily: '"Xanh Mono", monospace' }}>
-                      Xanh Mono
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="cutive-mono" id="cutive-mono" />
-                    <Label htmlFor="cutive-mono" className="text-lg" style={{ fontFamily: '"Cutive Mono", monospace' }}>
-                      Cutive Mono
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="arbutus-slab" id="arbutus-slab" />
-                    <Label htmlFor="arbutus-slab" className="text-lg" style={{ fontFamily: '"Arbutus Slab", serif' }}>
-                      Arbutus Slab
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="nixie-one" id="nixie-one" />
-                    <Label htmlFor="nixie-one" className="text-lg" style={{ fontFamily: '"Nixie One", cursive' }}>
-                      Nixie One
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="noticia-text" id="noticia-text" />
-                    <Label htmlFor="noticia-text" className="text-lg" style={{ fontFamily: '"Noticia Text", serif' }}>
-                      Noticia Text
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="arvo" id="arvo" />
-                    <Label htmlFor="arvo" className="text-lg" style={{ fontFamily: 'Arvo, serif' }}>
-                      Arvo
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="oi" id="oi" />
-                    <Label htmlFor="oi" className="text-lg" style={{ fontFamily: 'Oi, cursive' }}>
-                      Oi
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="oldenburg" id="oldenburg" />
-                    <Label htmlFor="oldenburg" className="text-lg" style={{ fontFamily: 'Oldenburg, cursive' }}>
-                      Oldenburg
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="orelega-one" id="orelega-one" />
-                    <Label htmlFor="orelega-one" className="text-lg" style={{ fontFamily: '"Orelega One", cursive' }}>
-                      Orelega One
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="nova-oval" id="nova-oval" />
-                    <Label htmlFor="nova-oval" className="text-lg" style={{ fontFamily: '"Nova Oval", cursive' }}>
-                      Nova Oval
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="atma" id="atma" />
-                    <Label htmlFor="atma" className="text-lg" style={{ fontFamily: 'Atma, cursive' }}>
-                      Atma
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="butcherman" id="butcherman" />
-                    <Label htmlFor="butcherman" className="text-lg" style={{ fontFamily: 'Butcherman, cursive' }}>
-                      Butcherman
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="cherry-bomb-one" id="cherry-bomb-one" />
-                    <Label htmlFor="cherry-bomb-one" className="text-lg" style={{ fontFamily: '"Cherry Bomb One", cursive' }}>
-                      Cherry Bomb One
-                    </Label>
-                  </div>
+              <h3 className="text-sm font-medium">Title Fonts</h3>
+              <p className="text-sm text-muted-foreground">
+                Choose a font for note titles. These fonts are designed to make headings stand out.
+              </p>
+              <div className="space-y-2">
+                <RadioGroup value={titleFont} onValueChange={handleTitleFontChange}>
+                  {sortTitleFontsAlphabetically(["arbutus", "agbalumo", "walter-turncoat", "yatra-one"]).map((font) => (
+                    <div key={font} className="flex items-center justify-between space-x-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value={font} id={`title-${font}`} />
+                        <Label htmlFor={`title-${font}`} className={getTitleFontLabelClasses(font)} style={{ 
+                          fontFamily: font === "arbutus" ? 'Arbutus, serif' : 
+                                    font === "agbalumo" ? 'Agbalumo, display' :
+                                    font === "walter-turncoat" ? '"Walter Turncoat", cursive' :
+                                    '"Yatra One", cursive'
+                        }}>
+                          {font === "arbutus" ? "Arbutus" :
+                           font === "agbalumo" ? "Agbalumo" :
+                           font === "walter-turncoat" ? "Walter Turncoat" :
+                           "Yatra One"}
+                        </Label>
+                      </div>
+                    </div>
+                  ))}
                 </RadioGroup>
               </div>
-            )}
-            
-            {fontMode === "handwriting" && (
-              <div className="ml-6 space-y-2 max-h-60 overflow-y-auto">
-                <RadioGroup value={fontFamily} onValueChange={handleFontChange}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="indie-flower" id="indie-flower" />
-                    <Label htmlFor="indie-flower" className="text-lg" style={{ fontFamily: "'Indie Flower', cursive" }}>
-                      Indie Flower (Default)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="give-you-glory" id="give-you-glory" />
-                    <Label htmlFor="give-you-glory" className="text-lg" style={{ fontFamily: '"Give You Glory", cursive' }}>
-                      Give You Glory (Decorative)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="annie-use-your-telescope" id="annie-use-your-telescope" />
-                    <Label htmlFor="annie-use-your-telescope" className="text-lg" style={{ fontFamily: '"Annie Use Your Telescope", cursive' }}>
-                      Annie Use Your Telescope
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="nothing-you-could-do" id="nothing-you-could-do" />
-                    <Label htmlFor="nothing-you-could-do" className="text-lg" style={{ fontFamily: '"Nothing You Could Do", cursive' }}>
-                      Nothing You Could Do
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="oooh-baby" id="oooh-baby" />
-                    <Label htmlFor="oooh-baby" className="text-lg" style={{ fontFamily: '"Oooh Baby", cursive' }}>
-                      Oooh Baby
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="over-the-rainbow" id="over-the-rainbow" />
-                    <Label htmlFor="over-the-rainbow" className="text-lg" style={{ fontFamily: '"Over the Rainbow", cursive' }}>
-                      Over the Rainbow
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="pangolin" id="pangolin" />
-                    <Label htmlFor="pangolin" className="text-lg" style={{ fontFamily: 'Pangolin, cursive' }}>
-                      Pangolin
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="autour-one" id="autour-one" />
-                    <Label htmlFor="autour-one" className="text-lg" style={{ fontFamily: '"Autour One", cursive' }}>
-                      Autour One
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="permanent-marker" id="permanent-marker" />
-                    <Label htmlFor="permanent-marker" className="text-lg" style={{ fontFamily: '"Permanent Marker", cursive' }}>
-                      Permanent Marker
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="reenie-beanie" id="reenie-beanie" />
-                    <Label htmlFor="reenie-beanie" className="text-lg" style={{ fontFamily: '"Reenie Beanie", cursive' }}>
-                      Reenie Beanie
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="rock-salt" id="rock-salt" />
-                    <Label htmlFor="rock-salt" className="text-lg" style={{ fontFamily: '"Rock Salt", cursive' }}>
-                      Rock Salt
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="schoolbell" id="schoolbell" />
-                    <Label htmlFor="schoolbell" className="text-lg" style={{ fontFamily: '"Schoolbell", cursive' }}>
-                      Schoolbell
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="sedgwick-ave" id="sedgwick-ave" />
-                    <Label htmlFor="sedgwick-ave" className="text-lg" style={{ fontFamily: '"Sedgwick Ave", cursive' }}>
-                      Sedgwick Ave
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="shadows-into-light" id="shadows-into-light" />
-                    <Label htmlFor="shadows-into-light" className="text-lg" style={{ fontFamily: '"Shadows Into Light", cursive' }}>
-                      Shadows Into Light
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="short-stack" id="short-stack" />
-                    <Label htmlFor="short-stack" className="text-lg" style={{ fontFamily: '"Short Stack", cursive' }}>
-                      Short Stack
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="shantell-sans" id="shantell-sans" />
-                    <Label htmlFor="shantell-sans" className="text-lg" style={{ fontFamily: '"Shantell Sans", cursive' }}>
-                      Shantell Sans
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="solitreo" id="solitreo" />
-                    <Label htmlFor="solitreo" className="text-lg" style={{ fontFamily: 'Solitreo, cursive' }}>
-                      Solitreo
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="sue-ellen-francisco" id="sue-ellen-francisco" />
-                    <Label htmlFor="sue-ellen-francisco" className="text-lg" style={{ fontFamily: '"Sue Ellen Francisco", cursive' }}>
-                      Sue Ellen Francisco
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="sunshiney" id="sunshiney" />
-                    <Label htmlFor="sunshiney" className="text-lg" style={{ fontFamily: 'Sunshiney, cursive' }}>
-                      Sunshiney
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="swanky-and-moo-moo" id="swanky-and-moo-moo" />
-                    <Label htmlFor="swanky-and-moo-moo" className="text-lg" style={{ fontFamily: '"Swanky and Moo Moo", cursive' }}>
-                      Swanky and Moo Moo
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="the-girl-next-door" id="the-girl-next-door" />
-                    <Label htmlFor="the-girl-next-door" className="text-lg" style={{ fontFamily: '"The Girl Next Door", cursive' }}>
-                      The Girl Next Door
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="tillana" id="tillana" />
-                    <Label htmlFor="tillana" className="text-lg" style={{ fontFamily: 'Tillana, cursive' }}>
-                      Tillana
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="unkempt" id="unkempt" />
-                    <Label htmlFor="unkempt" className="text-lg" style={{ fontFamily: 'Unkempt, cursive' }}>
-                      Unkempt
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="waiting-for-the-sunrise" id="waiting-for-the-sunrise" />
-                    <Label htmlFor="waiting-for-the-sunrise" className="text-lg" style={{ fontFamily: '"Waiting for the Sunrise", cursive' }}>
-                      Waiting for the Sunrise
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="beth-ellen" id="beth-ellen" />
-                    <Label htmlFor="beth-ellen" className="text-lg" style={{ fontFamily: '"Beth Ellen", cursive' }}>
-                      Beth Ellen
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="homemade-apple" id="homemade-apple" />
-                    <Label htmlFor="homemade-apple" className="text-lg" style={{ fontFamily: '"Homemade Apple", cursive' }}>
-                      Homemade Apple
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="zeyada" id="zeyada" />
-                    <Label htmlFor="zeyada" className="text-lg" style={{ fontFamily: 'Zeyada, cursive' }}>
-                      Zeyada
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="cedarville-cursive" id="cedarville-cursive" />
-                    <Label htmlFor="cedarville-cursive" className="text-lg" style={{ fontFamily: '"Cedarville Cursive", cursive' }}>
-                      Cedarville Cursive
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="coming-soon" id="coming-soon" />
-                    <Label htmlFor="coming-soon" className="text-lg" style={{ fontFamily: '"Coming Soon", cursive' }}>
-                      Coming Soon
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="covered-by-your-grace" id="covered-by-your-grace" />
-                    <Label htmlFor="covered-by-your-grace" className="text-lg" style={{ fontFamily: '"Covered By Your Grace", cursive' }}>
-                      Covered By Your Grace
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="crafty-girls" id="crafty-girls" />
-                    <Label htmlFor="crafty-girls" className="text-lg" style={{ fontFamily: '"Crafty Girls", cursive' }}>
-                      Crafty Girls
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="comforter" id="comforter" />
-                    <Label htmlFor="comforter" className="text-lg" style={{ fontFamily: 'Comforter, cursive' }}>
-                      Comforter
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="oregano" id="oregano" />
-                    <Label htmlFor="oregano" className="text-lg" style={{ fontFamily: 'Oregano, cursive' }}>
-                      Oregano
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="protest-revolution" id="protest-revolution" />
-                    <Label htmlFor="protest-revolution" className="text-lg" style={{ fontFamily: '"Protest Revolution", cursive' }}>
-                      Protest Revolution
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="protest-riot" id="protest-riot" />
-                    <Label htmlFor="protest-riot" className="text-lg" style={{ fontFamily: '"Protest Riot", cursive' }}>
-                      Protest Riot
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="rancho" id="rancho" />
-                    <Label htmlFor="rancho" className="text-lg" style={{ fontFamily: 'Rancho, cursive' }}>
-                      Rancho
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="sarina" id="sarina" />
-                    <Label htmlFor="sarina" className="text-lg" style={{ fontFamily: 'Sarina, cursive' }}>
-                      Sarina
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="single-day" id="single-day" />
-                    <Label htmlFor="single-day" className="text-lg" style={{ fontFamily: '"Single Day", cursive' }}>
-                      Single Day
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            )}
-            
-            {fontMode === "title" && (
-              <div className="ml-6 space-y-2">
-                <RadioGroup value={fontFamily} onValueChange={handleFontChange}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="arbutus" id="arbutus" />
-                    <Label htmlFor="arbutus" className="text-lg" style={{ fontFamily: 'Arbutus, serif' }}>
-                      Arbutus (Classic serif)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="agbalumo" id="agbalumo" />
-                    <Label htmlFor="agbalumo" className="text-lg" style={{ fontFamily: 'Agbalumo, display' }}>
-                      Agbalumo (Display font)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="walter-turncoat" id="walter-turncoat" />
-                    <Label htmlFor="walter-turncoat" className="text-lg" style={{ fontFamily: '"Walter Turncoat", cursive' }}>
-                      Walter Turncoat (Handwritten)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yatra-one" id="yatra-one" />
-                    <Label htmlFor="yatra-one" className="text-lg" style={{ fontFamily: '"Yatra One", cursive' }}>
-                      Yatra One (Display)
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            )}
-          </div>
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium">Default View</h3>
-            <RadioGroup value={defaultView} onValueChange={handleViewChange}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="grid" id="grid" />
-                <Label htmlFor="grid">
-                  Notes (Grid view)
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="list" id="list" />
-                <Label htmlFor="list">
-                  List (Compact view)
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
+            </div>
+          )}
         </div>
         <div className="pt-4 border-t">
           <p className="text-xs text-muted-foreground text-center">

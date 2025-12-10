@@ -98,7 +98,7 @@ export const NoteDetailDialog = ({
               placeholder="Add a title..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400"
+              className="font-title text-lg dark:text-white dark:placeholder:text-gray-400"
             />
           </div>
           <div>
