@@ -1,0 +1,203 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 97%;
+    --foreground: 0 0% 15%;
+    
+    --font-family-base: 'Indie Flower', cursive;
+    --font-family-handwriting: 'Indie Flower', cursive;
+    --font-family-title: 'Arbutus', serif;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 15%;
+
+    --primary: 350 100% 88%;
+    --primary-foreground: 0 0% 15%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 0 0% 15%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 48 96% 76%;
+    --accent-foreground: 0 0% 15%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 350 100% 88%;
+
+    --radius: 0.5rem;
+    
+    /* Sticky note colors */
+    --note-yellow: 48 96% 76%;
+    --note-pink: 350 100% 88%;
+    --note-blue: 199 92% 72%;
+    --note-green: 142 76% 73%;
+    --note-purple: 270 67% 78%;
+    --note-orange: 24 100% 80%;
+    --note-teal: 180 70% 75%;
+    --note-lavender: 260 60% 82%;
+    --note-peach: 20 100% 85%;
+    --note-mint: 150 80% 80%;
+    
+    /* Custom shadows */
+    --shadow-sticky: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-sticky-hover: 0 8px 20px rgba(0, 0, 0, 0.2), 0 4px 10px rgba(0, 0, 0, 0.12), inset 0 -2px 4px rgba(0, 0, 0, 0.08);
+    
+    --radius: 0.25rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 14%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 18%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 25%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 23%;
+    --muted-foreground: 0 0% 72%;
+    --accent: 0 0% 32%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 24 69% 52%;
+    --destructive-foreground: 0 0% 0%;
+    --border: 0 0% 26%;
+    --input: 0 0% 32%;
+    --ring: 0 0% 72%;
+    --chart-1: 75 81% 58%;
+    --chart-2: 261 58% 45%;
+    --chart-3: 0 0% 56%;
+    --chart-4: 0 0% 44%;
+    --chart-5: 0 0% 92%;
+    --sidebar-background: 0 0% 18%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 32%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 32%;
+    --sidebar-ring: 0 0% 72%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.02) 2px,
+        rgba(0, 0, 0, 0.02) 4px
+      );
+  }
+}
+
+@layer utilities {
+  .icon-crisp {
+    /* Fallback for browsers that don't support image-rendering */
+    image-rendering: auto;
+    /* Edge 79+ */
+    image-rendering: -webkit-optimize-contrast;
+    /* Pixelated fallback for other browsers */
+    image-rendering: pixelated;
+  }
+
+  .font-handwriting {
+    font-family: var(--font-family-handwriting), cursive;
+  }
+
+  .font-title {
+    font-family: var(--font-family-title), serif;
+  }
+
+  .dark .font-handwriting {
+    font-family: var(--font-family-handwriting), cursive;
+  }
+
+  .dark .font-handwriting.note-text {
+    color: #000000 !important;
+  }
+
+  .dark .font-handwriting.status-text {
+    color: inherit;
+  }
+
+  .dark .font-handwriting.status-text.selected {
+    color: #000000 !important;
+  }
+
+  .dark .note-status {
+    color: #000000 !important;
+  }
+
+  .dark .note-text {
+    color: #ffffff !important;
+  }
+
+  .dark p.note-text {
+    color: #ffffff !important;
+  }
+
+  .dark .text-foreground.note-text {
+    color: #ffffff !important;
+  }
+
+  .dark .sticky-note .text-foreground {
+    color: #000000 !important;
+  }
+
+  .dark .sticky-note .pin-icon {
+    color: #000000 !important;
+  }
+
+  .dark .pin-icon {
+    color: #ffffff !important;
+  }
+
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;
+  }
+}
