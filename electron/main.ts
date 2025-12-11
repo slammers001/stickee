@@ -21,6 +21,7 @@ const createWindow = async () => {
       height: 800,
       show: false, // Don't show the window until it's ready
       backgroundColor: '#ffffff',
+      icon: path.join(__dirname, '../public/stickee.png'), // Add the icon from public folder
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,

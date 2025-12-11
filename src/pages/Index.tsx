@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Grid3x3, List, Plus, Pin } from "lucide-react";
+import { Plus, Pin } from "lucide-react";
 import { StickyNote } from "@/components/StickyNote";
 import type { NoteStatus as StickyNoteStatus } from "@/components/StickyNote";
 import { AddNoteDialog } from "@/components/AddNoteDialog";
@@ -12,6 +12,8 @@ import { Note } from "@/types/note";
 import { UserProfile } from "@/components/UserProfile";
 import { SettingsButton } from "@/components/SettingsDialog";
 import { SearchBar } from "@/components/SearchBar";
+import { ThemeSelector } from "@/components/ThemeSelector";
+import { TermsPopup } from "@/components/TermsPopup";
 import { StickyNoteWindow } from "@/components/StickyNoteWindow";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { 
@@ -40,6 +42,9 @@ const Index = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [stickyNoteWindowOpen, setStickyNoteWindowOpen] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(() => {
+    return localStorage.getItem("stickee-terms-agreed") === "true";
+  });
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [iconPath, setIconPath] = useState("/favicons/stickee.png");
@@ -68,6 +73,12 @@ const Index = () => {
     }
   }, []);
 
+  // Handle terms agreement
+  const handleTermsAgree = () => {
+    setTermsAgreed(true);
+    localStorage.setItem("stickee-terms-agreed", "true");
+  };
+
   // Apply saved default view preference on component mount
   useEffect(() => {
     const savedView = localStorage.getItem("stickee-default-view") as "grid" | "list";
@@ -79,6 +90,9 @@ const Index = () => {
   // Keyboard shortcut for new note
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if terms are agreed
+      if (!termsAgreed) return;
+      
       // Only trigger 'n' key if no input fields are focused and no dialogs are open
       if (
         e.key === 'n' && 
@@ -95,12 +109,12 @@ const Index = () => {
         setDialogOpen(true);
       }
       
-      // Sticky note window shortcut - 'p' key
+      // Sticky note window shortcut - Alt+P keys
       if (
-        e.key === 'p' && 
+        e.key.toLowerCase() === 'p' && 
+        e.altKey &&
         !e.ctrlKey && 
-        !e.metaKey && 
-        !e.altKey &&
+        !e.metaKey &&
         !dialogOpen &&
         !detailDialogOpen &&
         !stickyNoteWindowOpen &&
@@ -309,7 +323,11 @@ const Index = () => {
     handleDragEnd,
   } = useDragAndDrop(unpinnedNotes, reorderNotes);
 
-  const openNoteDetail = (note: Note) => {
+  const handleNoteClick = (note: Note) => {
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to view notes");
+      return;
+    }
     setSelectedNote(note);
     setDetailDialogOpen(true);
   };
@@ -319,6 +337,10 @@ const Index = () => {
   };
 
   const handleQuickNote = async (content: string, color: string) => {
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to create notes");
+      return;
+    }
     setStickyNoteWindowOpen(false);
     
     if (content.trim()) {
@@ -346,10 +368,11 @@ const Index = () => {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card shadow-sm">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <img 
@@ -386,7 +409,8 @@ const Index = () => {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <SearchBar onSearch={handleSearch} />
+              <ThemeSelector />
+              <SearchBar onSearch={termsAgreed ? handleSearch : () => {}} disabled={!termsAgreed} />
               <div className="h-6 w-px bg-border"></div>
               <UserProfile />
               <div className="h-6 w-px bg-border"></div>
@@ -395,25 +419,20 @@ const Index = () => {
               <Button
                 variant="default"
                 size="icon"
-                onClick={() => setDialogOpen(true)}
+                onClick={(e) => {
+                  if (!termsAgreed) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toast.error("You must agree to the Terms of Service to create notes");
+                    return;
+                  }
+                  e.stopPropagation();
+                  setDialogOpen(true);
+                }}
+                disabled={!termsAgreed}
                 className="bg-primary hover:bg-primary/90"
               >
                 <Plus className="h-5 w-5" />
-              </Button>
-              <div className="h-6 w-px bg-border mx-1"></div>
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("grid")}
-              >
-                <Grid3x3 className="h-5 w-5" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="h-5 w-5" />
               </Button>
             </div>
           </div>
@@ -424,30 +443,11 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         {filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
-            <button 
-              onClick={() => setDialogOpen(true)}
-              className="group w-48 h-48 mb-8 flex items-center justify-center transition-all duration-500 hover:scale-110 hover:-rotate-12 focus:outline-none"
-              aria-label="Add new note"
-            >
-              <img 
-                src={iconPath} 
-                alt="Stickee" 
-                className="w-full h-full p-2 object-contain transition-all duration-500 group-hover:drop-shadow-lg icon-crisp scale-150 group-hover:-rotate-6 no-select"
-                onError={(e) => {
-                  // Prevent infinite loop by setting a flag
-                  const target = e.target as HTMLImageElement;
-                  if (!target.dataset.errorHandled) {
-                    target.dataset.errorHandled = "true";
-                    // Try fallback once
-                    if (target.src.includes("/favicons/")) {
-                      target.src = "./stickee.png";
-                    } else if (target.src.includes("./")) {
-                      target.src = "/stickee.png";
-                    }
-                  }
-                }}
-              />
-            </button>
+            <img 
+              src="/Stickee-Not-Found.png" 
+              alt="No notes found" 
+              className="mb-6 max-w-sm h-auto object-contain"
+            />
             <h2 className="text-2xl font-semibold text-foreground mb-2 font-handwriting">
               {searchQuery ? "No matching notes found" : "No Stickee notes yet"}
             </h2>
@@ -469,7 +469,7 @@ const Index = () => {
                 color={note.color}
                 status={note.status}
                 pinned={note.pinned}
-                onClick={() => openNoteDetail(note)}
+                onClick={() => handleNoteClick(note)}
                 onTogglePin={() => togglePin(note.id)}
               />
             ))}
@@ -498,7 +498,7 @@ const Index = () => {
                   color={note.color}
                   status={note.status}
                   pinned={note.pinned}
-                  onClick={() => openNoteDetail(note)}
+                  onClick={() => handleNoteClick(note)}
                   onTogglePin={() => togglePin(note.id)}
                 />
               </div>
@@ -528,7 +528,7 @@ const Index = () => {
                     "p-4 bg-card border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer",
                     colorMap[note.color]
                   )}
-                  onClick={() => openNoteDetail(note)}
+                  onClick={() => handleNoteClick(note)}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3 flex-1">
@@ -603,7 +603,7 @@ const Index = () => {
                       colorMap[note.color],
                       draggedItem?.index === index ? "opacity-50" : ""
                     )}
-                    onClick={() => openNoteDetail(note)}
+                    onClick={() => handleNoteClick(note)}
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-3 flex-1">
@@ -668,12 +668,14 @@ const Index = () => {
         />
       )}
 
-      {/* Sticky Note Window */}
-      <StickyNoteWindow
-        isOpen={stickyNoteWindowOpen}
-        onClose={handleQuickNote}
-      />
+      {/* Terms Popup */}
+      {!termsAgreed && <TermsPopup onAgree={handleTermsAgree} />}
     </div>
+    <StickyNoteWindow
+      isOpen={stickyNoteWindowOpen}
+      onClose={handleQuickNote}
+    />
+  </>
   );
 };
 

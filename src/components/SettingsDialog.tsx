@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { toast } from "sonner";
 import { getFontSettings, saveFontSettings, updateCurrentFont, updateTitleFont, updateFavoriteFonts } from "@/services/fontSettingsService";
 import { ensureUserExists } from "@/services/userService";
 
@@ -21,7 +21,7 @@ type FontFamily = "serif" | "sans-serif" | "monospace" |
 type TitleFontFamily = "arbutus" | "agbalumo" | "walter-turncoat" | "yatra-one";
 
 type FontMode = "basic" | "handwriting";
-type ActiveTab = "themes" | "fonts" | "bookmarks" | "titles";
+type ActiveTab = "ui" | "fonts" | "bookmarks" | "titles" | "terms";
 type ViewMode = "grid" | "list";
 
 interface SettingsDialogProps {
@@ -35,7 +35,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const [titleFont, setTitleFont] = useState<TitleFontFamily>("arbutus");
   const [defaultView, setDefaultView] = useState<ViewMode>("grid");
   const [favoriteFonts, setFavoriteFonts] = useState<FontFamily[]>([]);
-  const [activeTab, setActiveTab] = useState<ActiveTab>("themes");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("ui");
   const [visibleFontCount, setVisibleFontCount] = useState(20); // Lazy loading state
 
   // Organized font arrays for lazy loading
@@ -695,12 +695,12 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         {/* Tab Navigation */}
         <div className="flex space-x-1 p-1 bg-muted rounded-lg">
           <Button
-            variant={activeTab === "themes" ? "default" : "ghost"}
+            variant={activeTab === "ui" ? "default" : "ghost"}
             size="sm"
-            onClick={() => setActiveTab("themes")}
+            onClick={() => setActiveTab("ui")}
             className="flex-1"
           >
-            Themes
+            UI
           </Button>
           <Button
             variant={activeTab === "fonts" ? "default" : "ghost"}
@@ -726,18 +726,19 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
           >
             Bookmarks ({favoriteFonts.length}/10)
           </Button>
+          <Button
+            variant={activeTab === "terms" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setActiveTab("terms")}
+            className="flex-1"
+          >
+            Terms
+          </Button>
         </div>
 
         <div className="grid gap-6 py-4">
-          {activeTab === "themes" && (
+          {activeTab === "ui" && (
             <>
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Theme</h3>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Toggle between light and dark theme</span>
-                  <ThemeToggle />
-                </div>
-              </div>
               <div className="space-y-4">
                 <h3 className="text-sm font-medium">Default View</h3>
                 <RadioGroup value={defaultView} onValueChange={handleViewChange}>
@@ -948,10 +949,65 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
               </div>
             </div>
           )}
+          
+          {activeTab === "terms" && (
+            <>
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">Terms of Service</h3>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    You have agreed to the Terms of Service for using Stickee.
+                  </p>
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const termsWindow = window.open("/terms.md", "_blank", "width=800,height=600");
+                        if (termsWindow) {
+                          termsWindow.focus();
+                        }
+                      }}
+                    >
+                      View Full Terms
+                    </Button>
+                  </div>
+                  <div className="pt-4">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        localStorage.removeItem("stickee-terms-agreed");
+                        toast.success("You have disagreed to the Terms of Service");
+                        onOpenChange(false);
+                        window.location.reload();
+                      }}
+                    >
+                      Disagree to Terms
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Disagreeing will restrict all app functionality until you agree again.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
         <div className="pt-4 border-t">
           <p className="text-xs text-muted-foreground text-center">
-            By using this app you agree to the Terms of Service
+            By using this app you agree to the{" "}
+            <button
+              onClick={() => {
+                const termsWindow = window.open("/terms.md", "_blank", "width=800,height=600");
+                if (termsWindow) {
+                  termsWindow.focus();
+                }
+              }}
+              className="text-xs underline hover:text-foreground transition-colors"
+            >
+              Terms of Service
+            </button>
           </p>
         </div>
       </DialogContent>
@@ -961,15 +1017,53 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
 
 export const SettingsButton = () => {
   const [open, setOpen] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(() => {
+    return localStorage.getItem("stickee-terms-agreed") === "true";
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setTermsAgreed(localStorage.getItem("stickee-terms-agreed") === "true");
+    };
+
+    // Listen for storage changes
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check periodically as a fallback
+    const interval = setInterval(handleStorageChange, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const handleSettingsClick = (e: React.MouseEvent) => {
+    if (!termsAgreed) {
+      e.preventDefault();
+      toast.error("You must agree to Terms of Service to access settings");
+      return;
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="icon">
+    <Dialog open={open} onOpenChange={termsAgreed ? setOpen : () => {}}>
+      {!termsAgreed ? (
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={handleSettingsClick}
+        >
           <Settings className="h-5 w-5" />
         </Button>
-      </DialogTrigger>
-      <SettingsDialog open={open} onOpenChange={setOpen} />
+      ) : (
+        <DialogTrigger asChild>
+          <Button variant="outline" size="icon">
+            <Settings className="h-5 w-5" />
+          </Button>
+        </DialogTrigger>
+      )}
+      {termsAgreed && <SettingsDialog open={open} onOpenChange={setOpen} />}
     </Dialog>
   );
 };
