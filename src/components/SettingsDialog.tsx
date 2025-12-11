@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Heart, Settings } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,7 @@ interface SettingsDialogProps {
 }
 
 export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
+  const { theme, setTheme } = useTheme();
   const [fontMode, setFontMode] = useState<FontMode>("basic");
   const [fontFamily, setFontFamily] = useState<FontFamily>("indie-flower");
   const [titleFont, setTitleFont] = useState<TitleFontFamily>("arbutus");
@@ -763,6 +765,30 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         <div className="grid gap-6 py-4 max-h-[500px] overflow-y-auto">
           {activeTab === "ui" && (
             <>
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">Theme</h3>
+                <RadioGroup value={theme} onValueChange={setTheme}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="light" id="light" />
+                    <Label htmlFor="light">
+                      Light
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="dark" id="dark" />
+                    <Label htmlFor="dark">
+                      Dark
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="system" id="system" />
+                    <Label htmlFor="system">
+                      System
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              
               <div className="space-y-4">
                 <h3 className="text-sm font-medium">Default View</h3>
                 <RadioGroup value={defaultView} onValueChange={handleViewChange}>
