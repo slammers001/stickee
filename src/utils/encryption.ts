@@ -23,17 +23,43 @@ export function decryptContent(encryptedContent: string): string {
   if (!encryptedContent) return encryptedContent;
   
   try {
-    // Decode from base64
-    const binaryString = atob(encryptedContent);
-    const bytes = new Uint8Array(binaryString.length);
+    // Try old XOR-based decryption first (for backward compatibility)
+    const ENCRYPTION_KEY = 'stickee-encryption-key-2024';
+    const decoded = atob(encryptedContent);
     
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+    // Reverse XOR operation
+    const xorDecrypted = Array.from(decoded).map((char, index) => {
+      const keyChar = ENCRYPTION_KEY[index % ENCRYPTION_KEY.length];
+      return String.fromCharCode(char.charCodeAt(0) ^ keyChar.charCodeAt(0));
+    }).join('');
+    
+    // Check if XOR decryption produced readable text
+    // If it looks like normal text, return it
+    if (xorDecrypted.length > 0 && !xorDecrypted.includes('\u0000') && !xorDecrypted.includes('\uFFFD')) {
+      return xorDecrypted;
     }
     
-    // Use TextDecoder for proper Unicode handling
-    const decoder = new TextDecoder();
-    return decoder.decode(bytes);
+    // If XOR didn't work, try new TextEncoder/TextDecoder method
+    try {
+      const bytes = new Uint8Array(decoded.length);
+      
+      for (let i = 0; i < decoded.length; i++) {
+        bytes[i] = decoded.charCodeAt(i);
+      }
+      
+      const decoder = new TextDecoder();
+      const textDecoded = decoder.decode(bytes);
+      
+      // Validate that this is readable text
+      if (textDecoded.length > 0 && !textDecoded.includes('\u0000') && !textDecoded.includes('\uFFFD')) {
+        return textDecoded;
+      }
+    } catch (e) {
+      // If new method fails, return the XOR result
+    }
+    
+    // If neither method worked perfectly, return the XOR result as fallback
+    return xorDecrypted;
   } catch (error) {
     console.error('Decryption error:', error);
     return encryptedContent; // Fallback to original content
