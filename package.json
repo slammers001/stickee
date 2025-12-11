@@ -1,7 +1,7 @@
 {
   "name": "stickee",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "author": "slammers001",
   "description": "A modern and fun desktop application for managing and organizing your digital sticky notes and tasks",
