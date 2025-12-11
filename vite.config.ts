@@ -4,6 +4,7 @@ import path from "path";
 import type { PluginOption } from 'vite';
 import electron from "vite-plugin-electron";
 import viteCompression from 'vite-plugin-compression';
+import { readFileSync } from 'fs';
 
 // @ts-ignore - lovable-tagger might not have types
 export const componentTagger = (): PluginOption => ({
@@ -15,11 +16,25 @@ export const componentTagger = (): PluginOption => ({
 export default defineConfig(({ mode }) => {
   const isElectron = process.env.ELECTRON === 'true';
   
+  // Read package.json for version
+  const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'));
+  const appVersion = packageJson.version;
+  
   return {
     base: isElectron ? './' : '/',
     server: {
       host: "::",
       port: 8080,
+    },
+    define: {
+      // Embed Supabase credentials for Electron builds
+      ...(isElectron && {
+        'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL || ''),
+        'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY || ''),
+        'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
+      }),
+      // Also embed version for web builds
+      'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
     },
     plugins: [
       react(), 

@@ -11,6 +11,7 @@ import {
   updateNotePinStatus as updateNotePinStatusService,
   reorderNotes as reorderNotesService
 } from "@/services/notesService";
+import { ensureUserExists, updateUserVersion } from "@/services/userService";
 import { TermsPopup } from "@/components/TermsPopup";
 import { StickyNoteWindow } from "@/components/StickyNoteWindow";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
@@ -165,6 +166,10 @@ const Index = () => {
   useEffect(() => {
     const loadNotes = async () => {
       try {
+        // Ensure user exists and update version
+        await ensureUserExists();
+        await updateUserVersion();
+        
         const loadedNotes = await fetchNotes();
         setNotes(loadedNotes);
         setFilteredNotes(loadedNotes);
