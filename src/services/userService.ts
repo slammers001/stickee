@@ -1,6 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/lib/supabase';
 
+// Get current app version from package.json (embedded during build)
+const APP_VERSION = import.meta.env.VITE_APP_VERSION;
+
 const USER_ID_KEY = 'stickee_user_id';
 
 export const getUserId = (): string => {
@@ -26,11 +29,63 @@ export const getCurrentUser = () => {
 };
 
 // Create user in Supabase if they don't exist
+// Save terms agreement to Supabase
+export const saveTermsAgreement = async (): Promise<boolean> => {
+  const userId = getUserId();
+  console.log('Saving terms agreement for user:', userId);
+  
+  try {
+    // First, let's check what columns exist by trying a simple select
+    const { data: userData, error: checkError } = await supabase
+      .from('users')
+      .select('id, terms_agreed, terms_agreed_at, updated_at')
+      .eq('id', userId)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error('Error checking user data:', checkError);
+      return false;
+    }
+    
+    console.log('Current user data:', userData);
+    
+    // Now try to update
+    const { data, error } = await supabase
+      .from('users')
+      .update({
+        terms_agreed: true,
+        terms_agreed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        app_version: APP_VERSION
+      })
+      .eq('id', userId)
+      .select();
+    
+    if (error) {
+      console.error('Error saving terms agreement:', error);
+      console.error('Error details:', error.details, error.hint, error.code);
+      return false;
+    }
+    
+    console.log('Terms agreement saved successfully:', data);
+    return true;
+  } catch (error) {
+    console.error('Error saving terms agreement:', error);
+    return false;
+  }
+};
+
 export const ensureUserExists = async (): Promise<boolean> => {
   const userId = getUserId();
   console.log('Ensuring user exists for ID:', userId);
   
   try {
+    // Check if Supabase is available first
+    if (!supabase) {
+      console.error('Supabase client not available');
+      return false;
+    }
+
     // Check if user exists
     const { data: existingUser, error: checkError } = await supabase
       .from('users')
@@ -40,6 +95,10 @@ export const ensureUserExists = async (): Promise<boolean> => {
     
     if (checkError) {
       console.error('Error checking user existence:', checkError);
+      // Check if it's a connection/auth error
+      if (checkError.message?.includes('Invalid API key') || checkError.message?.includes('fetch')) {
+        console.error('Supabase connection error - check if credentials are properly embedded');
+      }
       return false;
     }
     
@@ -52,7 +111,8 @@ export const ensureUserExists = async (): Promise<boolean> => {
         .from('users')
         .insert({
           id: userId,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          app_version: APP_VERSION
         });
       
       if (insertError) {
@@ -69,5 +129,74 @@ export const ensureUserExists = async (): Promise<boolean> => {
   } catch (error) {
     console.error('Error ensuring user exists:', error);
     return false;
+  }
+};
+
+// Update user's app version
+export const updateUserVersion = async (): Promise<boolean> => {
+  const userId = getUserId();
+  console.log('Updating app version for user:', userId, 'to version:', APP_VERSION);
+  
+  try {
+    // Check if Supabase is available first
+    if (!supabase) {
+      console.error('Supabase client not available');
+      return false;
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({
+        app_version: APP_VERSION,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select('id, app_version, updated_at');
+    
+    if (error) {
+      console.error('Error updating user version:', error);
+      // Check if it's a connection/auth error
+      if (error.message?.includes('Invalid API key') || error.message?.includes('fetch')) {
+        console.error('Supabase connection error - check if credentials are properly embedded');
+      }
+      return false;
+    }
+    
+    console.log('User version updated successfully:', data);
+    return true;
+  } catch (error) {
+    console.error('Error updating user version:', error);
+    return false;
+  }
+};
+
+// Get version statistics
+export const getVersionStats = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('app_version')
+      .not('app_version', 'is', null);
+    
+    if (error) {
+      console.error('Error getting version stats:', error);
+      return null;
+    }
+    
+    // Count users per version
+    const versionCounts = data?.reduce((acc: Record<string, number>, user) => {
+      const version = user.app_version || 'unknown';
+      acc[version] = (acc[version] || 0) + 1;
+      return acc;
+    }, {}) || {};
+    
+    return {
+      totalUsers: data?.length || 0,
+      versionCounts,
+      currentVersion: APP_VERSION
+    };
+  } catch (error) {
+    console.error('Error getting version stats:', error);
+    return null;
   }
 };

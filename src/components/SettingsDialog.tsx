@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Heart, Settings } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -30,6 +32,7 @@ interface SettingsDialogProps {
 }
 
 export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
+  const { theme, setTheme } = useTheme();
   const [fontMode, setFontMode] = useState<FontMode>("basic");
   const [fontFamily, setFontFamily] = useState<FontFamily>("indie-flower");
   const [titleFont, setTitleFont] = useState<TitleFontFamily>("arbutus");
@@ -37,6 +40,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const [favoriteFonts, setFavoriteFonts] = useState<FontFamily[]>([]);
   const [activeTab, setActiveTab] = useState<ActiveTab>("ui");
   const [visibleFontCount, setVisibleFontCount] = useState(20); // Lazy loading state
+  const [termsContent, setTermsContent] = useState("");
 
   // Organized font arrays for lazy loading
   const basicFonts: FontFamily[] = [
@@ -254,6 +258,28 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     
     loadFontSettings();
   }, []);
+
+  // Load terms content when component mounts
+  useEffect(() => {
+    const loadTerms = async () => {
+      try {
+        const response = await fetch("/TERMS_OF_SERVICE.md");
+        const text = await response.text();
+        setTermsContent(text);
+      } catch (error) {
+        console.error("Failed to load terms:", error);
+        setTermsContent("Failed to load terms. Please try again.");
+      }
+    };
+    loadTerms();
+  }, []);
+
+  // Handle terms disagreement
+  const handleDisagreeTerms = () => {
+    localStorage.removeItem("stickee-terms-agreed");
+    toast.error("You have disagreed to the Terms of Service. App functionality is restricted.");
+    onOpenChange(false);
+  };
 
   const applyFontFamily = (font: FontFamily) => {
     const root = document.documentElement;
@@ -736,9 +762,33 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
           </Button>
         </div>
 
-        <div className="grid gap-6 py-4">
+        <div className="grid gap-6 py-4 max-h-[500px] overflow-y-auto">
           {activeTab === "ui" && (
             <>
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">Theme</h3>
+                <RadioGroup value={theme} onValueChange={setTheme}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="light" id="light" />
+                    <Label htmlFor="light">
+                      Light
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="dark" id="dark" />
+                    <Label htmlFor="dark">
+                      Dark
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="system" id="system" />
+                    <Label htmlFor="system">
+                      System
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              
               <div className="space-y-4">
                 <h3 className="text-sm font-medium">Default View</h3>
                 <RadioGroup value={defaultView} onValueChange={handleViewChange}>
@@ -955,39 +1005,42 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
               <div className="space-y-4">
                 <h3 className="text-sm font-medium">Terms of Service</h3>
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    You have agreed to the Terms of Service for using Stickee.
-                  </p>
-                  <div className="space-y-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const termsWindow = window.open("/terms.md", "_blank", "width=800,height=600");
-                        if (termsWindow) {
-                          termsWindow.focus();
-                        }
-                      }}
-                    >
-                      View Full Terms
-                    </Button>
-                  </div>
-                  <div className="pt-4">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => {
-                        localStorage.removeItem("stickee-terms-agreed");
-                        toast.success("You have disagreed to the Terms of Service");
-                        onOpenChange(false);
-                        window.location.reload();
-                      }}
-                    >
-                      Disagree to Terms
-                    </Button>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Disagreeing will restrict all app functionality until you agree again.
+                  <div className="text-center space-y-4 p-6 border rounded-lg bg-muted/50">
+                    <h2 className="text-xl font-semibold text-foreground">Welcome to Stickee!</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Please review and agree to our Terms of Service to continue using the application.
                     </p>
+                    
+                    <div className="flex flex-col space-y-3 max-w-sm mx-auto">
+                      <Button 
+                        onClick={() => {
+                          toast.success("Terms already agreed!");
+                        }}
+                        className="w-full"
+                        disabled
+                      >
+                        I Agree to Terms of Service
+                      </Button>
+                      
+                      <Button 
+                        onClick={handleDisagreeTerms}
+                        variant="destructive"
+                        className="w-full"
+                      >
+                        Disagree to Terms of Service
+                      </Button>
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground text-center">
+                      You have already agreed to the terms to use Stickee. You can review the terms anytime.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold">Terms of Service</h4>
+                    <div className="prose prose-sm max-w-none dark:prose-invert max-h-96 overflow-y-auto p-4 border rounded-lg bg-muted/30">
+                      <ReactMarkdown>{termsContent}</ReactMarkdown>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -999,10 +1052,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             By using this app you agree to the{" "}
             <button
               onClick={() => {
-                const termsWindow = window.open("/terms.md", "_blank", "width=800,height=600");
-                if (termsWindow) {
-                  termsWindow.focus();
-                }
+                setActiveTab("terms");
               }}
               className="text-xs underline hover:text-foreground transition-colors"
             >

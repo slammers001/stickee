@@ -27,7 +27,7 @@ export function SearchBar({ onSearch, placeholder = "Search notes...", disabled 
         value={query}
         onChange={handleChange}
         disabled={disabled}
-        className="pl-10 pr-4 rounded-full focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 !focus:outline-none !focus:ring-0 !focus-visible:outline-none !focus-visible:ring-0"
+        className="pl-10 pr-4 rounded-md focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 !focus:outline-none !focus:ring-0 !focus-visible:outline-none !focus-visible:ring-0"
         style={{
           outline: 'none',
           border: 'none',

@@ -1,21 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { Plus, Pin, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Plus, Pin } from "lucide-react";
-import { StickyNote } from "@/components/StickyNote";
-import type { NoteStatus as StickyNoteStatus } from "@/components/StickyNote";
-import { AddNoteDialog } from "@/components/AddNoteDialog";
-import { NoteDetailDialog } from "@/components/NoteDetailDialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { Note } from "@/types/note";
-import { UserProfile } from "@/components/UserProfile";
-import { SettingsButton } from "@/components/SettingsDialog";
-import { SearchBar } from "@/components/SearchBar";
-import { ThemeSelector } from "@/components/ThemeSelector";
-import { TermsPopup } from "@/components/TermsPopup";
-import { StickyNoteWindow } from "@/components/StickyNoteWindow";
-import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { 
   getNotes as fetchNotes, 
   createNote as createNoteService, 
@@ -24,6 +11,19 @@ import {
   updateNotePinStatus as updateNotePinStatusService,
   reorderNotes as reorderNotesService
 } from "@/services/notesService";
+import { ensureUserExists, updateUserVersion } from "@/services/userService";
+import { TermsPopup } from "@/components/TermsPopup";
+import { StickyNoteWindow } from "@/components/StickyNoteWindow";
+import { useDragAndDrop } from "@/hooks/useDragAndDrop";
+import { SearchBar } from "@/components/SearchBar";
+import { UserProfile } from "@/components/UserProfile";
+import { StickyNote } from "@/components/StickyNote";
+import { AddNoteDialog } from "@/components/AddNoteDialog";
+import { NoteDetailDialog } from "@/components/NoteDetailDialog";
+import { SettingsDialog } from "@/components/SettingsDialog";
+import { cn } from "@/lib/utils";
+import type { Note } from "@/types/note";
+import type { StickyNoteStatus } from "@/types/note";
 
 // Using the Note interface from types/note.ts
 
@@ -48,6 +48,33 @@ const Index = () => {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [iconPath, setIconPath] = useState("/favicons/stickee.png");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [showTermsDialog, setShowTermsDialog] = useState(false);
+
+  // Check for terms agreement on mount and storage changes
+  useEffect(() => {
+    const checkTermsAgreement = () => {
+      const agreed = localStorage.getItem("stickee-terms-agreed") === "true";
+      setTermsAgreed(agreed);
+    };
+
+    checkTermsAgreement();
+
+    // Listen for storage changes
+    const handleStorageChange = () => {
+      checkTermsAgreement();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check periodically as a fallback
+    const interval = setInterval(handleStorageChange, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Fix icon path for Electron
   useEffect(() => {
@@ -77,6 +104,11 @@ const Index = () => {
   const handleTermsAgree = () => {
     setTermsAgreed(true);
     localStorage.setItem("stickee-terms-agreed", "true");
+  };
+
+  // Handle showing terms dialog
+  const handleShowTermsDialog = (show: boolean) => {
+    setShowTermsDialog(show);
   };
 
   // Apply saved default view preference on component mount
@@ -134,6 +166,10 @@ const Index = () => {
   useEffect(() => {
     const loadNotes = async () => {
       try {
+        // Ensure user exists and update version
+        await ensureUserExists();
+        await updateUserVersion();
+        
         const loadedNotes = await fetchNotes();
         setNotes(loadedNotes);
         setFilteredNotes(loadedNotes);
@@ -409,16 +445,18 @@ const Index = () => {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <ThemeSelector />
               <SearchBar onSearch={termsAgreed ? handleSearch : () => {}} disabled={!termsAgreed} />
               <div className="h-6 w-px bg-border"></div>
               <UserProfile />
               <div className="h-6 w-px bg-border"></div>
-              <SettingsButton />
-              <div className="h-6 w-px bg-border mx-1"></div>
               <Button
-                variant="default"
+                variant="outline"
                 size="icon"
+                onClick={() => setSettingsOpen(true)}
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+              <Button
                 onClick={(e) => {
                   if (!termsAgreed) {
                     e.preventDefault();
@@ -669,13 +707,26 @@ const Index = () => {
       )}
 
       {/* Terms Popup */}
-      {!termsAgreed && <TermsPopup onAgree={handleTermsAgree} />}
+      {!termsAgreed && (
+        <TermsPopup 
+          onAgree={handleTermsAgree} 
+          showTerms={showTermsDialog}
+          onShowTermsChange={handleShowTermsDialog}
+        />
+      )}
+
+      {/* Settings Dialog */}
+      <SettingsDialog 
+        open={settingsOpen} 
+        onOpenChange={setSettingsOpen}
+      />
+      
+      <StickyNoteWindow
+        isOpen={stickyNoteWindowOpen}
+        onClose={handleQuickNote}
+      />
     </div>
-    <StickyNoteWindow
-      isOpen={stickyNoteWindowOpen}
-      onClose={handleQuickNote}
-    />
-  </>
+    </>
   );
 };
 
