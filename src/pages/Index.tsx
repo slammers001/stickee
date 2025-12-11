@@ -111,13 +111,37 @@ const Index = () => {
     setShowTermsDialog(show);
   };
 
-  // Apply saved default view preference on component mount
+  // Apply saved default view preference on component mount and listen for changes
   useEffect(() => {
     const savedView = localStorage.getItem("stickee-default-view") as "grid" | "list";
     if (savedView) {
       setViewMode(savedView);
     }
   }, []);
+
+  // Listen for view mode changes in localStorage
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "stickee-default-view" && e.newValue) {
+        setViewMode(e.newValue as "grid" | "list");
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check periodically as a fallback for same-tab changes
+    const interval = setInterval(() => {
+      const currentView = localStorage.getItem("stickee-default-view") as "grid" | "list";
+      if (currentView && currentView !== viewMode) {
+        setViewMode(currentView);
+      }
+    }, 500);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [viewMode]);
 
   // Keyboard shortcut for new note
   useEffect(() => {
