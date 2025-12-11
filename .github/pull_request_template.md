@@ -79,6 +79,9 @@ For example, if on v0.0.4 and you add a new feature, it becomes v0.1.0. If you d
 - [ ] I have commented my code, particularly in hard-to-understand areas
 - [ ] I have made corresponding updates to the documentation
 
+### New Version Doc
+- [ ] I have created a new file in the versions folder documenting the changes I added for this version and added my username on the bottom (ex, @slammers001)
+
 ### PR Standards
 - [ ] PR description is clear and comprehensive (ex, don't say added stuff as title)
 - [ ] Changes are limited to a single logical piece of work
