@@ -171,6 +171,12 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         const link = document.createElement('link');
         link.href = `https://fonts.googleapis.com/css2?family=${fontName}&display=swap`;
         link.rel = 'stylesheet';
+        
+        // Add error handling for Electron
+        link.onerror = () => {
+          console.warn(`Failed to load font: ${fontName} - this is expected in Electron builds`);
+        };
+        
         document.head.appendChild(link);
       }
     });
@@ -501,6 +507,12 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         const link = document.createElement('link');
         link.href = `https://fonts.googleapis.com/css2?family=${fontName}&display=swap`;
         link.rel = 'stylesheet';
+        
+        // Add error handling for Electron
+        link.onerror = () => {
+          console.warn(`Failed to load font: ${fontName} - this is expected in Electron builds`);
+        };
+        
         document.head.appendChild(link);
       }
     }

@@ -54,9 +54,8 @@ export function TermsPopup({ onAgree, showTerms = false, onShowTermsChange }: Te
         // In Electron, try different possible paths
         const possiblePaths = [
           "./TERMS_OF_SERVICE.md",
-          "../TERMS_OF_SERVICE.md",
-          "../../TERMS_OF_SERVICE.md",
-          "/TERMS_OF_SERVICE.md"
+          "/TERMS_OF_SERVICE.md",
+          "TERMS_OF_SERVICE.md"
         ];
         
         let loaded = false;
@@ -105,9 +104,8 @@ export function TermsPopup({ onAgree, showTerms = false, onShowTermsChange }: Te
             // In Electron, try different possible paths
             const possiblePaths = [
               "./TERMS_OF_SERVICE.md",
-              "../TERMS_OF_SERVICE.md",
-              "../../TERMS_OF_SERVICE.md",
-              "/TERMS_OF_SERVICE.md"
+              "/TERMS_OF_SERVICE.md",
+              "TERMS_OF_SERVICE.md"
             ];
             
             let loaded = false;
