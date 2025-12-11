@@ -2,6 +2,7 @@ export type NoteStatus = 'To-Do' | 'Doing' | 'Done' | 'Backlog';
 
 export interface Note {
   id: string;
+  title?: string;
   content: string;
   color: string;
   status: NoteStatus;

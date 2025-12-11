@@ -1,26 +1,31 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { Plus, Pin, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Grid3x3, List, Plus } from "lucide-react";
-import { StickyNote } from "@/components/StickyNote";
-import type { NoteStatus as StickyNoteStatus } from "@/components/StickyNote";
-import { AddNoteDialog } from "@/components/AddNoteDialog";
-import { NoteDetailDialog } from "@/components/NoteDetailDialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { Note } from "@/types/note";
 import { 
   getNotes as fetchNotes, 
   createNote as createNoteService, 
   updateNote as updateNoteService, 
   deleteNote as deleteNoteService,
-  updateNoteStatus as updateNoteStatusService,
-  updateNotePinStatus as updateNotePinStatusService
+  updateNotePinStatus as updateNotePinStatusService,
+  reorderNotes as reorderNotesService
 } from "@/services/notesService";
+import { ensureUserExists, updateUserVersion } from "@/services/userService";
+import { TermsPopup } from "@/components/TermsPopup";
+import { StickyNoteWindow } from "@/components/StickyNoteWindow";
+import { useDragAndDrop } from "@/hooks/useDragAndDrop";
+import { SearchBar } from "@/components/SearchBar";
+import { UserProfile } from "@/components/UserProfile";
+import { StickyNote } from "@/components/StickyNote";
+import { AddNoteDialog } from "@/components/AddNoteDialog";
+import { NoteDetailDialog } from "@/components/NoteDetailDialog";
+import { SettingsDialog } from "@/components/SettingsDialog";
+import { cn } from "@/lib/utils";
+import type { Note } from "@/types/note";
+import type { StickyNoteStatus } from "@/types/note";
 
 // Using the Note interface from types/note.ts
-
-const colors = ["yellow", "pink", "blue", "green", "purple", "orange", "teal", "lavender", "peach", "mint"];
 
 const statusColors: Record<StickyNoteStatus, string> = {
   "To-Do": "bg-red-100 text-red-800 border-red-200",
@@ -31,18 +36,143 @@ const statusColors: Record<StickyNoteStatus, string> = {
 
 const Index = () => {
   const [notes, setNotes] = useState<Note[]>([]);
+  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [stickyNoteWindowOpen, setStickyNoteWindowOpen] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(() => {
+    return localStorage.getItem("stickee-terms-agreed") === "true";
+  });
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [iconPath, setIconPath] = useState("./stickee.png");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [showTermsDialog, setShowTermsDialog] = useState(false);
+
+  // Check for terms agreement on mount and storage changes
+  useEffect(() => {
+    const checkTermsAgreement = () => {
+      const agreed = localStorage.getItem("stickee-terms-agreed") === "true";
+      setTermsAgreed(agreed);
+    };
+
+    checkTermsAgreement();
+
+    // Listen for storage changes
+    const handleStorageChange = () => {
+      checkTermsAgreement();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check periodically as a fallback
+    const interval = setInterval(handleStorageChange, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Fix icon path for Electron
+  useEffect(() => {
+    // Check if we're in Electron and adjust the path
+    if ((window as any).electronAPI?.isElectron) {
+      // In Electron, use relative path
+      setIconPath("./stickee.png");
+    }
+  }, []);
+
+  // Apply saved font preference on component mount
+  useEffect(() => {
+    const savedFont = localStorage.getItem("stickee-font-family") as "handwriting" | "serif";
+    if (savedFont) {
+      const root = document.documentElement;
+      if (savedFont === "serif") {
+        root.style.setProperty('--font-family-base', 'Georgia, serif');
+        root.style.setProperty('--font-family-handwriting', 'Georgia, serif');
+      } else {
+        root.style.setProperty('--font-family-base', 'Indie Flower, cursive');
+        root.style.setProperty('--font-family-handwriting', 'Indie Flower, cursive');
+      }
+    }
+  }, []);
+
+  // Handle terms agreement
+  const handleTermsAgree = () => {
+    setTermsAgreed(true);
+    localStorage.setItem("stickee-terms-agreed", "true");
+  };
+
+  // Handle showing terms dialog
+  const handleShowTermsDialog = (show: boolean) => {
+    setShowTermsDialog(show);
+  };
+
+  // Apply saved default view preference on component mount
+  useEffect(() => {
+    const savedView = localStorage.getItem("stickee-default-view") as "grid" | "list";
+    if (savedView) {
+      setViewMode(savedView);
+    }
+  }, []);
+
+  // Keyboard shortcut for new note
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if terms are agreed
+      if (!termsAgreed) return;
+      
+      // Only trigger 'n' key if no input fields are focused and no dialogs are open
+      if (
+        e.key === 'n' && 
+        !e.ctrlKey && 
+        !e.metaKey && 
+        !e.altKey &&
+        !dialogOpen &&
+        !detailDialogOpen &&
+        !stickyNoteWindowOpen &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        setDialogOpen(true);
+      }
+      
+      // Sticky note window shortcut - Alt+P keys
+      if (
+        e.key.toLowerCase() === 'p' && 
+        e.altKey &&
+        !e.ctrlKey && 
+        !e.metaKey &&
+        !dialogOpen &&
+        !detailDialogOpen &&
+        !stickyNoteWindowOpen &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        setStickyNoteWindowOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [dialogOpen, detailDialogOpen, stickyNoteWindowOpen]);
 
   // Load notes on component mount
   useEffect(() => {
     const loadNotes = async () => {
       try {
+        // Ensure user exists and update version
+        await ensureUserExists();
+        await updateUserVersion();
+        
         const loadedNotes = await fetchNotes();
         setNotes(loadedNotes);
+        setFilteredNotes(loadedNotes);
       } catch (error) {
         console.error('Error loading notes:', error);
         toast.error('Failed to load notes');
@@ -54,9 +184,27 @@ const Index = () => {
     loadNotes();
   }, []);
 
-  const addNote = async (content: string, status: StickyNoteStatus, color: string) => {
+  // Filter notes based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredNotes(notes);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = notes.filter(note => 
+      note.content.toLowerCase().includes(query) ||
+      note.status.toLowerCase().includes(query) ||
+      note.color.toLowerCase().includes(query) ||
+      (note.title && note.title.toLowerCase().includes(query))
+    );
+    setFilteredNotes(filtered);
+  }, [searchQuery, notes]);
+
+  const addNote = async (title: string, content: string, status: StickyNoteStatus, color: string) => {
     try {
       const newNote = await createNoteService({
+        title: title || undefined,
         content,
         color,
         status,
@@ -65,6 +213,7 @@ const Index = () => {
       });
       
       setNotes(prevNotes => [newNote, ...prevNotes]);
+      setFilteredNotes(prevNotes => [newNote, ...prevNotes]);
       setDialogOpen(false);
       toast.success('Note added successfully!');
     } catch (error) {
@@ -93,9 +242,10 @@ const Index = () => {
     }
   };
 
-  const updateNote = async (id: string, content: string, status: StickyNoteStatus, color: string) => {
+  const updateNote = async (id: string, title: string, content: string, status: StickyNoteStatus, color: string) => {
     try {
       const updatedNote = await updateNoteService(id, { 
+        title: title || undefined,
         content, 
         status, 
         color
@@ -107,29 +257,17 @@ const Index = () => {
             note.id === id ? { ...updatedNote } : note
           )
         );
+        setFilteredNotes(prevNotes => 
+          prevNotes.map(note => 
+            note.id === id ? { ...updatedNote } : note
+          )
+        );
         setDetailDialogOpen(false);
         toast.success('Note updated!');
       }
     } catch (error) {
       console.error('Error updating note:', error);
       toast.error('Failed to update note');
-    }
-  };
-
-  const handleStatusChange = async (id: string, status: StickyNoteStatus) => {
-    try {
-      const updatedNote = await updateNoteStatusService(id, status);
-
-      if (updatedNote) {
-        setNotes(prevNotes =>
-          prevNotes.map(note =>
-            note.id === id ? { ...updatedNote } : note
-          )
-        );
-      }
-    } catch (error) {
-      console.error('Error updating note status:', error);
-      toast.error('Failed to update note status');
     }
   };
 
@@ -146,6 +284,11 @@ const Index = () => {
             note.id === id ? { ...updatedNote } : note
           )
         );
+        setFilteredNotes(prevNotes =>
+          prevNotes.map(note =>
+            note.id === id ? { ...updatedNote } : note
+          )
+        );
       }
     } catch (error) {
       console.error('Error toggling pin:', error);
@@ -157,6 +300,7 @@ const Index = () => {
     try {
       await deleteNoteService(id);
       setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
+      setFilteredNotes(prevNotes => prevNotes.filter(note => note.id !== id));
       setDetailDialogOpen(false);
       toast.success('Note deleted!');
     } catch (error) {
@@ -165,9 +309,94 @@ const Index = () => {
     }
   };
 
-  const openNoteDetail = (note: Note) => {
+  const reorderNotes = async (fromIndex: number, toIndex: number) => {
+    try {
+      const allUnpinnedNotes = notes.filter(note => !note.pinned);
+      const allPinnedNotes = notes.filter(note => note.pinned);
+      
+      // Find the actual note being moved by getting the corresponding note from the full notes list
+      const filteredUnpinnedNotes = filteredNotes.filter(note => !note.pinned);
+      const movedNote = filteredUnpinnedNotes[fromIndex];
+      const actualNote = allUnpinnedNotes.find(n => n.id === movedNote.id);
+      
+      if (!actualNote) return;
+      
+      // Find the actual index in the full notes array
+      const actualFromIndex = allUnpinnedNotes.findIndex(n => n.id === actualNote.id);
+      
+      // Create a copy of all unpinned notes and reorder them
+      const reorderedUnpinned = [...allUnpinnedNotes];
+      reorderedUnpinned.splice(actualFromIndex, 1);
+      reorderedUnpinned.splice(toIndex, 0, actualNote);
+      
+      // Combine pinned notes (always first) with reordered unpinned notes
+      const newOrder = [...allPinnedNotes, ...reorderedUnpinned];
+      
+      // Update the database
+      await reorderNotesService(newOrder);
+      
+      // Update local state
+      setNotes(newOrder);
+      setFilteredNotes(newOrder);
+      toast.success('Notes reordered!');
+    } catch (error) {
+      console.error('Error reordering notes:', error);
+      toast.error('Failed to reorder notes');
+    }
+  };
+
+  // Separate pinned and unpinned notes for drag and drop
+  const pinnedNotes = filteredNotes.filter(note => note.pinned);
+  const unpinnedNotes = filteredNotes.filter(note => !note.pinned);
+  
+  const {
+    draggedItem,
+    dragOverIndex,
+    handleDragStart,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    handleDragEnd,
+  } = useDragAndDrop(unpinnedNotes, reorderNotes);
+
+  const handleNoteClick = (note: Note) => {
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to view notes");
+      return;
+    }
     setSelectedNote(note);
     setDetailDialogOpen(true);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleQuickNote = async (content: string, color: string) => {
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to create notes");
+      return;
+    }
+    setStickyNoteWindowOpen(false);
+    
+    if (content.trim()) {
+      try {
+        const newNote = await createNoteService({
+          content: content.trim(),
+          color: color || "yellow",
+          status: "To-Do",
+          pinned: false,
+          lastUpdated: Date.now()
+        });
+        
+        setNotes(prevNotes => [newNote, ...prevNotes]);
+        setFilteredNotes(prevNotes => [newNote, ...prevNotes]);
+        toast.success('Sticky note added!');
+      } catch (error) {
+        console.error('Error creating sticky note:', error);
+        toast.error('Failed to add sticky note');
+      }
+    }
   };
 
   if (loading) {
@@ -175,12 +404,25 @@ const Index = () => {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card shadow-sm">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center space-x-2">
+              <img 
+                src={iconPath} 
+                alt="Stickee" 
+                className="h-14 w-14 object-contain icon-crisp no-select"
+                onError={(e) => {
+                  // Prevent infinite loop by setting a flag
+                  const target = e.target as HTMLImageElement;
+                  if (!target.dataset.errorHandled) {
+                    target.dataset.errorHandled = "true";
+                  }
+                }}
+              />
               <h1 className="text-4xl font-bold text-foreground tracking-tight font-handwriting">
                 Stickee
               </h1>
@@ -190,35 +432,39 @@ const Index = () => {
                   href="https://github.com/slammers001" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="hover:underline hover:text-foreground transition-colors"
+                  className="underline hover:text-foreground transition-colors"
                 >
                   slammers001
                 </a>
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
+              <SearchBar onSearch={termsAgreed ? handleSearch : () => {}} disabled={!termsAgreed} />
+              <div className="h-6 w-px bg-border"></div>
+              <UserProfile />
+              <div className="h-6 w-px bg-border"></div>
               <Button
-                variant="default"
+                variant="outline"
                 size="icon"
-                onClick={() => setDialogOpen(true)}
+                onClick={() => setSettingsOpen(true)}
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+              <Button
+                onClick={(e) => {
+                  if (!termsAgreed) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toast.error("You must agree to the Terms of Service to create notes");
+                    return;
+                  }
+                  e.stopPropagation();
+                  setDialogOpen(true);
+                }}
+                disabled={!termsAgreed}
                 className="bg-primary hover:bg-primary/90"
               >
                 <Plus className="h-5 w-5" />
-              </Button>
-              <div className="h-6 w-px bg-border mx-1"></div>
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("grid")}
-              >
-                <Grid3x3 className="h-5 w-5" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="h-5 w-5" />
               </Button>
             </div>
           </div>
@@ -227,59 +473,85 @@ const Index = () => {
 
       {/* Main Board */}
       <main className="container mx-auto px-4 py-8">
-        {notes.length === 0 ? (
+        {filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
-            <button 
-              onClick={() => setDialogOpen(true)}
-              className="group w-48 h-48 mb-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800/50 transition-all duration-300 hover:-rotate-12 focus:outline-none"
-              aria-label="Add new note"
-            >
-              <img 
-                src="/stickee.png" 
-                alt="Stickee" 
-                className="w-5/6 h-5/6 object-contain transition-transform duration-300 group-hover:scale-105"
-              />
-            </button>
+            <img 
+              src={searchQuery ? "./Stickee-Not-Found.png" : "./stickee.png"} 
+              alt={searchQuery ? "No notes found" : "Stickee"} 
+              className="mb-6 max-w-sm h-auto object-contain transition-all duration-200 hover:scale-110 hover:rotate-[-10deg] cursor-pointer"
+              onClick={() => {
+                if (!termsAgreed) {
+                  toast.error("You must agree to the Terms of Service to create notes");
+                  return;
+                }
+                setDialogOpen(true);
+              }}
+              onError={(e) => {
+                console.error(`Failed to load ${searchQuery ? 'Stickee-Not-Found.png' : 'stickee.png'}`);
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+              }}
+            />
             <h2 className="text-2xl font-semibold text-foreground mb-2 font-handwriting">
-              No sticky notes yet
+              {searchQuery ? "No matching notes found" : "No Stickee notes yet"}
             </h2>
             <p className="text-muted-foreground mb-6 max-w-md">
-              Click the Stickee icon to create your first sticky note!
+              {searchQuery 
+                ? `No notes found matching "${searchQuery}". Try a different search term or clear the search.`
+                : "Click the Stickee icon to create your first Stickee note!"
+              }
             </p>
           </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-            {[...notes].sort((a, b) => {
-              // First sort by pinned status
-              if (a.pinned !== b.pinned) {
-                return b.pinned ? 1 : -1;
-              }
-              // Then sort by lastUpdated in descending order (newest first)
-              return b.lastUpdated - a.lastUpdated;
-            }).map((note, index) => (
+            {/* Pinned notes - not draggable */}
+            {pinnedNotes.map((note) => (
               <StickyNote
                 key={note.id}
+                title={note.title}
                 content={note.content}
                 color={note.color}
                 status={note.status}
-                index={index}
-                lastUpdated={note.lastUpdated}
                 pinned={note.pinned}
-                onClick={() => openNoteDetail(note)}
+                onClick={() => handleNoteClick(note)}
                 onTogglePin={() => togglePin(note.id)}
               />
+            ))}
+            {/* Unpinned notes - draggable */}
+            {unpinnedNotes.map((note, index) => (
+              <div
+                key={note.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index, note.id)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                className={cn(
+                  "transition-all duration-200 relative",
+                  draggedItem?.index === index ? "opacity-50" : ""
+                )}
+              >
+                {/* Drop indicator line */}
+                {dragOverIndex === index && (
+                  <div className="absolute left-2 top-0 bottom-0 w-1 bg-primary rounded-full transition-all duration-200 z-10" />
+                )}
+                <StickyNote
+                  title={note.title}
+                  content={note.content}
+                  color={note.color}
+                  status={note.status}
+                  pinned={note.pinned}
+                  onClick={() => handleNoteClick(note)}
+                  onTogglePin={() => togglePin(note.id)}
+                />
+              </div>
             ))}
           </div>
         ) : (
           <div className="max-w-4xl mx-auto space-y-3">
-            {[...notes].sort((a, b) => {
-              // First sort by pinned status
-              if (a.pinned !== b.pinned) {
-                return b.pinned ? 1 : -1;
-              }
-              // Then sort by lastUpdated in descending order (newest first)
-              return b.lastUpdated - a.lastUpdated;
-            }).map((note) => {
+            {/* Pinned notes - not draggable */}
+            {pinnedNotes.map((note) => {
               const colorMap: Record<string, string> = {
                 yellow: "border-l-[hsl(var(--note-yellow))]",
                 pink: "border-l-[hsl(var(--note-pink))]",
@@ -300,18 +572,120 @@ const Index = () => {
                     "p-4 bg-card border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer",
                     colorMap[note.color]
                   )}
-                  onClick={() => openNoteDetail(note)}
+                  onClick={() => handleNoteClick(note)}
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <p className="text-foreground font-handwriting text-lg flex-1 line-clamp-2">
-                      {note.content}
-                    </p>
+                    <div className="flex items-start gap-3 flex-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          togglePin(note.id);
+                        }}
+                        className={cn(
+                          "mt-1 flex-shrink-0 transition-colors pin-icon",
+                          note.pinned 
+                            ? "text-red-500 hover:text-red-600" 
+                            : "text-foreground/40 hover:text-foreground/70"
+                        )}
+                      >
+                        <Pin 
+                          size={16} 
+                          fill={note.pinned ? "currentColor" : "none"} 
+                        />
+                      </button>
+                      <div className="flex-1">
+                        {note.title && (
+                          <h4 className="text-foreground font-handwriting text-xl font-bold mb-1 leading-tight">
+                            {note.title.length > 12 ? `${note.title.substring(0, 12)}...` : note.title}
+                          </h4>
+                        )}
+                        <p className="text-foreground font-handwriting text-lg line-clamp-2 note-text">
+                          {note.content}
+                        </p>
+                      </div>
+                    </div>
                     <Badge
                       variant="outline"
-                      className={cn("text-xs font-handwriting shrink-0", statusColors[note.status])}
+                      className={cn("text-xs font-handwriting shrink-0 note-status dark:text-white", statusColors[note.status])}
                     >
                       {note.status}
                     </Badge>
+                  </div>
+                </div>
+              );
+            })}
+            {/* Unpinned notes - draggable */}
+            {unpinnedNotes.map((note, index) => {
+              const colorMap: Record<string, string> = {
+                yellow: "border-l-[hsl(var(--note-yellow))]",
+                pink: "border-l-[hsl(var(--note-pink))]",
+                blue: "border-l-[hsl(var(--note-blue))]",
+                green: "border-l-[hsl(var(--note-green))]",
+                purple: "border-l-[hsl(var(--note-purple))]",
+                orange: "border-l-[hsl(var(--note-orange))]",
+                teal: "border-l-[hsl(var(--note-teal))]",
+                lavender: "border-l-[hsl(var(--note-lavender))]",
+                peach: "border-l-[hsl(var(--note-peach))]",
+                mint: "border-l-[hsl(var(--note-mint))]",
+              };
+              
+              return (
+                <div key={note.id} className="relative">
+                  {/* Drop indicator line */}
+                  {dragOverIndex === index && (
+                    <div className="absolute -top-1 left-0 right-0 h-1 bg-primary rounded-full transition-all duration-200 z-10" />
+                  )}
+                  <div
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index, note.id)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
+                    className={cn(
+                      "p-4 bg-card border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer",
+                      colorMap[note.color],
+                      draggedItem?.index === index ? "opacity-50" : ""
+                    )}
+                    onClick={() => handleNoteClick(note)}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3 flex-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            togglePin(note.id);
+                          }}
+                          className={cn(
+                            "mt-1 flex-shrink-0 transition-colors pin-icon",
+                            note.pinned 
+                              ? "text-red-500 hover:text-red-600" 
+                              : "text-foreground/40 hover:text-foreground/70"
+                          )}
+                        >
+                          <Pin 
+                            size={16} 
+                            fill={note.pinned ? "currentColor" : "none"} 
+                          />
+                        </button>
+                        <div className="flex-1">
+                        {note.title && (
+                          <h4 className="text-foreground font-handwriting text-xl font-bold mb-1 leading-tight">
+                            {note.title.length > 12 ? `${note.title.substring(0, 12)}...` : note.title}
+                          </h4>
+                        )}
+                        <p className="text-foreground font-handwriting text-lg line-clamp-2 note-text">
+                          {note.content}
+                        </p>
+                      </div>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={cn("text-xs font-handwriting shrink-0 note-status dark:text-white", statusColors[note.status])}
+                      >
+                        {note.status}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               );
@@ -337,7 +711,28 @@ const Index = () => {
           onDelete={deleteNote}
         />
       )}
+
+      {/* Terms Popup */}
+      {!termsAgreed && (
+        <TermsPopup 
+          onAgree={handleTermsAgree} 
+          showTerms={showTermsDialog}
+          onShowTermsChange={handleShowTermsDialog}
+        />
+      )}
+
+      {/* Settings Dialog */}
+      <SettingsDialog 
+        open={settingsOpen} 
+        onOpenChange={setSettingsOpen}
+      />
+      
+      <StickyNoteWindow
+        isOpen={stickyNoteWindowOpen}
+        onClose={handleQuickNote}
+      />
     </div>
+    </>
   );
 };
 

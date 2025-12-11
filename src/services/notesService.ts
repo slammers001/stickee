@@ -1,15 +1,19 @@
-import { v4 as uuidv4 } from 'uuid';
 import { Note, NoteStatus } from '@/types/note';
 import { supabase } from '@/lib/supabase';
+import { getUserId } from './userService';
+import { encryptContent, decryptContent, encryptTitle, decryptTitle } from '@/utils/encryption';
 
 // Helper function to map Supabase note to our Note type
 const mapSupabaseNote = (note: any): Note => {
   // Safely get the timestamp, trying different possible column names
   const timestamp = note.last_updated || note.updated_at || note.created_at || new Date().toISOString();
   
+  console.log('Loading note from database:', note);
+  
   return {
     id: note.id,
-    content: note.content || '',
+    title: decryptTitle(note.title),
+    content: decryptContent(note.content),
     color: note.color || '#ffffff',
     status: (note.status as NoteStatus) || 'To-Do',
     lastUpdated: typeof timestamp === 'string' ? Date.parse(timestamp) : timestamp,
@@ -20,14 +24,16 @@ const mapSupabaseNote = (note: any): Note => {
   };
 };
 
-// Get all notes
+// Get all notes for the current user
 export const getNotes = async (): Promise<Note[]> => {
   try {
+    const userId = getUserId();
     const { data: notes, error } = await supabase
       .from('notes')
       .select('*')
+      .eq('user_id', userId) // Only get notes for current user
       .order('pinned', { ascending: false })
-      .order('updated_at', { ascending: false }); // Changed from last_updated to updated_at
+      .order('updated_at', { ascending: false }); // Newest first
 
     if (error) throw error;
     return notes ? notes.map(mapSupabaseNote) : [];
@@ -43,21 +49,23 @@ export const createNote = async (noteData: Omit<Note, 'id'>): Promise<Note> => {
   let cleanNote: Record<string, any> | null = null;
   
   try {
-    // Get current user if available
-    const { data: { user } } = await supabase.auth.getUser();
+    // Get current user ID from our local service
+    const userId = getUserId();
     
     // Prepare the note data to send to Supabase
     const noteDataToSend = {
-      content: noteData.content,
+      title: encryptTitle(noteData.title),
+      content: encryptContent(noteData.content),
       color: noteData.color,
       status: noteData.status,
       pinned: noteData.pinned,
       updated_at: new Date().toISOString(),
-      // Only include user_id if we have a valid user
-      ...(user?.id && { user_id: user.id })
+      user_id: userId // Always include user_id from our local service
     };
 
-    // Remove undefined values
+    console.log('Saving note with data:', noteDataToSend);
+
+    // Remove undefined values but keep null values for database
     cleanNote = Object.fromEntries(
       Object.entries(noteDataToSend)
         .filter(([_, v]) => v !== undefined)
@@ -91,11 +99,19 @@ export const createNote = async (noteData: Omit<Note, 'id'>): Promise<Note> => {
 
 // Update an existing note
 export const updateNote = async (id: string, updates: Partial<Omit<Note, 'id'>>): Promise<Note | null> => {
+  const userId = getUserId();
+  
   // Create update data with proper field names for Supabase
   const updateData: any = {
-    ...updates,
     updated_at: new Date().toISOString(),
   };
+
+  // Only include fields that exist in the database schema
+  if (updates.content !== undefined) updateData.content = encryptContent(updates.content);
+  if (updates.color !== undefined) updateData.color = updates.color;
+  if (updates.status !== undefined) updateData.status = updates.status;
+  if (updates.pinned !== undefined) updateData.pinned = updates.pinned;
+  if (updates.title !== undefined) updateData.title = encryptTitle(updates.title);
 
   // Remove fields that shouldn't be sent to Supabase
   delete updateData.lastUpdated;
@@ -111,6 +127,7 @@ export const updateNote = async (id: string, updates: Partial<Omit<Note, 'id'>>)
       .from('notes')
       .update(cleanUpdateData)
       .eq('id', id)
+      .eq('user_id', userId) // Ensure we only update the user's own note
       .select()
       .single();
 
@@ -124,11 +141,14 @@ export const updateNote = async (id: string, updates: Partial<Omit<Note, 'id'>>)
 
 // Delete a note
 export const deleteNote = async (id: string): Promise<boolean> => {
+  const userId = getUserId();
+  
   try {
     const { error } = await supabase
       .from('notes')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', userId); // Ensure we only delete the user's own note
 
     if (error) throw error;
     return true;
@@ -146,4 +166,30 @@ export const updateNoteStatus = async (id: string, status: NoteStatus): Promise<
 // Toggle pin status
 export const updateNotePinStatus = async (id: string, pinned: boolean): Promise<Note | null> => {
   return updateNote(id, { pinned });
+};
+
+// Reorder notes (update lastUpdated to maintain new order)
+export const reorderNotes = async (notes: Note[]): Promise<void> => {
+  try {
+    const userId = getUserId();
+    
+    // Use a base timestamp and add index to create sequential order
+    const baseTimestamp = Date.now() - 1000000; // Base timestamp in the past
+    
+    // Update all notes with new timestamps to reflect order
+    const updates = notes.map((note, index) => {
+      // Create sequential timestamps based on position
+      const newTimestamp = baseTimestamp + (index * 1000); // 1 second intervals
+      return supabase
+        .from('notes')
+        .update({ updated_at: new Date(newTimestamp).toISOString() }) // Use updated_at instead of last_updated
+        .eq('id', note.id)
+        .eq('user_id', userId);
+    });
+
+    await Promise.all(updates);
+  } catch (error) {
+    console.error('Error reordering notes:', error);
+    throw error;
+  }
 };

@@ -7,6 +7,7 @@ import { Pin } from "lucide-react";
 export type NoteStatus = 'To-Do' | 'Doing' | 'Done' | 'Backlog';
 
 interface StickyNoteProps {
+  title?: string;
   content: string;
   color: string;
   status: NoteStatus;
@@ -37,7 +38,7 @@ const statusColors: Record<NoteStatus, string> = {
   "Backlog": "bg-gray-100 text-gray-800 border-gray-200",
 };
 
-export const StickyNote = ({ content, color, status, index, lastUpdated, pinned, onClick, onTogglePin }: StickyNoteProps) => {
+export const StickyNote = ({ title, content, color, status, pinned, onClick, onTogglePin }: Omit<StickyNoteProps, 'index' | 'lastUpdated'>) => {
   // Generate unique random rotation between -4 and 4 degrees
   const rotation = useMemo(() => {
     // Generate a random angle between 1 and 4 degrees
@@ -58,7 +59,7 @@ export const StickyNote = ({ content, color, status, index, lastUpdated, pinned,
   return (
     <Card
       className={cn(
-        "p-5 w-full aspect-square max-w-[280px] mx-auto flex flex-col justify-between",
+        "p-5 w-full aspect-square max-w-[280px] mx-auto flex flex-col justify-between sticky-note",
         "transition-all duration-200 hover:scale-105 cursor-pointer",
         "border-0 animate-in fade-in-0 zoom-in-95 relative",
         "before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-16 before:h-6",
@@ -78,12 +79,17 @@ export const StickyNote = ({ content, color, status, index, lastUpdated, pinned,
       onClick={onClick}
     >
       <div className="flex-1">
-        <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting font-semibold">
+        {title && (
+          <h3 className="text-foreground text-xl font-bold mb-2 font-title leading-tight">
+            {title.length > 12 ? `${title.substring(0, 12)}...` : title}
+          </h3>
+        )}
+        <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting">
           {displayContent}
         </p>
       </div>
       <div className="flex items-center justify-center mt-2">
-        <Badge variant="outline" className={cn("text-xs font-handwriting", statusColors[status])}>
+        <Badge variant="outline" className={cn("text-xs font-handwriting shrink-0 note-status dark:text-white", statusColors[status])}>
           {status}
         </Badge>
       </div>
@@ -93,7 +99,7 @@ export const StickyNote = ({ content, color, status, index, lastUpdated, pinned,
           onTogglePin();
         }}
         className={cn(
-          "absolute top-3 right-3 w-6 h-6 rounded-full transition-all flex items-center justify-center",
+          "absolute top-3 right-3 w-6 h-6 rounded-full transition-all flex items-center justify-center pin-icon",
           "hover:bg-foreground/5 active:scale-90",
           pinned ? "text-red-500" : "text-foreground/40 hover:text-foreground/70"
         )}
