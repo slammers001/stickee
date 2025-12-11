@@ -1,61 +1,132 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Link } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { ensureUserExists, saveTermsAgreement } from "@/services/userService";
 
 interface TermsPopupProps {
   onAgree: () => void;
+  showTerms?: boolean;
+  onShowTermsChange?: (show: boolean) => void;
 }
 
-export function TermsPopup({ onAgree }: TermsPopupProps) {
-  const [showTerms, setShowTerms] = useState(false);
+export function TermsPopup({ onAgree, showTerms = false, onShowTermsChange }: TermsPopupProps) {
   const [termsContent, setTermsContent] = useState("");
 
-  const handleShowTerms = async () => {
+  // Handle terms agreement with Supabase save
+  const handleTermsAgree = async () => {
     try {
-      const response = await fetch("/terms.md");
+      // Save to localStorage first
+      localStorage.setItem("stickee-terms-agreed", "true");
+      
+      // Ensure user exists and save terms agreement to Supabase
+      const userExists = await ensureUserExists();
+      if (userExists) {
+        const saved = await saveTermsAgreement();
+        if (saved) {
+          console.log("Terms agreement saved to Supabase");
+        } else {
+          console.error("Failed to save terms agreement to Supabase");
+        }
+      }
+      
+      // Call parent callback
+      onAgree();
+    } catch (error) {
+      console.error("Error handling terms agreement:", error);
+      // Still allow the user to proceed even if Supabase save fails
+      localStorage.setItem("stickee-terms-agreed", "true");
+      onAgree();
+    }
+  };
+
+  const handleShowTerms = async () => {
+    if (onShowTermsChange) {
+      onShowTermsChange(true);
+      return;
+    }
+    
+    try {
+      const response = await fetch("/TERMS_OF_SERVICE.md");
       const text = await response.text();
       setTermsContent(text);
-      setShowTerms(true);
     } catch (error) {
       console.error("Failed to load terms:", error);
     }
   };
 
+  // Load terms content when showTerms becomes true
+  useEffect(() => {
+    if (showTerms && !termsContent) {
+      const loadTerms = async () => {
+        try {
+          const response = await fetch("/TERMS_OF_SERVICE.md");
+          const text = await response.text();
+          setTermsContent(text);
+        } catch (error) {
+          console.error("Failed to load terms:", error);
+          setTermsContent("Failed to load terms. Please try again.");
+        }
+      };
+      loadTerms();
+    }
+  }, [showTerms, termsContent]);
+
   return (
     <>
-      <div className="fixed bottom-4 left-4 bg-background border shadow-lg rounded-lg p-4 max-w-sm z-50">
-        <div className="space-y-3">
-          <p className="text-sm font-medium">Agree To Terms of Service</p>
-          <div className="flex items-center space-x-2">
-            <Button
-              onClick={handleShowTerms}
-              variant="outline"
-              size="sm"
-              className="flex items-center space-x-1"
-            >
-              <Link className="h-3 w-3" />
-              <span>Terms of Service</span>
-            </Button>
-            <Button onClick={onAgree} size="sm">
-              Agree
-            </Button>
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+        {/* Modal */}
+        <div className="bg-background border shadow-2xl rounded-xl p-6 max-w-md mx-4 transform animate-in fade-in zoom-in duration-200">
+          <div className="space-y-4">
+            <div className="text-center space-y-2">
+              <h2 className="text-xl font-semibold text-foreground">Welcome to Stickee!</h2>
+              <p className="text-sm text-muted-foreground">
+                Please review and agree to our Terms of Service to continue using the application.
+              </p>
+            </div>
+            
+            <div className="flex flex-col space-y-3">
+              <Button
+                onClick={handleShowTerms}
+                variant="outline"
+                className="flex items-center justify-center space-x-2 w-full"
+              >
+                <Link className="h-4 w-4" />
+                <span>View Terms of Service</span>
+              </Button>
+              
+              <Button onClick={handleTermsAgree} className="w-full">
+                I Agree to Terms of Service
+              </Button>
+            </div>
+            
+            <p className="text-xs text-muted-foreground text-center">
+              You must agree to the terms to use Stickee. You can review the terms anytime in settings.
+            </p>
           </div>
         </div>
       </div>
 
-      <Dialog open={showTerms} onOpenChange={setShowTerms}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Terms of Service</DialogTitle>
-          </DialogHeader>
-          <div className="mt-4">
-            <pre className="whitespace-pre-wrap text-sm font-sans leading-relaxed">
-              {termsContent}
-            </pre>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Terms Dialog */}
+      {showTerms && (
+        <Dialog open={showTerms} onOpenChange={onShowTermsChange || (() => {})}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Terms of Service</DialogTitle>
+            </DialogHeader>
+            <div className="mt-4 prose prose-sm max-w-none dark:prose-invert max-h-[60vh] overflow-y-auto">
+              <ReactMarkdown>{termsContent || "Loading terms..."}</ReactMarkdown>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => onShowTermsChange?.(false)}>
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }

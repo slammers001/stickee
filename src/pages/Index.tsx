@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Note } from "@/types/note";
 import { UserProfile } from "@/components/UserProfile";
-import { SettingsButton } from "@/components/SettingsDialog";
+import { SettingsButton, SettingsDialog } from "@/components/SettingsDialog";
 import { SearchBar } from "@/components/SearchBar";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { TermsPopup } from "@/components/TermsPopup";
@@ -48,6 +48,33 @@ const Index = () => {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [iconPath, setIconPath] = useState("/favicons/stickee.png");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [showTermsDialog, setShowTermsDialog] = useState(false);
+
+  // Check for terms agreement on mount and storage changes
+  useEffect(() => {
+    const checkTermsAgreement = () => {
+      const agreed = localStorage.getItem("stickee-terms-agreed") === "true";
+      setTermsAgreed(agreed);
+    };
+
+    checkTermsAgreement();
+
+    // Listen for storage changes
+    const handleStorageChange = () => {
+      checkTermsAgreement();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check periodically as a fallback
+    const interval = setInterval(handleStorageChange, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Fix icon path for Electron
   useEffect(() => {
@@ -77,6 +104,11 @@ const Index = () => {
   const handleTermsAgree = () => {
     setTermsAgreed(true);
     localStorage.setItem("stickee-terms-agreed", "true");
+  };
+
+  // Handle showing terms dialog
+  const handleShowTermsDialog = (show: boolean) => {
+    setShowTermsDialog(show);
   };
 
   // Apply saved default view preference on component mount
@@ -669,7 +701,19 @@ const Index = () => {
       )}
 
       {/* Terms Popup */}
-      {!termsAgreed && <TermsPopup onAgree={handleTermsAgree} />}
+      {!termsAgreed && (
+        <TermsPopup 
+          onAgree={handleTermsAgree} 
+          showTerms={showTermsDialog}
+          onShowTermsChange={handleShowTermsDialog}
+        />
+      )}
+
+      {/* Settings Dialog */}
+      <SettingsDialog 
+        open={settingsOpen} 
+        onOpenChange={setSettingsOpen}
+      />
     </div>
     <StickyNoteWindow
       isOpen={stickyNoteWindowOpen}

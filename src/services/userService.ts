@@ -26,6 +26,51 @@ export const getCurrentUser = () => {
 };
 
 // Create user in Supabase if they don't exist
+// Save terms agreement to Supabase
+export const saveTermsAgreement = async (): Promise<boolean> => {
+  const userId = getUserId();
+  console.log('Saving terms agreement for user:', userId);
+  
+  try {
+    // First, let's check what columns exist by trying a simple select
+    const { data: userData, error: checkError } = await supabase
+      .from('users')
+      .select('id, terms_agreed, terms_agreed_at, updated_at')
+      .eq('id', userId)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error('Error checking user data:', checkError);
+      return false;
+    }
+    
+    console.log('Current user data:', userData);
+    
+    // Now try to update
+    const { data, error } = await supabase
+      .from('users')
+      .update({
+        terms_agreed: true,
+        terms_agreed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select();
+    
+    if (error) {
+      console.error('Error saving terms agreement:', error);
+      console.error('Error details:', error.details, error.hint, error.code);
+      return false;
+    }
+    
+    console.log('Terms agreement saved successfully:', data);
+    return true;
+  } catch (error) {
+    console.error('Error saving terms agreement:', error);
+    return false;
+  }
+};
+
 export const ensureUserExists = async (): Promise<boolean> => {
   const userId = getUserId();
   console.log('Ensuring user exists for ID:', userId);
