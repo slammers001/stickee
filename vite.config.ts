@@ -1,10 +1,11 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import type { PluginOption } from 'vite';
 import electron from "vite-plugin-electron";
 import viteCompression from 'vite-plugin-compression';
 import { readFileSync } from 'fs';
+import { copyFileSync, existsSync } from 'fs';
 
 // @ts-ignore - lovable-tagger might not have types
 export const componentTagger = (): PluginOption => ({
@@ -12,9 +13,22 @@ export const componentTagger = (): PluginOption => ({
   // Add any necessary implementation here
 });
 
+// Plugin to copy TERMS_OF_SERVICE.md to build output
+const copyTermsFile = (): PluginOption => ({
+  name: 'copy-terms-file',
+  writeBundle() {
+    if (existsSync('./TERMS_OF_SERVICE.md')) {
+      copyFileSync('./TERMS_OF_SERVICE.md', './dist/TERMS_OF_SERVICE.md');
+    }
+  },
+});
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const isElectron = process.env.ELECTRON === 'true';
+  
+  // Load environment variables from .env.local
+  const env = loadEnv(mode, process.cwd(), '');
   
   // Read package.json for version
   const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'));
@@ -27,13 +41,9 @@ export default defineConfig(({ mode }) => {
       port: 8080,
     },
     define: {
-      // Embed Supabase credentials for Electron builds
-      ...(isElectron && {
-        'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL || ''),
-        'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY || ''),
-        'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
-      }),
-      // Also embed version for web builds
+      // Embed Supabase credentials for all builds
+      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL || ''),
+      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || ''),
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
     },
     plugins: [
@@ -43,6 +53,7 @@ export default defineConfig(({ mode }) => {
         algorithm: 'gzip',
         ext: '.gz'
       }),
+      copyTermsFile(), // Always copy terms file
       isElectron && electron([
         {
           entry: 'electron/main.ts',

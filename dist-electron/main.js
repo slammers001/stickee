@@ -1,53 +1,55 @@
-import { app as r, BrowserWindow as c } from "electron";
-import t from "path";
+import { app as s, BrowserWindow as c } from "electron";
+import e from "path";
 import { fileURLToPath as d } from "url";
 import a from "fs/promises";
 import { constants as p } from "fs";
-const h = d(import.meta.url), n = t.dirname(h), f = !r.isPackaged;
-let e = null;
+const h = d(import.meta.url), n = e.dirname(h), f = !s.isPackaged;
+let t = null;
 const l = async () => {
   try {
-    if (e = new c({
+    if (t = new c({
       width: 1200,
       height: 800,
       show: !1,
       // Don't show the window until it's ready
       backgroundColor: "#ffffff",
+      icon: e.join(n, "../public/stickee.png"),
+      // Add the icon from public folder
       webPreferences: {
         nodeIntegration: !1,
         contextIsolation: !0,
         webSecurity: !0,
-        preload: t.join(n, "preload.js")
+        preload: e.join(n, "preload.js")
       }
-    }), e.once("ready-to-show", () => {
-      e && (e.show(), e.focus());
-    }), e.on("closed", () => {
-      e = null;
+    }), t.once("ready-to-show", () => {
+      t && (t.show(), t.focus());
+    }), t.on("closed", () => {
+      t = null;
     }), f)
-      console.log("Development mode - loading from Vite dev server..."), await e.loadURL("http://localhost:8080"), e.webContents.openDevTools();
+      console.log("Development mode - loading from Vite dev server..."), await t.loadURL("http://localhost:8080"), t.webContents.openDevTools();
     else {
-      const s = [
+      const r = [
         // For electron-builder with ASAR unpacking
-        t.join(process.resourcesPath, "app.asar.unpacked/dist/index.html"),
+        e.join(process.resourcesPath, "app.asar.unpacked/dist/index.html"),
         // For electron-builder with ASAR (packed)
-        t.join(process.resourcesPath, "app.asar/dist/index.html"),
+        e.join(process.resourcesPath, "app.asar/dist/index.html"),
         // For electron-builder resources
-        t.join(process.resourcesPath, "dist/index.html"),
+        e.join(process.resourcesPath, "dist/index.html"),
         // Relative to dist-electron (most likely)
-        t.join(n, "../dist/index.html"),
+        e.join(n, "../dist/index.html"),
         // Fallback paths
-        t.join(n, "../../dist/index.html"),
-        t.join(process.cwd(), "dist/index.html"),
+        e.join(n, "../../dist/index.html"),
+        e.join(process.cwd(), "dist/index.html"),
         // Try direct path to index.html in app root
-        t.join(process.resourcesPath, "app.asar.unpacked/index.html"),
-        t.join(process.resourcesPath, "app.asar/index.html"),
-        t.join(process.resourcesPath, "index.html")
+        e.join(process.resourcesPath, "app.asar.unpacked/index.html"),
+        e.join(process.resourcesPath, "app.asar/index.html"),
+        e.join(process.resourcesPath, "index.html")
       ];
-      console.log("Production mode - looking for index.html..."), console.log("Possible paths:", s);
+      console.log("Production mode - looking for index.html..."), console.log("Possible paths:", r);
       let i = !1;
-      for (const o of s)
+      for (const o of r)
         try {
-          console.log("Trying path:", o), await a.access(o, p.F_OK), console.log("✅ File found at:", o), await e.loadFile(o), console.log("✅ Successfully loaded from:", o), await e.webContents.executeJavaScript(`
+          console.log("Trying path:", o), await a.access(o, p.F_OK), console.log("✅ File found at:", o), await t.loadFile(o), console.log("✅ Successfully loaded from:", o), await t.webContents.executeJavaScript(`
             if (typeof window !== 'undefined') {
               window.electronAPI = window.electronAPI || {};
               window.electronAPI.isElectron = true;
@@ -66,12 +68,12 @@ const l = async () => {
           console.log("Could not read resources directory");
         }
         try {
-          const o = await a.readdir(t.join(process.resourcesPath, "app.asar.unpacked"));
+          const o = await a.readdir(e.join(process.resourcesPath, "app.asar.unpacked"));
           console.log("Files in app.asar.unpacked:", o);
         } catch {
           console.log("Could not read app.asar.unpacked directory");
         }
-        e.loadURL(`data:text/html;charset=utf-8,
+        t.loadURL(`data:text/html;charset=utf-8,
           <html>
             <body style="font-family: Arial, sans-serif; padding: 40px; text-align: center;">
               <h1>Stickee - Application Loading Error</h1>
@@ -84,22 +86,22 @@ const l = async () => {
               <p>cwd: ${process.cwd()}</p>
               <p>Possible paths tried:</p>
               <ul style="text-align: left; max-width: 800px; margin: 20px auto; font-family: monospace;">
-                ${s.map((o) => `<li>${o}</li>`).join("")}
+                ${r.map((o) => `<li>${o}</li>`).join("")}
               </ul>
             </body>
           </html>
         `);
       }
     }
-  } catch (s) {
-    console.error("Failed to create window:", s), r.quit();
+  } catch (r) {
+    console.error("Failed to create window:", r), s.quit();
   }
 };
-r.whenReady().then(() => {
-  l(), r.on("activate", () => {
+s.whenReady().then(() => {
+  l(), s.on("activate", () => {
     c.getAllWindows().length === 0 && l();
   });
 });
-r.on("window-all-closed", () => {
-  process.platform !== "darwin" && r.quit();
+s.on("window-all-closed", () => {
+  process.platform !== "darwin" && s.quit();
 });

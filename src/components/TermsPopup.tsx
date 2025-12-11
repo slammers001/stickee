@@ -48,11 +48,49 @@ export function TermsPopup({ onAgree, showTerms = false, onShowTermsChange }: Te
     }
     
     try {
-      const response = await fetch("/TERMS_OF_SERVICE.md");
+      // Handle different environments
+      let response;
+      if (typeof window !== 'undefined' && (window as any).electronAPI?.isElectron) {
+        // In Electron, try different possible paths
+        const possiblePaths = [
+          "./TERMS_OF_SERVICE.md",
+          "../TERMS_OF_SERVICE.md",
+          "../../TERMS_OF_SERVICE.md",
+          "/TERMS_OF_SERVICE.md"
+        ];
+        
+        let loaded = false;
+        for (const path of possiblePaths) {
+          try {
+            const testResponse = await fetch(path);
+            if (testResponse.ok) {
+              response = testResponse;
+              loaded = true;
+              break;
+            }
+          } catch (e) {
+            // Try next path
+            continue;
+          }
+        }
+        
+        if (!loaded) {
+          throw new Error("Could not find TERMS_OF_SERVICE.md in Electron environment");
+        }
+      } else {
+        // Web environment
+        response = await fetch("/TERMS_OF_SERVICE.md");
+      }
+      
+      if (!response) {
+        throw new Error("Could not fetch TERMS_OF_SERVICE.md");
+      }
+      
       const text = await response.text();
       setTermsContent(text);
     } catch (error) {
       console.error("Failed to load terms:", error);
+      setTermsContent("Failed to load terms. Please try again.");
     }
   };
 
@@ -61,7 +99,44 @@ export function TermsPopup({ onAgree, showTerms = false, onShowTermsChange }: Te
     if (showTerms && !termsContent) {
       const loadTerms = async () => {
         try {
-          const response = await fetch("/TERMS_OF_SERVICE.md");
+          // Handle different environments
+          let response;
+          if (typeof window !== 'undefined' && (window as any).electronAPI?.isElectron) {
+            // In Electron, try different possible paths
+            const possiblePaths = [
+              "./TERMS_OF_SERVICE.md",
+              "../TERMS_OF_SERVICE.md",
+              "../../TERMS_OF_SERVICE.md",
+              "/TERMS_OF_SERVICE.md"
+            ];
+            
+            let loaded = false;
+            for (const path of possiblePaths) {
+              try {
+                const testResponse = await fetch(path);
+                if (testResponse.ok) {
+                  response = testResponse;
+                  loaded = true;
+                  break;
+                }
+              } catch (e) {
+                // Try next path
+                continue;
+              }
+            }
+            
+            if (!loaded) {
+              throw new Error("Could not find TERMS_OF_SERVICE.md in Electron environment");
+            }
+          } else {
+            // Web environment
+            response = await fetch("/TERMS_OF_SERVICE.md");
+          }
+          
+          if (!response) {
+            throw new Error("Could not fetch TERMS_OF_SERVICE.md");
+          }
+          
           const text = await response.text();
           setTermsContent(text);
         } catch (error) {
