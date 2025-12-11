@@ -156,7 +156,7 @@ export const NoteDetailDialog = ({
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="min-h-[300px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400"
+              className="min-h-[300px] resize-none font-handwriting text-lg text-foreground dark:text-white dark:placeholder:text-gray-400"
               placeholder="Type your note here..."
             />
           </div>

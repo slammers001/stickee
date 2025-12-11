@@ -9,29 +9,29 @@ All colors MUST be HSL.
 @layer base {
   :root {
     --background: 0 0% 97%;
-    --foreground: 0 0% 15%;
+    --foreground: 0 0% 0%;
     
     --font-family-base: 'Indie Flower', cursive;
     --font-family-handwriting: 'Indie Flower', cursive;
     --font-family-title: 'Arbutus', serif;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 15%;
+    --card-foreground: 0 0% 0%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 15%;
+    --popover-foreground: 0 0% 0%;
 
     --primary: 350 100% 88%;
-    --primary-foreground: 0 0% 15%;
+    --primary-foreground: 0 0% 0%;
 
     --secondary: 210 40% 96.1%;
-    --secondary-foreground: 0 0% 15%;
+    --secondary-foreground: 0 0% 0%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 0 0% 45%;
 
     --accent: 48 96% 76%;
-    --accent-foreground: 0 0% 15%;
+    --accent-foreground: 0 0% 0%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -202,5 +202,28 @@ All colors MUST be HSL.
     -ms-user-select: none;
     user-select: none;
     pointer-events: none;
+  }
+
+  /* Force black text in light mode for all text inputs */
+  textarea, input {
+    color: #000000 !important;
+  }
+  
+  textarea::placeholder, input::placeholder {
+    color: #000000 !important;
+  }
+
+  /* Override dark mode text to black */
+  .dark textarea, .dark input {
+    color: #000000 !important;
+  }
+  
+  .dark textarea::placeholder, .dark input::placeholder {
+    color: #000000 !important;
+  }
+
+  /* Force black text for all text content */
+  p, span, div, h1, h2, h3, h4, h5, h6, label, textarea, input {
+    color: #000000 !important;
   }
 }

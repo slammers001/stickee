@@ -4,12 +4,14 @@ import path from "path";
 import type { PluginOption } from 'vite';
 import electron from "vite-plugin-electron";
 import viteCompression from 'vite-plugin-compression';
+import { VitePWA } from 'vite-plugin-pwa';
 
-// @ts-ignore - lovable-tagger might not have types
-export const componentTagger = (): PluginOption => ({
-  name: 'component-tagger',
-  // Add any necessary implementation here
-});
+export const componentTagger = (): PluginOption => {
+  return {
+    name: 'component-tagger',
+    // Add any necessary implementation here
+  };
+};
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -24,11 +26,35 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(), 
       mode === "development" && componentTagger(),
+      !isElectron && VitePWA({
+        registerType: 'autoUpdate',
+        manifest: {
+          name: 'Stickee',
+          short_name: 'Stickee',
+          description: 'Create and organize your thoughts with beautiful digital sticky notes',
+          theme_color: '#ffffff',
+          background_color: '#ffffff',
+          display: 'standalone',
+          icons: [
+            {
+              src: '/favicons/android-chrome-192x192.png',
+              sizes: '192x192',
+              type: 'image/png'
+            },
+            {
+              src: '/favicons/android-chrome-512x512.png',
+              sizes: '512x512',
+              type: 'image/png'
+            }
+          ]
+        }
+      }),
       !isElectron && viteCompression({
         algorithm: 'gzip',
         ext: '.gz'
       }),
-      isElectron && electron([
+      // @ts-expect-error - electron plugin type compatibility
+      isElectron && (electron([
         {
           entry: 'electron/main.ts',
           onstart: (options: { startup: () => void }) => {
@@ -80,7 +106,7 @@ export default defineConfig(({ mode }) => {
             },
           },
         },
-      ] as any) // Type assertion to handle the electron plugin type
+      ] as unknown as PluginOption) as PluginOption)
     ].filter((p): p is Exclude<typeof p, boolean> => Boolean(p)),
     resolve: {
       alias: {

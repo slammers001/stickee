@@ -29,7 +29,7 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
   useEffect(() => {
     if (isOpen && !windowRef.current) {
       // Check if we're in Electron and adjust window features
-      const isElectron = (window as any).electronAPI?.isElectron;
+      const isElectron = (window as unknown as { electronAPI?: { isElectron?: boolean } }).electronAPI?.isElectron;
       const windowFeatures = isElectron 
         ? 'width=350,height=450,left=100,top=100,toolbar=no,menubar=no,scrollbars=no,resizable=no,status=no,nodeIntegration=no,contextIsolation=yes'
         : 'width=350,height=450,left=100,top=100,toolbar=no,menubar=no,scrollbars=no,resizable=no,status=no';
@@ -181,27 +181,34 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
                 outline: none;
                 font-size: 1.125rem;
                 line-height: 1.5;
-                color: hsl(var(--foreground));
+                color: #1f2937;
                 font-family: ${fontFamily};
                 padding: 0.5rem 0;
               }
               
               .note-textarea::placeholder {
-                color: hsl(var(--foreground) / 0.5);
+                color: rgba(31, 41, 55, 0.5);
               }
               
               .controls {
                 display: flex;
-                justify-content: space-between;
+                justify-content: flex-end;
                 align-items: center;
                 margin-top: 0.5rem;
                 font-size: 0.75rem;
-                color: hsl(var(--foreground) / 0.7);
+                color: #000000;
               }
               
-              .close-hint {
-                font-size: 0.7rem;
-                opacity: 0.7;
+              .dark .controls {
+                color: #000000;
+              }
+              
+              .dark .note-textarea {
+                color: #f3f4f6;
+              }
+              
+              .dark .note-textarea::placeholder {
+                color: rgba(243, 244, 246, 0.5);
               }
               
               /* Color classes */
@@ -241,7 +248,6 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
                   spellcheck="false"
                 ></textarea>
                 <div class="controls">
-                  <div class="close-hint">Press Esc or Ctrl+Enter to save</div>
                   <div id="charCount">0/1000</div>
                 </div>
               </div>
@@ -266,6 +272,15 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
               
               // Apply theme on load
               applyTheme(themeData.theme);
+              
+              // Force black text in textarea
+              textarea.style.color = '#000000';
+              textarea.style.setProperty('color', '#000000', 'important');
+              
+              // Add CSS rule for placeholder and character count
+              const style = document.createElement('style');
+              style.textContent = 'textarea::placeholder { color: #000000 !important; } #charCount { color: #000000 !important; } .controls { color: #000000 !important; }';
+              document.head.appendChild(style);
               
               // Update character count
               const updateCharCount = () => {
@@ -325,10 +340,14 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
                   e.preventDefault();
                   saveAndClose();
                 }
-                // Close on Escape
+                // Close on Escape without saving
                 else if (e.key === 'Escape') {
                   e.preventDefault();
-                  saveAndClose();
+                  // Close without saving - just close the window
+                  if (!isClosing) {
+                    isClosing = true;
+                    window.close();
+                  }
                 }
               });
               

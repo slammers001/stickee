@@ -22,10 +22,10 @@ export function QuickNote({ isOpen, onClose }: QuickNoteProps) {
       
       if (e.key === 'Escape') {
         e.preventDefault();
-        onClose(content);
+        onClose(''); // Close without saving
       } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
-        onClose(content);
+        onClose(content); // Save and close
       }
     };
 
@@ -53,13 +53,10 @@ export function QuickNote({ isOpen, onClose }: QuickNoteProps) {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Type your note here..."
-            className="w-full h-32 resize-none font-handwriting text-lg bg-transparent border-none outline-none placeholder:text-muted-foreground"
+            className="w-full h-32 resize-none font-handwriting text-lg text-foreground bg-transparent border-none outline-none placeholder:text-muted-foreground"
+            style={{ color: '#000000' }}
             autoFocus
           />
-        </div>
-        <div className="px-4 pb-4 text-xs text-muted-foreground">
-          Press <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Esc</kbd> or{' '}
-          <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Ctrl+Enter</kbd> to save
         </div>
       </div>
     </div>

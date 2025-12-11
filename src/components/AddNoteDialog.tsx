@@ -49,6 +49,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
       handleSave();
     }
   };
@@ -126,12 +127,9 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="min-h-[150px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400"
+              className="min-h-[150px] resize-none font-handwriting text-lg text-foreground dark:text-white dark:placeholder:text-gray-400"
               autoFocus
             />
-            <p className="text-xs text-muted-foreground mt-2">
-              Press Ctrl+Enter to save quickly
-            </p>
           </div>
         </div>
         <DialogFooter className="flex gap-2">
