@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2 } from "lucide-react";
 import { NoteStatus } from "./StickyNote";
 import { cn } from "@/lib/utils";
+import { soundEffects } from "@/utils/soundEffects";
 
 interface NoteDetailDialogProps {
   open: boolean;
@@ -71,6 +72,7 @@ export const NoteDetailDialog = ({
 
   const handleSave = () => {
     if (note && content.trim()) {
+      soundEffects.playSaveSound();
       onSave(note.id, title.trim(), content, status, color);
       onOpenChange(false);
     }
@@ -78,6 +80,7 @@ export const NoteDetailDialog = ({
 
   const handleDelete = () => {
     if (note) {
+      soundEffects.playDeleteSound();
       onDelete(note.id);
       onOpenChange(false);
     }

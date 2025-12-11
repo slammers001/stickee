@@ -1,7 +1,7 @@
 # Terms of Service for Stickee
 
 **Last Updated:** December 10, 2025  
-**Application:** Stickee v0.1.2
+**Application:** Stickee v0.1.0
 **Developer:** slammers001
 
 ---
@@ -31,7 +31,7 @@ Slammers001 grants you a limited, non-exclusive, non-transferable, revocable lic
 
 ## 4. System Requirements and Compatibility
 
-Stickee v0.1.2 is currently available only for Windows operating systems. You are responsible for ensuring your system meets the minimum requirements for installation and operation.
+Stickee v0.1.0 is currently available only for Windows operating systems. You are responsible for ensuring your system meets the minimum requirements for installation and operation.
 
 ---
 
@@ -142,4 +142,4 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
 
 **Acknowledgement:** By using Stickee, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
 
-**Version:** Terms v2.0 for Stickee v0.1.2
+**Version:** Terms v2.0 for Stickee v0.1.0
