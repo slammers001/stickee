@@ -2,19 +2,17 @@
 // This is basic obfuscation, not military-grade encryption
 // For production, consider using a proper encryption library
 
-const ENCRYPTION_KEY = 'stickee-encryption-key-2024'; // In production, use environment variables
-
 export function encryptContent(content: string): string {
   if (!content) return content;
   
   try {
-    // Simple XOR-based obfuscation with base64 encoding
-    const encrypted = Array.from(content).map((char, index) => {
-      const keyChar = ENCRYPTION_KEY[index % ENCRYPTION_KEY.length];
-      return String.fromCharCode(char.charCodeAt(0) ^ keyChar.charCodeAt(0));
-    }).join('');
+    // Use TextEncoder for proper Unicode handling
+    const encoder = new TextEncoder();
+    const data = encoder.encode(content);
     
-    return btoa(encrypted); // Base64 encode
+    // Convert to base64
+    const base64 = btoa(String.fromCharCode(...data));
+    return base64;
   } catch (error) {
     console.error('Encryption error:', error);
     return content; // Fallback to original content
@@ -25,14 +23,17 @@ export function decryptContent(encryptedContent: string): string {
   if (!encryptedContent) return encryptedContent;
   
   try {
-    // Base64 decode
-    const decoded = atob(encryptedContent);
+    // Decode from base64
+    const binaryString = atob(encryptedContent);
+    const bytes = new Uint8Array(binaryString.length);
     
-    // Reverse XOR operation
-    return Array.from(decoded).map((char, index) => {
-      const keyChar = ENCRYPTION_KEY[index % ENCRYPTION_KEY.length];
-      return String.fromCharCode(char.charCodeAt(0) ^ keyChar.charCodeAt(0));
-    }).join('');
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    // Use TextDecoder for proper Unicode handling
+    const decoder = new TextDecoder();
+    return decoder.decode(bytes);
   } catch (error) {
     console.error('Decryption error:', error);
     return encryptedContent; // Fallback to original content

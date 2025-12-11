@@ -47,7 +47,7 @@ const Index = () => {
   });
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [iconPath, setIconPath] = useState("/favicons/stickee.png");
+  const [iconPath, setIconPath] = useState("./stickee.png");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
 
@@ -81,7 +81,7 @@ const Index = () => {
     // Check if we're in Electron and adjust the path
     if ((window as any).electronAPI?.isElectron) {
       // In Electron, use relative path
-      setIconPath("./favicons/stickee.png");
+      setIconPath("./stickee.png");
     }
   }, []);
 
@@ -420,12 +420,6 @@ const Index = () => {
                   const target = e.target as HTMLImageElement;
                   if (!target.dataset.errorHandled) {
                     target.dataset.errorHandled = "true";
-                    // Try fallback once
-                    if (target.src.includes("/favicons/")) {
-                      target.src = "./stickee.png";
-                    } else if (target.src.includes("./")) {
-                      target.src = "/stickee.png";
-                    }
                   }
                 }}
               />
@@ -482,9 +476,21 @@ const Index = () => {
         {filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
             <img 
-              src="/Stickee-Not-Found.png" 
-              alt="No notes found" 
-              className="mb-6 max-w-sm h-auto object-contain"
+              src={searchQuery ? "./Stickee-Not-Found.png" : "./stickee.png"} 
+              alt={searchQuery ? "No notes found" : "Stickee"} 
+              className="mb-6 max-w-sm h-auto object-contain transition-all duration-200 hover:scale-110 hover:rotate-[-10deg] cursor-pointer"
+              onClick={() => {
+                if (!termsAgreed) {
+                  toast.error("You must agree to the Terms of Service to create notes");
+                  return;
+                }
+                setDialogOpen(true);
+              }}
+              onError={(e) => {
+                console.error(`Failed to load ${searchQuery ? 'Stickee-Not-Found.png' : 'stickee.png'}`);
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+              }}
             />
             <h2 className="text-2xl font-semibold text-foreground mb-2 font-handwriting">
               {searchQuery ? "No matching notes found" : "No Stickee notes yet"}

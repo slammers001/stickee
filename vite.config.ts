@@ -19,6 +19,11 @@ const copyTermsFile = (): PluginOption => ({
   writeBundle() {
     if (existsSync('./TERMS_OF_SERVICE.md')) {
       copyFileSync('./TERMS_OF_SERVICE.md', './dist/TERMS_OF_SERVICE.md');
+      // Also copy to public folder for Electron
+      if (!existsSync('./public')) {
+        require('fs').mkdirSync('./public', { recursive: true });
+      }
+      copyFileSync('./TERMS_OF_SERVICE.md', './public/TERMS_OF_SERVICE.md');
     }
   },
 });
