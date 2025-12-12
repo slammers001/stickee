@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Pin, Settings } from "lucide-react";
+import { Plus, Pin, Settings, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -21,6 +21,8 @@ import { StickyNote } from "@/components/StickyNote";
 import { AddNoteDialog } from "@/components/AddNoteDialog";
 import { NoteDetailDialog } from "@/components/NoteDetailDialog";
 import { SettingsDialog } from "@/components/SettingsDialog";
+import { Checklist } from "@/components/Checklist";
+import { useChecklist } from "@/hooks/useChecklist";
 import { cn } from "@/lib/utils";
 import type { Note } from "@/types/note";
 import type { StickyNoteStatus } from "@/types/note";
@@ -50,6 +52,16 @@ const Index = () => {
   const [iconPath, setIconPath] = useState("./stickee.png");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
+  
+  // Checklist state and handlers
+  const {
+    items: checklistItems,
+    isOpen: isChecklistOpen,
+    addItem: addChecklistItem,
+    toggleItem: toggleChecklistItem,
+    deleteItem: deleteChecklistItem,
+    toggleChecklist,
+  } = useChecklist();
 
   // Check for terms agreement on mount and storage changes
   useEffect(() => {
@@ -754,6 +766,16 @@ const Index = () => {
       <StickyNoteWindow
         isOpen={stickyNoteWindowOpen}
         onClose={handleQuickNote}
+      />
+
+      {/* Checklist */}
+      <Checklist
+        items={checklistItems}
+        isOpen={isChecklistOpen}
+        onAdd={addChecklistItem}
+        onToggle={toggleChecklistItem}
+        onDelete={deleteChecklistItem}
+        onToggleOpen={toggleChecklist}
       />
     </div>
     </>
