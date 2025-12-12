@@ -619,7 +619,7 @@ const Index = () => {
                       </button>
                       <div className="flex-1">
                         {note.title && (
-                          <h4 className="text-foreground font-handwriting text-xl font-bold mb-1 leading-tight">
+                          <h4 className="text-foreground font-title text-xl font-bold mb-1 leading-tight">
                             {note.title.length > 12 ? `${note.title.substring(0, 12)}...` : note.title}
                           </h4>
                         )}
@@ -694,7 +694,7 @@ const Index = () => {
                         </button>
                         <div className="flex-1">
                         {note.title && (
-                          <h4 className="text-foreground font-handwriting text-xl font-bold mb-1 leading-tight">
+                          <h4 className="text-foreground font-title text-xl font-bold mb-1 leading-tight">
                             {note.title.length > 12 ? `${note.title.substring(0, 12)}...` : note.title}
                           </h4>
                         )}
