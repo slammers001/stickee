@@ -1,7 +1,7 @@
 {
   "name": "stickee",
   "private": true,
-  "version": "0.0.4",
+  "version":   "0.1.4",
   "type": "module",
   "author": "slammers001",
   "description": "A modern and fun desktop application for managing and organizing your digital sticky notes and tasks",
@@ -18,14 +18,15 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "electron": "ELECTRON=true vite",
-    "electron:dev": "concurrently \"vite\" \"electron .\"",
+    "electron":   "ELECTRON=true vite",
+    "electron:dev": "concurrently \"vite\" \"electron . \"",
     "electron:serve": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\" --kill-others --success first",
     "electron:build": "cross-env ELECTRON=true vite build",
     "electron:start": "electron .",
     "electron:package": "npm run electron:build && electron-builder build --win --x64 --publish never",
-    "clean": "rm -rf dist dist-electron release",
-    "deps:clean": "npm prune --production"
+    "electron:package-signed": "npm run electron:build && electron-builder build --win --x64 --publish always",
+    "clean": "rmdir /s /q dist & rmdir /s /q dist-electron & rmdir /s /q release",
+    "deps: clean": "npm prune --production"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
@@ -40,54 +41,56 @@
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react-dom":   "^18.3.1",
     "react-router-dom": "^6.30.1",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
-    "tailwindcss-animate": "^1.0.7",
+    "tailwindcss-animate":   "^1.0.7",
     "uuid": "^13.0.0",
     "vite-plugin-pwa": "^1.2.0",
     "zod": "^3.25.76"
   },
   "build": {
-    "appId": "com.stickee.app",
+    "appId":   "com.slammers001.stickee",
     "productName": "Stickee",
     "extraMetadata": {
-      "main": "dist-electron/main.js"
+      "main":  "dist-electron/main.js"
     },
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
+      "target": {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
       "publisherName": "slammers001",
       "verifyUpdateCodeSignature": false,
-      "icon": "public/stickee.png"
+      "sign": false,
+      "forceCodeSigning": false,
+      "signingHashAlgorithms": [],
+      "icon": "public/stickee. png"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "deleteAppDataOnUninstall": true,
-      "perMachine": false
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Stickee"
     },
-    "directories": {
+    "directories":   {
       "output": "release",
       "buildResources": "public"
     },
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
-      "!**/node_modules/**/*",
+      "! **/node_modules/**/*",
       "!src/**/*",
       "!**/*.ts",
       "!**/*.tsx",
       "!**/README.md",
       "!**/LICENSE",
-      "!**/.gitignore",
+      "!**/. gitignore",
       "!**/package-lock.json",
       "!**/yarn.lock"
     ],
@@ -108,21 +111,26 @@
     "nodeGypRebuild": false,
     "asarUnpack": [
       "dist-electron/preload.js"
-    ]
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "slammers001",
+      "repo": "stickee"
+    }
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/electron": "^1.4.38",
-    "@types/node": "^22.19.1",
-    "@types/react": "^18.3.23",
-    "@types/react-dom": "^18.3.7",
+    "@types/node":   "^22.19.1",
+    "@types/react":   "^18.3.23",
+    "@types/react-dom":  "^18.3.7",
     "@vitejs/plugin-react-swc": "^3.11.0",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.2.1",
     "cross-env": "^7.0.3",
-    "electron": "^28.1.0",
-    "electron-builder": "^24.9.1",
+    "electron":   "^28.1.0",
+    "electron-builder":  "^24.9.1",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
@@ -130,10 +138,10 @@
     "lovable-tagger": "^1.1.10",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.38.0",
+    "typescript":   "^5.8.3",
+    "typescript-eslint":   "^8.38.0",
     "vite": "^5.4.19",
-    "vite-plugin-compression": "^0.5.1",
+    "vite-plugin-compression":   "^0.5.1",
     "vite-plugin-electron": "^0.29.0",
     "wait-on": "^9.0.3"
   }
