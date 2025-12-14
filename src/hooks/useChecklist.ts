@@ -3,6 +3,7 @@ import { ChecklistItem } from '@/types/checklist';
 import { checklistService } from '@/services/checklistService';
 import { supabase } from '@/lib/supabase';
 import { getCurrentUser } from '@/services/userService';
+import { toast } from 'sonner';
 
 type SupabaseError = {
   status?: number;
@@ -17,6 +18,15 @@ export const useChecklist = () => {
 
   // Load items from Supabase on mount
   const loadItems = useCallback(async () => {
+    // Check if terms are agreed
+    const termsAgreed = localStorage.getItem("stickee-terms-agreed") === "true";
+    if (!termsAgreed) {
+      console.warn('Terms not agreed, skipping checklist loading');
+      setItems([]);
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       const user = getCurrentUser();
       if (!user?.id) {
@@ -85,6 +95,13 @@ export const useChecklist = () => {
   }, [loadItems, supabase, getCurrentUser]);
 
   const addItem = useCallback(async (text: string) => {
+    // Check if terms are agreed
+    const termsAgreed = localStorage.getItem("stickee-terms-agreed") === "true";
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to use the checklist");
+      return;
+    }
+    
     const user = getCurrentUser();
     if (!text.trim() || !user?.id) {
       console.warn('Invalid input or no user ID');
@@ -119,6 +136,13 @@ export const useChecklist = () => {
   }, []);
 
   const toggleItem = useCallback(async (id: string) => {
+    // Check if terms are agreed
+    const termsAgreed = localStorage.getItem("stickee-terms-agreed") === "true";
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to use the checklist");
+      return;
+    }
+    
     const item = items.find(item => item.id === id);
     if (!item) return;
     
@@ -139,6 +163,13 @@ export const useChecklist = () => {
   }, [items]);
 
   const deleteItem = useCallback(async (id: string) => {
+    // Check if terms are agreed
+    const termsAgreed = localStorage.getItem("stickee-terms-agreed") === "true";
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to use the checklist");
+      return;
+    }
+    
     try {
       setIsLoading(true);
       await checklistService.deleteItem(id);
@@ -164,6 +195,13 @@ export const useChecklist = () => {
   }, [loadItems]);
 
   const toggleChecklist = useCallback(() => {
+    // Check if terms are agreed
+    const termsAgreed = localStorage.getItem("stickee-terms-agreed") === "true";
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to use the checklist");
+      return;
+    }
+    
     setIsOpen(prev => !prev);
   }, []);
 

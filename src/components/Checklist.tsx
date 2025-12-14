@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, Trash2, Plus, List } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface ChecklistProps {
   items: {
@@ -26,12 +27,43 @@ export function Checklist({
   onToggleOpen,
 }: ChecklistProps) {
   const [newItemText, setNewItemText] = useState('');
+  
+  // Check if terms are agreed
+  const termsAgreed = localStorage.getItem("stickee-terms-agreed") === "true";
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to use the checklist");
+      return;
+    }
     if (!newItemText.trim()) return;
     onAdd(newItemText);
     setNewItemText('');
+  };
+  
+  const handleToggleOpen = () => {
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to use the checklist");
+      return;
+    }
+    onToggleOpen();
+  };
+  
+  const handleToggle = (id: string) => {
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to use the checklist");
+      return;
+    }
+    onToggle(id);
+  };
+  
+  const handleDelete = (id: string) => {
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to use the checklist");
+      return;
+    }
+    onDelete(id);
   };
 
   return (
@@ -39,15 +71,18 @@ export function Checklist({
       <Button
         variant="outline"
         size="icon"
-        onClick={onToggleOpen}
+        onClick={handleToggleOpen}
+        disabled={!termsAgreed}
         className={`
           h-12 w-12 flex items-center justify-center
           bg-[hsl(var(--note-pink))] hover:bg-[hsl(var(--note-pink))]
           text-white rounded-lg transition-all duration-200
           hover:scale-105
           ${isOpen ? 'rotate-180 rounded-full' : 'rotate-0 rounded-lg'}
-          transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]`
+          transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+          ${!termsAgreed ? 'opacity-50 cursor-not-allowed' : ''}`
         }
+        title={!termsAgreed ? "You must agree to Terms of Service to use the checklist" : "Toggle checklist"}
       >
         <div className="relative w-6 h-6 flex items-center justify-center">
           {isOpen ? (
@@ -119,7 +154,7 @@ export function Checklist({
                 >
                   <button
                     type="button"
-                    onClick={() => onToggle(item.id)}
+                    onClick={() => handleToggle(item.id)}
                     className={cn(
                       'w-5 h-5 rounded border flex items-center justify-center mr-2 flex-shrink-0',
                       item.completed
@@ -144,7 +179,7 @@ export function Checklist({
                     className="h-6 w-6"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onDelete(item.id);
+                      handleDelete(item.id);
                     }}
                   >
                     <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
