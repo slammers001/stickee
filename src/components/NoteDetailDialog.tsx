@@ -57,6 +57,14 @@ export const NoteDetailDialog = ({
   const [initialColor, setInitialColor] = useState(note?.color || "yellow");
   const [initialTitle, setInitialTitle] = useState(note?.title || "");
 
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    // Limit to 240 characters
+    if (value.length <= 240) {
+      setContent(value);
+    }
+  };
+
   // Update local state when note prop changes
   useEffect(() => {
     if (note) {
@@ -158,10 +166,13 @@ export const NoteDetailDialog = ({
             <label className="text-sm font-medium mb-2 block">Content</label>
             <Textarea
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={handleContentChange}
               className="min-h-[300px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400"
               placeholder="Type your note here..."
             />
+            <p className="text-xs text-muted-foreground mt-2">
+              Maximum 240 characters
+            </p>
           </div>
         </div>
         <DialogFooter className="flex gap-2">

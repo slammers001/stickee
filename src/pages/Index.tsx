@@ -284,6 +284,10 @@ const Index = () => {
       
       setNotes(prevNotes => [newNote, ...prevNotes]);
       setFilteredNotes(prevNotes => [newNote, ...prevNotes]);
+      
+      // Load reactions for the new note immediately
+      await loadReactions([newNote]);
+      
       setDialogOpen(false);
       toast.success('Note added successfully!');
     } catch (error) {
@@ -461,6 +465,10 @@ const Index = () => {
         
         setNotes(prevNotes => [newNote, ...prevNotes]);
         setFilteredNotes(prevNotes => [newNote, ...prevNotes]);
+        
+        // Load reactions for the new note immediately
+        await loadReactions([newNote]);
+        
         toast.success('Sticky note added!');
       } catch (error) {
         console.error('Error creating sticky note:', error);

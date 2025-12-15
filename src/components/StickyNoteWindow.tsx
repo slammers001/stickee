@@ -270,12 +270,30 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
               // Update character count
               const updateCharCount = () => {
                 const currentLength = textarea.value.length;
-                charCount.textContent = currentLength + '/1000';
+                charCount.textContent = currentLength + '/240';
                 
-                // Limit to 1000 characters
-                if (currentLength > 1000) {
-                  textarea.value = textarea.value.substring(0, 1000);
-                  charCount.textContent = '1000/1000';
+                // Limit to 240 characters
+                if (currentLength > 240) {
+                  textarea.value = textarea.value.substring(0, 240);
+                  charCount.textContent = '240/240';
+                }
+              };
+              
+              // Handle input events
+              const handleInput = (e) => {
+                content = e.target.value;
+                updateCharCount();
+              };
+              
+              // Handle keydown events to prevent Enter at 10 lines
+              const handleKeyDown = (e) => {
+                const currentLines = textarea.value.split('\n');
+                const maxLines = 10;
+                
+                // Prevent Enter key if already at 10 lines
+                if (e.key === 'Enter' && currentLines.length >= maxLines) {
+                  e.preventDefault();
+                  return false;
                 }
               };
               
@@ -301,10 +319,7 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
               }
               
               // Update content on input
-              textarea.addEventListener('input', (e) => {
-                content = e.target.value;
-                updateCharCount();
-              });
+              textarea.addEventListener('input', handleInput);
               
               const saveAndClose = () => {
                 if (!isClosing) {

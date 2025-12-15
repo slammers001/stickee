@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Pin, Smile } from "lucide-react";
 import { EmojiPicker } from "./EmojiPicker";
 import { ReactionSummary } from "@/types/emojiReaction";
-import { getReactionsForNote, toggleReaction } from "@/services/emojiReactionService";
+import { toggleReaction } from "@/services/emojiReactionService";
 import { toast } from "sonner";
 
 export type NoteStatus = 'To-Do' | 'Doing' | 'Done' | 'Backlog';
@@ -69,11 +69,9 @@ export const StickyNote = ({
     return magnitude * direction;
   }, []);
   
-  // Limit to 10 lines
-  const lines = content.split('\n');
-  const limitedLines = lines.slice(0, 10);
-  const displayContent = limitedLines.length < lines.length 
-    ? limitedLines.join('\n') + '...' 
+  // Limit to 240 characters
+  const displayContent = content.length > 240 
+    ? content.substring(0, 240) + '...' 
     : content;
 
   const handleEmojiClick = (e: React.MouseEvent) => {

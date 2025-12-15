@@ -37,6 +37,21 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   const [status, setStatus] = useState<NoteStatus>("To-Do");
   const [color, setColor] = useState(colors[0]);
 
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    // Limit to 240 characters
+    if (value.length <= 240) {
+      setContent(value);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Handle Ctrl+Enter to save
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      handleSave();
+    }
+  };
+
   const handleSave = () => {
     if (content.trim()) {
       soundEffects.playNewNoteSound();
@@ -46,12 +61,6 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
       setStatus("To-Do");
       setColor(colors[0]);
       onOpenChange(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      handleSave();
     }
   };
 
@@ -126,13 +135,13 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
             <Textarea
               placeholder="Type your note here..."
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={handleContentChange}
               onKeyDown={handleKeyDown}
               className="min-h-[150px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400"
               autoFocus
             />
             <p className="text-xs text-muted-foreground mt-2">
-              Press Ctrl+Enter to save quickly
+              Press Ctrl+Enter to save quickly • Maximum 240 characters
             </p>
           </div>
         </div>
