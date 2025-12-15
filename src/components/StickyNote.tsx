@@ -176,7 +176,7 @@ export const StickyNote = ({
             className="p-1 rounded-full hover:bg-accent transition-colors"
             title="Add reaction"
           >
-            <Smile size={16} className="text-foreground/60 hover:text-foreground" />
+            <Smile size={16} className="text-foreground/60 hover:text-foreground emoji-react-icon" />
           </button>
         </div>
         

@@ -193,6 +193,22 @@ All colors MUST be HSL.
     color: #ffffff !important;
   }
 
+  .dark .emoji-react-icon {
+    color: #000000 !important;
+  }
+
+  .dark .emoji-react-icon:hover {
+    transform: scale(1.2) !important;
+  }
+
+  .dark button:hover .emoji-react-icon {
+    transform: scale(1.2) !important;
+  }
+
+  .dark button:hover {
+    background-color: transparent !important;
+  }
+
   .no-select {
     -webkit-user-select: none;
     -moz-user-select: none;
