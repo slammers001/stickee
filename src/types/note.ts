@@ -1,3 +1,5 @@
+import { ReactionSummary } from './emojiReaction';
+
 export type NoteStatus = 'To-Do' | 'Doing' | 'Done' | 'Backlog';
 
 export interface Note {
@@ -11,6 +13,7 @@ export interface Note {
   pinned: boolean;
   user_id?: string; // Made optional
   created_at?: string; // For Supabase compatibility
+  reactions?: ReactionSummary[]; // Optional array of reaction summaries
 }
 
 export type StickyNoteStatus = NoteStatus;

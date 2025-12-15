@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Pin, Settings, List } from "lucide-react";
+import { Plus, Pin, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -12,6 +12,8 @@ import {
   reorderNotes as reorderNotesService
 } from "@/services/notesService";
 import { ensureUserExists, updateUserVersion } from "@/services/userService";
+import { getReactionsForNote } from "@/services/emojiReactionService";
+import type { ReactionSummary } from "@/types/emojiReaction";
 import { TermsPopup } from "@/components/TermsPopup";
 import { StickyNoteWindow } from "@/components/StickyNoteWindow";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
@@ -52,6 +54,7 @@ const Index = () => {
   const [iconPath, setIconPath] = useState("./stickee.png");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
+  const [noteReactions, setNoteReactions] = useState<Record<string, ReactionSummary[]>>({});
   
   // Checklist state and handlers
   const {
@@ -196,12 +199,40 @@ const Index = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [dialogOpen, detailDialogOpen, stickyNoteWindowOpen]);
+  }, [dialogOpen, detailDialogOpen, stickyNoteWindowOpen, termsAgreed]);
+
+  // Load reactions for all notes
+  const loadReactions = async (notesToLoad: Note[]) => {
+    const reactionsMap: Record<string, ReactionSummary[]> = {};
+    
+    for (const note of notesToLoad) {
+      try {
+        const reactions = await getReactionsForNote(note.id);
+        reactionsMap[note.id] = reactions;
+      } catch (error) {
+        console.error('Error loading reactions for note:', error);
+        reactionsMap[note.id] = [];
+      }
+    }
+    
+    setNoteReactions(prev => ({
+      ...prev,
+      ...reactionsMap
+    }));
+  };
+
+  const handleReactionUpdate = (noteId: string, reactions: ReactionSummary[]) => {
+    setNoteReactions(prev => ({
+      ...prev,
+      [noteId]: reactions
+    }));
+  };
 
   // Load notes on component mount
   useEffect(() => {
     const loadNotes = async () => {
       try {
+        setLoading(true);
         // Ensure user exists and update version
         await ensureUserExists();
         await updateUserVersion();
@@ -209,6 +240,9 @@ const Index = () => {
         const loadedNotes = await fetchNotes();
         setNotes(loadedNotes);
         setFilteredNotes(loadedNotes);
+        
+        // Load reactions after notes are loaded
+        await loadReactions(loadedNotes);
       } catch (error) {
         console.error('Error loading notes:', error);
         toast.error('Failed to load notes');
@@ -440,7 +474,6 @@ const Index = () => {
   }
 
   return (
-    <>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card shadow-sm">
@@ -544,11 +577,14 @@ const Index = () => {
             {pinnedNotes.map((note) => (
               <StickyNote
                 key={note.id}
+                id={note.id}
                 title={note.title}
                 content={note.content}
                 color={note.color}
                 status={note.status}
                 pinned={note.pinned}
+                reactions={noteReactions[note.id] || []}
+                onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
                 onClick={() => handleNoteClick(note)}
                 onTogglePin={() => togglePin(note.id)}
               />
@@ -573,11 +609,14 @@ const Index = () => {
                   <div className="absolute left-2 top-0 bottom-0 w-1 bg-primary rounded-full transition-all duration-200 z-10" />
                 )}
                 <StickyNote
+                  id={note.id}
                   title={note.title}
                   content={note.content}
                   color={note.color}
                   status={note.status}
                   pinned={note.pinned}
+                  reactions={noteReactions[note.id] || []}
+                  onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
                   onClick={() => handleNoteClick(note)}
                   onTogglePin={() => togglePin(note.id)}
                 />
@@ -705,15 +744,15 @@ const Index = () => {
                           />
                         </button>
                         <div className="flex-1">
-                        {note.title && (
-                          <h4 className="text-foreground font-title text-xl font-bold mb-1 leading-tight">
-                            {note.title.length > 12 ? `${note.title.substring(0, 12)}...` : note.title}
-                          </h4>
-                        )}
-                        <p className="text-foreground font-handwriting text-lg line-clamp-2 note-text">
-                          {note.content}
-                        </p>
-                      </div>
+                          {note.title && (
+                            <h4 className="text-foreground font-title text-xl font-bold mb-1 leading-tight">
+                              {note.title.length > 12 ? `${note.title.substring(0, 12)}...` : note.title}
+                            </h4>
+                          )}
+                          <p className="text-foreground font-handwriting text-lg line-clamp-2 note-text">
+                            {note.content}
+                          </p>
+                        </div>
                       </div>
                       <Badge
                         variant="outline"
@@ -778,7 +817,6 @@ const Index = () => {
         onToggleOpen={toggleChecklist}
       />
     </div>
-    </>
   );
 };
 
