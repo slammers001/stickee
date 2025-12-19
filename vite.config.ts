@@ -2,7 +2,6 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import type { PluginOption } from 'vite';
-import electron from "vite-plugin-electron";
 import viteCompression from 'vite-plugin-compression';
 import { readFileSync } from 'fs';
 import { copyFileSync, existsSync } from 'fs';
@@ -30,8 +29,6 @@ const copyTermsFile = (): PluginOption => ({
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const isElectron = process.env.ELECTRON === 'true';
-  
   // Load environment variables from .env.local
   const env = loadEnv(mode, process.cwd(), '');
   
@@ -40,7 +37,7 @@ export default defineConfig(({ mode }) => {
   const appVersion = packageJson.version;
   
   return {
-    base: isElectron ? './' : '/',
+    base: './',
     server: {
       host: "::",
       port: 8080,
@@ -54,64 +51,11 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(), 
       mode === "development" && componentTagger(),
-      !isElectron && viteCompression({
+      viteCompression({
         algorithm: 'gzip',
         ext: '.gz'
       }),
       copyTermsFile(), // Always copy terms file
-      isElectron && electron([
-        {
-          entry: 'electron/main.ts',
-          onstart: (options: { startup: () => void }) => {
-            options.startup();
-          },
-          vite: {
-            build: {
-              outDir: 'dist-electron',
-              rollupOptions: {
-                external: ['electron'],
-                output: {
-                  entryFileNames: 'main.js'
-                }
-              },
-            },
-          },
-        },
-        {
-          entry: 'electron/preload.ts',
-          onstart: (options: { reload: () => void }) => {
-            options.reload();
-          },
-          vite: {
-            build: {
-              outDir: 'dist-electron',
-              rollupOptions: {
-                external: ['electron'],
-                output: {
-                  entryFileNames: 'preload.js',
-                  format: 'cjs',
-                  inlineDynamicImports: true,
-                  exports: 'auto'
-                }
-              },
-              commonjsOptions: {
-                transformMixedEsModules: true,
-                esmExternals: true
-              },
-              // Ensure we don't have ESM-specific code in preload
-              target: 'node16',
-              minify: false,
-              lib: {
-                entry: 'electron/preload.ts',
-                formats: ['cjs'],
-                fileName: () => 'preload.js'
-              },
-              // Ensure proper module type
-              ssr: true
-            },
-          },
-        },
-      ] as any) // Type assertion to handle the electron plugin type
     ].filter((p): p is Exclude<typeof p, boolean> => Boolean(p)),
     resolve: {
       alias: {
@@ -144,7 +88,7 @@ export default defineConfig(({ mode }) => {
           }
         },
         // External dependencies that shouldn't be bundled
-        external: ['electron'],
+        external: [],
       },
       // Enable compression
       cssCodeSplit: true,
