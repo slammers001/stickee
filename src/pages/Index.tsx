@@ -51,8 +51,7 @@ const Index = () => {
   });
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [iconPath, setIconPath] = useState("./stickee.png");
-  const [settingsOpen, setSettingsOpen] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [noteReactions, setNoteReactions] = useState<Record<string, ReactionSummary[]>>({});
   
@@ -89,15 +88,6 @@ const Index = () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
     };
-  }, []);
-
-  // Fix icon path for Electron
-  useEffect(() => {
-    // Check if we're in Electron and adjust the path
-    if ((window as any).electronAPI?.isElectron) {
-      // In Electron, use relative path
-      setIconPath("./stickee.png");
-    }
   }, []);
 
   // Apply saved font preference on component mount
@@ -489,7 +479,7 @@ const Index = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <img 
-                src={iconPath} 
+                src="./stickee.png" 
                 alt="Stickee" 
                 className="h-14 w-14 object-contain icon-crisp no-select"
                 onError={(e) => {

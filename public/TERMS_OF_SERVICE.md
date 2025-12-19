@@ -105,7 +105,7 @@ Your license to use Stickee terminates automatically if you:
 
 Stickee uses the following open-source technologies:
 
-- Electron
+- Tauri
 - React
 - TypeScript
 - Tailwind CSS

@@ -28,11 +28,7 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
 
   useEffect(() => {
     if (isOpen && !windowRef.current) {
-      // Check if we're in Electron and adjust window features
-      const isElectron = (window as any).electronAPI?.isElectron;
-      const windowFeatures = isElectron 
-        ? 'width=350,height=450,left=100,top=100,toolbar=no,menubar=no,scrollbars=no,resizable=no,status=no,nodeIntegration=no,contextIsolation=yes'
-        : 'width=350,height=450,left=100,top=100,toolbar=no,menubar=no,scrollbars=no,resizable=no,status=no';
+      const windowFeatures = 'width=350,height=450,left=100,top=100,toolbar=no,menubar=no,scrollbars=no,resizable=no,status=no';
 
       // Open a new small window
       const newWindow = window.open(
@@ -44,8 +40,8 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
       if (newWindow) {
         windowRef.current = newWindow as unknown as Window;
         
-        // Determine favicon path based on environment
-        const faviconPath = isElectron ? "./favicons/stickee.png" : "/favicons/stickee.png";
+        // Determine favicon path
+        const faviconPath = "/favicons/stickee.png";
         
         // Get the current theme and font preference
         const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;

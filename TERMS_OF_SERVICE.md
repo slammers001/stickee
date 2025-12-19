@@ -1,7 +1,7 @@
 # Terms of Service for Stickee
 
 **Last Updated:** December 10, 2025  
-**Application:** Stickee v0.1.0
+**Application:** Stickee v0.1.0-present version
 **Developer:** slammers001
 
 ---
@@ -105,7 +105,7 @@ Your license to use Stickee terminates automatically if you:
 
 Stickee uses the following open-source technologies:
 
-- Electron
+- Tauri
 - React
 - TypeScript
 - Tailwind CSS

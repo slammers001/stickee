@@ -2,7 +2,7 @@
 /release
 /dist
 /node_modules
-/dist-electron
+/dist-electron #old version used electron
 
 
 # Environment variables
