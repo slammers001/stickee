@@ -91,7 +91,7 @@ For example, if on v0.0.4 and you add a new feature, it becomes v0.1.0. If you d
 - [ ] No new warnings or errors are introduced
 
 ### Running
-- [ ] I ran npm run electron:package and it worked with a downloadable .exe file
+- [ ] I ran npm run tauri:build and it worked with a downloadable .exe file
 - [ ] I ran the .exe file to make sure the app works the way I expected it to
 - [ ] If it didn't, I fixed the errors and rebuilt to make sure it works
 
