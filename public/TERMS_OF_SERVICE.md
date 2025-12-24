@@ -1,7 +1,7 @@
 # Terms of Service for Stickee
 
-**Last Updated:** December 10, 2025  
-**Application:** Stickee v0.1.0
+**Last Updated:** December 24, 2025  
+**Application:** Stickee v0.1.0-present version
 **Developer:** slammers001
 
 ---
@@ -142,4 +142,4 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
 
 **Acknowledgement:** By using Stickee, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
 
-**Version:** Terms v2.0 for Stickee v0.1.0
+**Version:** Terms v2.0 for Stickee v0.1.0-present version
