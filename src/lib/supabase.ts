@@ -1,19 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Get environment variables - fallback to hardcoded values for Electron builds
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 
-  (typeof window !== 'undefined' && (window as any).electronAPI?.isElectron ? 
-    'https://your-project.supabase.co' : '');
+// Get environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 
-  (typeof window !== 'undefined' && (window as any).electronAPI?.isElectron ? 
-    'your-anon-key' : '');
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase URL or Anon Key is missing. Please check your environment variables or build configuration.');
-  if (typeof window !== 'undefined' && (window as any).electronAPI?.isElectron) {
-    console.error('Electron build detected - Supabase credentials not properly embedded during build');
-  }
+  console.warn('Supabase URL or Anon Key is missing. Please check your environment variables.');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

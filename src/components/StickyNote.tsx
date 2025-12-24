@@ -69,10 +69,11 @@ export const StickyNote = ({
     return magnitude * direction;
   }, []);
   
-  // Limit to 240 characters
-  const displayContent = content.length > 240 
-    ? content.substring(0, 240) + '...' 
-    : content;
+  // Limit to 13 lines (primary constraint)
+  const displayContent = useMemo(() => {
+    const lines = content.split('\n');
+    return lines.length > 13 ? lines.slice(0, 13).join('\n') + '...' : content;
+  }, [content]);
 
   const handleEmojiClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -134,7 +135,7 @@ export const StickyNote = ({
               {title.length > 12 ? `${title.substring(0, 12)}...` : title}
             </h3>
           )}
-          <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting">
+          <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting line-clamp-13">
             {displayContent}
           </p>
         </div>

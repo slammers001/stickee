@@ -10,6 +10,14 @@ export function QuickNote({ isOpen, onClose }: QuickNoteProps) {
   const [content, setContent] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    // Limit to 1500 characters
+    if (value.length <= 1500) {
+      setContent(value);
+    }
+  };
+
   useEffect(() => {
     if (isOpen && textareaRef.current) {
       textareaRef.current.focus();
@@ -51,7 +59,7 @@ export function QuickNote({ isOpen, onClose }: QuickNoteProps) {
           <textarea
             ref={textareaRef}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={handleContentChange}
             placeholder="Type your note here..."
             className="w-full h-32 resize-none font-handwriting text-lg bg-transparent border-none outline-none placeholder:text-muted-foreground"
             autoFocus
@@ -60,6 +68,9 @@ export function QuickNote({ isOpen, onClose }: QuickNoteProps) {
         <div className="px-4 pb-4 text-xs text-muted-foreground">
           Press <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Esc</kbd> or{' '}
           <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Ctrl+Enter</kbd> to save
+        </div>
+        <div className="px-4 pb-2 text-xs text-muted-foreground">
+          {content.length}/1500 characters
         </div>
       </div>
     </div>

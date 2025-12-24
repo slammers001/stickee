@@ -7,7 +7,6 @@ interface DebugInfo {
   supabaseUrl: string;
   hasRealtime: boolean;
   hasAuth: boolean;
-  isElectron: boolean;
   envVars: {
     VITE_SUPABASE_URL: string;
     VITE_SUPABASE_ANON_KEY: string;
@@ -26,7 +25,6 @@ export const SupabaseDebug = () => {
           supabaseUrl: import.meta.env.VITE_SUPABASE_URL || 'Not available',
           hasRealtime: !!supabase?.realtime,
           hasAuth: !!supabase?.auth,
-          isElectron: typeof window !== 'undefined' && !!(window as any).electronAPI?.isElectron,
           envVars: {
             VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Not set',
             VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Not set',
@@ -70,8 +68,8 @@ export const SupabaseDebug = () => {
           <>
             <div>
               <p className="text-sm text-muted-foreground">Environment</p>
-              <Badge variant={debugInfo.isElectron ? "default" : "secondary"}>
-                {debugInfo.isElectron ? "Electron" : "Web"}
+              <Badge variant="secondary">
+                Web
               </Badge>
             </div>
 

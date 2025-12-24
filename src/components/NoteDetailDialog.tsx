@@ -59,8 +59,8 @@ export const NoteDetailDialog = ({
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
-    // Limit to 240 characters
-    if (value.length <= 240) {
+    // Limit to 1500 characters
+    if (value.length <= 1500) {
       setContent(value);
     }
   };
@@ -171,8 +171,11 @@ export const NoteDetailDialog = ({
               placeholder="Type your note here..."
             />
             <p className="text-xs text-muted-foreground mt-2">
-              Maximum 240 characters
+              Maximum 1500 characters
             </p>
+            <div className="text-xs text-muted-foreground mt-1">
+              {content.length}/1500 characters
+            </div>
           </div>
         </div>
         <DialogFooter className="flex gap-2">

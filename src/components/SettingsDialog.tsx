@@ -172,9 +172,9 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         link.href = `https://fonts.googleapis.com/css2?family=${fontName}&display=swap`;
         link.rel = 'stylesheet';
         
-        // Add error handling for Electron
+        // Add error handling for font loading
         link.onerror = () => {
-          console.warn(`Failed to load font: ${fontName} - this is expected in Electron builds`);
+          console.warn(`Failed to load font: ${fontName}`);
         };
         
         document.head.appendChild(link);
@@ -275,7 +275,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         setTermsContent(text);
       } catch (error) {
         console.warn("Failed to load terms from public folder, using fallback:", error);
-        // Fallback: embed the terms content directly for Electron builds
+        // Fallback: embed the terms content directly
         const fallbackTerms = `# Terms of Service for Stickee
 
 **Last Updated:** December 10, 2025  
@@ -383,7 +383,7 @@ Your license to use Stickee terminates automatically if you:
 
 Stickee uses the following open-source technologies:
 
-- Electron
+- Tauri
 - React
 - TypeScript
 - Tailwind CSS
@@ -655,9 +655,9 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
         link.href = `https://fonts.googleapis.com/css2?family=${fontName}&display=swap`;
         link.rel = 'stylesheet';
         
-        // Add error handling for Electron
+        // Add error handling for font loading
         link.onerror = () => {
-          console.warn(`Failed to load font: ${fontName} - this is expected in Electron builds`);
+          console.warn(`Failed to load font: ${fontName}`);
         };
         
         document.head.appendChild(link);
