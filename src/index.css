@@ -216,4 +216,11 @@ All colors MUST be HSL.
     user-select: none;
     pointer-events: none;
   }
+
+  .line-clamp-13 {
+    display: -webkit-box;
+    -webkit-line-clamp: 13;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
