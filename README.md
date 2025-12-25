@@ -1,17 +1,58 @@
-# To the lucky contributors:
-Do not commit anything directly. Instead, **CREATE A PULL REQUEST**!
-You can assign issues to yourself to work on.
-The best way for you to do this is to:
-1) Fork the repository
-2) Create a .env.local with: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
-3) When you have your changes, create a pull request
-4) Wait until notification to say I accepted or didn't.
+# Stickee: The Modern Desktop Sticky Note Application
 
-**Yay! If you contribute with an accepted pull request, your name will get added to the release!!!**
-Pull request requirements:
-1) Send screenshots of how it works
-2) Explain clearly. For example, don't just say "Fixed stuff" as the commit message
+Stickee is a modern desktop application designed for managing and organizing digital sticky notes. Built with React, TypeScript, and Tauri, it combines the simplicity of traditional sticky notes with powerful digital features.
 
-#### **Future ideas found in issues**
+## Key Features
 
-# Stickee!
+* **Intuitive Interface:** Drag-and-drop interface for arranging notes with a fun, interactive experience.
+* **Cloud Synchronization:** Seamlessly sync notes across devices.
+* **Extensive Customization:**
+    * 10 Note Colors
+    * 60+ Font Choices (including handwriting styles)
+    * Light & Dark Theme Support
+    * Emoji Reactions
+* **Smart Features:**
+    * Automatic URL Detection
+    * Keyboard Shortcuts (N for new note, Alt+P for quick note window)
+    * Comprehensive Search Function (content, titles, colors, statuses)
+* **CRUD Operations:** Full Create, Read, Update, and Delete (CRUD) functionality for notes.
+* **Data Encryption:** Robust security with encryption of note content and titles in the Supabase database.
+
+
+
+## Core Functionality
+
+### Note Management
+
+* **Note Attributes:** Each note includes timestamps, user associations, and optional titles alongside the main content.
+* **Note Statuses:** Categorize notes with To-Do, Doing, Done, and Backlog statuses.
+* **Pinning:** Pin important notes to the top for immediate visibility.
+
+### Enhanced Features
+
+* **Checklists:** Create nested task lists within notes, toggle completion states, and dynamically add/delete tasks. Ideal for project management and task tracking.
+* **Search:** Real-time filtering across note content, titles, colors, and statuses, optimized for performance.
+* **View Modes:** Grid and List views for flexible data visualization.
+* **Emoji Reactions:** Add visual feedback to notes and categorize them with emoji reactions, tracked with counts.
+
+
+## Technical Details
+
+* **Technology Stack:**
+    * **Framework:** React, TypeScript
+    * **Desktop Framework:** Tauri
+    * **Database:** Supabase
+    * **State Management:** React Query
+    * **UI Components:** Radix UI
+* **Architecture:** Clean separation of concerns (UI, Business Logic, Data Services) with TypeScript for type safety and service layer abstraction.
+* **Scalability & Maintainability:** Designed for scalability and easy maintenance through modular design and TypeScript.
+
+
+## Design & User Experience
+
+Stickee emphasizes both functionality and user experience with:
+
+*   Smooth animations
+*   Intuitive interactions
+*   A playful aesthetic
+
