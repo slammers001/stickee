@@ -11,3 +11,5 @@ The best way for you to do this is to:
 Pull request requirements:
 1) Send screenshots of how it works
 2) Explain clearly. For example, don't just say "Fixed stuff" as the commit message
+
+## Some ```good first issues``` can be found here: [```click me```](https://github.com/slammers001/stickee/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
