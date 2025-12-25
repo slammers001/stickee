@@ -251,8 +251,25 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
               const colorOptions = document.querySelectorAll('.color-option');
               const noteContainer = document.getElementById('noteContainer');
               
+              // Link detection regex
+              const URL_REGEX = /(https?:\\/\\/(?:www\\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\\.[^\\s]{2,}|www\\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\\.[^\\s]{2,}|https?:\\/\\/(?:www\\.|(?!www))[a-zA-Z0-9]+\\.[^\\s]{2,}|www\\.[a-zA-Z0-9]+\\.[^\\s]{2,})/gi;
+              
               // Theme data from parent window
               const themeData = ${JSON.stringify(themeData)};
+              
+              // Normalize URL function
+              const normalizeUrl = (url) => {
+                if (url.startsWith('http')) {
+                  return url;
+                }
+                return 'https://' + url;
+              };
+              
+              // Open link in browser
+              const openLinkInBrowser = (url) => {
+                const normalizedUrl = normalizeUrl(url);
+                window.open(normalizedUrl, '_blank', 'noopener,noreferrer');
+              };
               
               // Apply initial theme
               function applyTheme(theme) {
@@ -316,6 +333,29 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
               
               // Update content on input
               textarea.addEventListener('input', handleInput);
+              
+              // Handle clicks on links in textarea
+              const handleClick = (e) => {
+                const text = textarea.value;
+                const cursorPos = textarea.selectionStart;
+                const words = text.split(/\\s+/);
+                let currentPos = 0;
+                
+                for (const word of words) {
+                  const wordStart = text.indexOf(word, currentPos);
+                  const wordEnd = wordStart + word.length;
+                  
+                  if (cursorPos >= wordStart && cursorPos <= wordEnd) {
+                    if (URL_REGEX.test(word)) {
+                      openLinkInBrowser(word);
+                      return;
+                    }
+                  }
+                  currentPos = wordEnd + 1;
+                }
+              };
+              
+              textarea.addEventListener('click', handleClick);
               
               const saveAndClose = () => {
                 if (!isClosing) {

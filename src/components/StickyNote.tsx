@@ -7,6 +7,7 @@ import { EmojiPicker } from "./EmojiPicker";
 import { ReactionSummary } from "@/types/emojiReaction";
 import { toggleReaction } from "@/services/emojiReactionService";
 import { toast } from "sonner";
+import { LinkableText } from "./LinkableText";
 
 export type NoteStatus = 'To-Do' | 'Doing' | 'Done' | 'Backlog';
 
@@ -135,9 +136,10 @@ export const StickyNote = ({
               {title.length > 12 ? `${title.substring(0, 12)}...` : title}
             </h3>
           )}
-          <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting line-clamp-13">
-            {displayContent}
-          </p>
+          <LinkableText 
+            text={displayContent}
+            className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting line-clamp-13"
+          />
         </div>
         
         {/* Reactions Section */}
