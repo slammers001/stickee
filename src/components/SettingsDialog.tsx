@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Settings } from "lucide-react";
+import { Heart, Settings, Download } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from "sonner";
 import { getFontSettings, saveFontSettings, updateCurrentFont, updateTitleFont, updateFavoriteFonts } from "@/services/fontSettingsService";
 import { ensureUserExists } from "@/services/userService";
+import { exportUserData, downloadExportFile, importUserData, validateImportFile } from "@/services/exportService";
 
 type FontFamily = "serif" | "sans-serif" | "monospace" | 
   "abeezee" | "aclonica" | "advent-pro" | "anonymous-pro" | "tenali-ramakrishna" | "truculenta" | "ubuntu-sans-mono" | "unbounded" | "nova-mono" | "orbitron" | "bahianita" | "syne-mono" | "vt323" | "xanh-mono" | "cutive-mono" | "arbutus-slab" | "nixie-one" | "noticia-text" | "arvo" | "oi" | "oldenburg" | "orelega-one" | "nova-oval" | "atma" | "butcherman" | "cherry-bomb-one" |
@@ -23,7 +24,7 @@ type FontFamily = "serif" | "sans-serif" | "monospace" |
 type TitleFontFamily = "arbutus" | "agbalumo" | "walter-turncoat" | "yatra-one";
 
 type FontMode = "basic" | "handwriting";
-type ActiveTab = "ui" | "fonts" | "bookmarks" | "titles" | "terms";
+type ActiveTab = "ui" | "fonts" | "bookmarks" | "titles" | "terms" | "data";
 type ViewMode = "grid" | "list";
 
 interface SettingsDialogProps {
@@ -41,6 +42,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("ui");
   const [visibleFontCount, setVisibleFontCount] = useState(20); // Lazy loading state
   const [termsContent, setTermsContent] = useState("");
+  const [importing, setImporting] = useState(false);
 
   // Organized font arrays for lazy loading
   const basicFonts: FontFamily[] = [
@@ -745,6 +747,31 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
 
   const isFavorite = (font: FontFamily) => favoriteFonts.includes(font);
 
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    
+    try {
+      // Validate the file first
+      await validateImportFile(file);
+      
+      // Import the data
+      await importUserData(file);
+      
+      toast.success("Data imported successfully! Refresh the page to see your imported notes.");
+      onOpenChange(false); // Close the dialog after successful import
+    } catch (error) {
+      console.error('Import failed:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to import data. Please check the file format.");
+    } finally {
+      setImporting(false);
+      // Clear the file input
+      event.target.value = '';
+    }
+  };
+
   const getFontLabelClasses = (font: string) => {
     return `text-lg ${fontFamily === font ? "bg-primary text-primary-foreground px-2 py-1 rounded-md font-semibold" : ""}`;
   };
@@ -869,7 +896,7 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>
@@ -918,6 +945,14 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
             className="flex-1"
           >
             Terms
+          </Button>
+          <Button
+            variant={activeTab === "data" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setActiveTab("data")}
+            className="flex-1"
+          >
+            Data
           </Button>
         </div>
 
@@ -1204,6 +1239,96 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
                 </div>
               </div>
             </>
+          )}
+          
+          {activeTab === "data" && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium">Data Management</h3>
+              <p className="text-sm text-muted-foreground">
+                Export your data to keep a backup or import data from a previous export.
+              </p>
+              
+              <div className="space-y-4">
+                <div className="border rounded-lg p-4 space-y-4">
+                  <div>
+                    <h4 className="font-medium mb-2">Export All Data</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Download all your notes, checklist items, and reactions as a JSON file.
+                    </p>
+                    <Button
+                      onClick={async () => {
+                        try {
+                          const data = await exportUserData();
+                          downloadExportFile(data);
+                          toast.success("Data exported successfully!");
+                        } catch (error) {
+                          console.error('Export failed:', error);
+                          toast.error("Failed to export data. Please try again.");
+                        }
+                      }}
+                      className="w-full"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Export Data to JSON
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="border rounded-lg p-4 space-y-4">
+                  <div>
+                    <h4 className="font-medium mb-2">Import Data</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Import notes and checklist items from a previously exported JSON file.
+                    </p>
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept=".json"
+                          onChange={handleImport}
+                          disabled={importing}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                          id="file-upload"
+                        />
+                        <label 
+                          htmlFor="file-upload"
+                          className={`block w-full p-3 border-2 border-dashed border-muted-foreground/25 rounded-lg text-center cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors ${
+                            importing ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
+                        >
+                          <div className="space-y-2">
+                            <Download className="h-6 w-6 mx-auto text-muted-foreground" />
+                            <div className="text-sm">
+                              <span className="font-medium text-primary">
+                                {importing ? 'Importing...' : 'Click to upload or drag and drop'}
+                              </span>
+                              <p className="text-muted-foreground">
+                                JSON files only
+                              </p>
+                            </div>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                  <p className="mb-2">
+                    <strong>What's included in your export/import:</strong>
+                  </p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>All your notes (content, colors, status, pins)</li>
+                    <li>Your checklist items and completion status</li>
+                    <li>Emoji reactions on notes (export only)</li>
+                    <li>User information and timestamp</li>
+                  </ul>
+                  <p className="mt-2">
+                    <strong>Note:</strong> Importing will add new notes to your existing data.
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
         </div>
         <div className="pt-4 border-t">
