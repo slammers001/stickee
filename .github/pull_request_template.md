@@ -109,5 +109,6 @@ If so, what variables need to be added
 ## ⚠️ package.json
 - [ ] I have updated the package.json version line to represent the version change I would like
 - [ ] I have updated the Index.tsx file in src/pages to change the version display to the version I would like
+- [ ] I have updated tauri.conf.json to display the correct version as well
 
 # Thank you for contributing!
