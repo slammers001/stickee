@@ -71,6 +71,20 @@ export const checklistService = {
     }
   },
 
+  async updateItem(id: string, text: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from(TABLE_NAME)
+        .update({ text: text.trim(), updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating checklist item:', error);
+      throw error;
+    }
+  },
+
   async reorderItems(updatedItems: ChecklistItem[]): Promise<void> {
     try {
       const updates = updatedItems.map((item, index) => ({

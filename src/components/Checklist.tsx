@@ -13,6 +13,7 @@ interface ChecklistProps {
   }[];
   onAdd: (text: string) => void;
   onToggle: (id: string) => void;
+  onUpdate: (id: string, text: string) => void;
   onDelete: (id: string) => void;
   isOpen: boolean;
   onToggleOpen: () => void;
@@ -22,11 +23,14 @@ export function Checklist({
   items = [],
   onAdd,
   onToggle,
+  onUpdate,
   onDelete,
   isOpen,
   onToggleOpen,
 }: ChecklistProps) {
   const [newItemText, setNewItemText] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState('');
   
   // Check if terms are agreed
   const termsAgreed = localStorage.getItem("stickee-terms-agreed") === "true";
@@ -64,6 +68,33 @@ export function Checklist({
       return;
     }
     onDelete(id);
+  };
+
+  const handleStartEdit = (id: string, text: string) => {
+    setEditingId(id);
+    setEditingText(text);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingId || !editingText.trim()) return;
+    onUpdate(editingId, editingText);
+    setEditingId(null);
+    setEditingText('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingText('');
+  };
+
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancelEdit();
+    }
   };
 
   return (
@@ -148,7 +179,7 @@ export function Checklist({
                 <div
                   key={item.id}
                   className={cn(
-                    'flex items-center p-2 rounded hover:bg-accent',
+                    'flex items-center p-2 rounded hover:bg-gray-100',
                     item.completed && 'opacity-60'
                   )}
                 >
@@ -156,23 +187,37 @@ export function Checklist({
                     type="button"
                     onClick={() => handleToggle(item.id)}
                     className={cn(
-                      'w-5 h-5 rounded border flex items-center justify-center mr-2 flex-shrink-0',
+                      'w-5 h-5 rounded border-2 flex items-center justify-center mr-2 flex-shrink-0',
                       item.completed
-                        ? 'bg-primary border-primary text-primary-foreground'
-                        : 'border-input'
+                        ? 'bg-gray-700 border-gray-700 text-white'
+                        : 'border-gray-600 hover:border-gray-700'
                     )}
                   >
                     {item.completed && <Check className="h-3 w-3" />}
                   </button>
-                  <span
-                    className={cn(
-                      'flex-1 text-sm',
-                      item.completed && 'line-through text-muted-foreground'
-                    )}
-                    style={{ fontFamily: 'var(--font-family-handwriting)' }}
-                  >
-                    {item.text}
-                  </span>
+                  {editingId === item.id ? (
+                    <Input
+                      type="text"
+                      value={editingText}
+                      onChange={(e) => setEditingText(e.target.value)}
+                      onKeyDown={handleEditKeyDown}
+                      onBlur={handleSaveEdit}
+                      className="flex-1 text-sm h-6"
+                      style={{ fontFamily: 'var(--font-family-handwriting)' }}
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      className={cn(
+                        'flex-1 text-sm cursor-pointer',
+                        item.completed && 'line-through text-muted-foreground'
+                      )}
+                      onClick={() => handleStartEdit(item.id, item.text)}
+                      style={{ fontFamily: 'var(--font-family-handwriting)' }}
+                    >
+                      {item.text}
+                    </span>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"

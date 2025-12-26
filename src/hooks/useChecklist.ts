@@ -162,6 +162,32 @@ export const useChecklist = () => {
     }
   }, [items]);
 
+  const updateItem = useCallback(async (id: string, text: string) => {
+    // Check if terms are agreed
+    const termsAgreed = localStorage.getItem("stickee-terms-agreed") === "true";
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to use the checklist");
+      return;
+    }
+    
+    if (!text.trim()) return;
+    
+    try {
+      setIsLoading(true);
+      await checklistService.updateItem(id, text);
+      setItems(prev =>
+        prev.map(item =>
+          item.id === id ? { ...item, text: text.trim() } : item
+        )
+      );
+    } catch (error) {
+      console.error('Failed to update item:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const deleteItem = useCallback(async (id: string) => {
     // Check if terms are agreed
     const termsAgreed = localStorage.getItem("stickee-terms-agreed") === "true";
@@ -209,6 +235,7 @@ export const useChecklist = () => {
     items,
     addItem,
     toggleItem,
+    updateItem,
     deleteItem,
     reorderItems,
     isOpen,

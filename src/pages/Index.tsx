@@ -61,6 +61,7 @@ const Index = () => {
     isOpen: isChecklistOpen,
     addItem: addChecklistItem,
     toggleItem: toggleChecklistItem,
+    updateItem: updateChecklistItem,
     deleteItem: deleteChecklistItem,
     toggleChecklist,
   } = useChecklist();
@@ -811,6 +812,7 @@ const Index = () => {
         isOpen={isChecklistOpen}
         onAdd={addChecklistItem}
         onToggle={toggleChecklistItem}
+        onUpdate={updateChecklistItem}
         onDelete={deleteChecklistItem}
         onToggleOpen={toggleChecklist}
       />
