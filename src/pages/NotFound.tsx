@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { StickyNote } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
@@ -11,17 +12,9 @@ const NotFound = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="text-center">
-        <img 
-          src="./Stickee-Not-Found.png" 
-          alt="Stickee Not Found" 
-          className="mx-auto mb-8 max-w-md h-auto object-contain"
-          onError={(e) => {
-            console.error('Failed to load Stickee-Not-Found.png, checking file...');
-            const target = e.target as HTMLImageElement;
-            // Try with timestamp to bust cache
-            target.src = `./Stickee-Not-Found.png?t=${Date.now()}`;
-          }}
-        />
+        <div className="mx-auto mb-8 flex h-48 w-48 items-center justify-center rounded-full bg-muted">
+          <StickyNote className="h-24 w-24 text-muted-foreground" />
+        </div>
         <h1 className="mb-4 text-4xl font-bold">404</h1>
         <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
         <a href="/" className="text-blue-500 underline hover:text-blue-700">

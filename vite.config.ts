@@ -6,6 +6,21 @@ import viteCompression from 'vite-plugin-compression';
 import { readFileSync } from 'fs';
 import { copyFileSync, existsSync } from 'fs';
 
+// Tree shaking plugin for lucide-react
+const lucideTreeShake = (): PluginOption => ({
+  name: 'lucide-tree-shake',
+  resolveId(id) {
+    if (id === 'lucide-react') {
+      return id;
+    }
+  },
+  load(id) {
+    if (id === 'lucide-react') {
+      return `export * from 'lucide-react/dist/esm/icons/index.js';`;
+    }
+  }
+});
+
 // @ts-ignore - lovable-tagger might not have types
 export const componentTagger = (): PluginOption => ({
   name: 'component-tagger',
@@ -39,7 +54,6 @@ export default defineConfig(({ mode }) => {
       port: 8080,
     },
     define: {
-      // Embed Supabase credentials for all builds
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL || ''),
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || ''),
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
@@ -51,7 +65,7 @@ export default defineConfig(({ mode }) => {
         algorithm: 'gzip',
         ext: '.gz'
       }),
-      copyTermsFile(), // Always copy terms file
+      copyTermsFile(),
     ].filter((p): p is Exclude<typeof p, boolean> => Boolean(p)),
     resolve: {
       alias: {
@@ -61,35 +75,17 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       emptyOutDir: true,
-      minify: 'esbuild', // Use esbuild for faster minification
+      minify: 'esbuild',
       target: 'esnext',
       rollupOptions: {
-        input: {
-          main: path.resolve(__dirname, 'index.html'),
-        },
         output: {
-          // Ensure consistent file naming
           entryFileNames: 'assets/[name]-[hash].js',
           chunkFileNames: 'assets/[name]-[hash].js',
-          assetFileNames: 'assets/[name]-[hash][extname]',
-          // Manual chunking for better code splitting
-          manualChunks: {
-            vendor: ['react', 'react-dom'],
-            ui: ['@radix-ui/react-dialog', '@radix-ui/react-toast', '@radix-ui/react-label', '@radix-ui/react-slot', 'sonner'],
-            router: ['react-router-dom'],
-            utils: ['clsx', 'tailwind-merge', 'class-variance-authority'],
-            query: ['@tanstack/react-query'],
-            theme: ['next-themes'],
-            icons: ['lucide-react']
-          }
-        },
-        // External dependencies that shouldn't be bundled
-        external: [],
+          assetFileNames: 'assets/[name]-[hash][extname]'
+        }
       },
-      // Enable compression
       cssCodeSplit: true,
-      // Don't generate sourcemaps in production to reduce size
-      sourcemap: false,
+      sourcemap: false
     },
   };
 });
