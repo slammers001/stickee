@@ -8,7 +8,7 @@ MAJOR.MINOR.PATCH (X.Y.Z) format:
 • MINOR (Y): New features
 • PATCH (Z): Bug fixes
 If version is from v0.0.1 to less than v0.1.0, it's not considered a stable app with features working.
-For example, if on v0.0.4 and you add a new feature, it becomes v0.1.0. If you do a major feature, becomes v1.0.0. If a bug fix it becomes v0.0.5.
+For example, if on v0.0.4 and you add a new feature, it becomes v0.1.0. If you do a major feature, becomes v1.0.0. If a bug fix (any issue with the label bug or any bug you find) it becomes v0.0.5.
 
 -->
 

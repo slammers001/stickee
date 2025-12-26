@@ -54,7 +54,6 @@ export default defineConfig(({ mode }) => {
       port: 8080,
     },
     define: {
-      // Embed Supabase credentials for all builds
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL || ''),
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || ''),
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
@@ -62,12 +61,11 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(), 
       mode === "development" && componentTagger(),
-      lucideTreeShake(),
       viteCompression({
         algorithm: 'gzip',
         ext: '.gz'
       }),
-      copyTermsFile(), // Always copy terms file
+      copyTermsFile(),
     ].filter((p): p is Exclude<typeof p, boolean> => Boolean(p)),
     resolve: {
       alias: {
@@ -80,30 +78,14 @@ export default defineConfig(({ mode }) => {
       minify: 'esbuild',
       target: 'esnext',
       rollupOptions: {
-        input: {
-          main: path.resolve(__dirname, 'index.html'),
-        },
         output: {
           entryFileNames: 'assets/[name]-[hash].js',
           chunkFileNames: 'assets/[name]-[hash].js',
-          assetFileNames: 'assets/[name]-[hash][extname]',
-          manualChunks: {
-            vendor: ['react', 'react-dom'],
-            ui: ['@radix-ui/react-dialog', '@radix-ui/react-toast', '@radix-ui/react-label', '@radix-ui/react-slot', 'sonner'],
-            router: ['react-router-dom'],
-            utils: ['clsx', 'tailwind-merge', 'class-variance-authority'],
-            query: ['@tanstack/react-query'],
-            theme: ['next-themes'],
-            icons: ['lucide-react']
-          }
-        },
-        external: [],
-        treeshake: 'smallest'
+          assetFileNames: 'assets/[name]-[hash][extname]'
+        }
       },
       cssCodeSplit: true,
-      sourcemap: false,
-      chunkSizeWarningLimit: 1000,
-      assetsInlineLimit: 4096
+      sourcemap: false
     },
   };
 });

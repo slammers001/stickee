@@ -23,6 +23,7 @@ serde = { version = "1.0", features = ["derive"], default-features = false }
 log = { version = "0.4", default-features = false }
 tauri = { version = "2.9.5", features = ["rustls-tls", "wry"], default-features = false }
 tauri-plugin-log = { version = "2", features = ["colored"], default-features = false }
+tauri-plugin-shell = "2"
 
 [profile.release]
 panic = "abort"

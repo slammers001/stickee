@@ -27,7 +27,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "nsis",
+    "targets": "all",
     "icon": [
       "icons/32x32.png",
       "icons/64x64.png", 
@@ -39,13 +39,6 @@
     ],
     "category": "Productivity",
     "shortDescription": "A modern desktop app for sticky notes",
-    "longDescription": "A modern and fun desktop application for managing and organizing your digital sticky notes and tasks",
-    "windows": {
-      "nsis": {
-        "displayLanguageSelector": false,
-        "languages": ["English"],
-        "template": "modern"
-      }
-    }
+    "longDescription": "A modern and fun desktop application for managing and organizing your digital sticky notes and tasks"
   }
 }
