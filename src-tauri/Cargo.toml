@@ -19,8 +19,14 @@ tauri-build = { version = "2.5.3", features = [] }
 
 [dependencies]
 serde_json = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-log = "0.4"
-tauri = { version = "2.9.5", features = [] }
-tauri-plugin-log = "2"
-tauri-plugin-shell = "2"
+serde = { version = "1.0", features = ["derive"], default-features = false }
+log = { version = "0.4", default-features = false }
+tauri = { version = "2.9.5", features = ["rustls-tls", "wry"], default-features = false }
+tauri-plugin-log = { version = "2", features = ["colored"], default-features = false }
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+strip = true
+opt-level = "s"

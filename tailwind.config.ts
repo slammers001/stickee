@@ -93,7 +93,6 @@ export default {
   },
   plugins: [
     require("tailwindcss-animate"),
-    require("@tailwindcss/typography"),
     require("./src/lib/plugins/text-size-adjust").textSizeAdjust,
   ],
 } satisfies Config;
