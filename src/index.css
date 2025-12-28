@@ -219,8 +219,455 @@ All colors MUST be HSL.
 
   .line-clamp-13 {
     display: -webkit-box;
+    display: box;
     -webkit-line-clamp: 13;
+    line-clamp: 13;
     -webkit-box-orient: vertical;
+    box-orient: vertical;
     overflow: hidden;
   }
+}
+
+/* Mobile-friendly CSS for Stickee App - Fix horizontal scrolling and button positioning */
+
+/* Reset and base mobile styles */
+@media (max-width: 768px) {
+    * {
+        box-sizing: border-box;
+    }
+    
+    body, html {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        padding: 10px !important;
+    }
+    
+    /* Main container */
+    #root, .app, .container {
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+    }
+    
+    /* Header/Toolbar - ensure buttons stay within viewport */
+    header, .header, .toolbar, .nav {
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 10px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 15px !important;
+    }
+    
+    /* Main header container - vertical layout on mobile */
+    header > div, .header > div, .toolbar > div, .nav > div {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        gap: 10px !important;
+    }
+    
+    /* Left side content (logo, title, made by) - left aligned and stacked */
+    .flex.items-center.space-x-2 {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        text-align: left !important;
+        gap: 2px !important;
+    }
+    
+    /* Make "Made by" text smaller */
+    .flex.items-center.space-x-2 p {
+        font-size: 10px !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+    
+    /* Right side controls (user, add) - move to bottom */
+    .flex.items-center.gap-4 {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        align-self: flex-end !important;
+    }
+    
+    /* Hide search button on mobile */
+    .flex.items-center.gap-4 > div:first-child {
+        display: none !important;
+    }
+    
+    /* Hide settings button on mobile - target the specific button */
+    .flex.items-center.gap-4 button:has(.lucide-settings),
+    .flex.items-center.gap-4 button[aria-label*="Settings"],
+    button:has(.lucide-settings) {
+        display: none !important;
+    }
+    
+    /* Hide terms of service on mobile - target the actual component */
+    .terms-popup, .terms-container, .terms-dialog, .terms-modal {
+        display: none !important;
+    }
+    
+    /* Also hide any terms-related components */
+    [class*="TermsPopup"], [class*="terms-popup"] {
+        display: none !important;
+    }
+    
+    /* Show user profile on mobile */
+    .flex.items-center.gap-4 > div:nth-child(2) {
+        display: block !important;
+    }
+    
+    /* Hide any text labels in buttons on mobile */
+    button span:not(.icon), .btn span:not(.icon) {
+        display: none !important;
+    }
+    
+    /* Hide emoji reactions completely on mobile */
+    .emoji-react-icon {
+        display: none !important;
+    }
+    
+    button:has(.emoji-react-icon), .btn:has(.emoji-react-icon) {
+        display: none !important;
+    }
+    
+    /* Hide reaction displays and containers on mobile */
+    .reactions-container, .emoji-reactions, .reaction-list, .reaction-display, .reaction-bar, .emoji-bar {
+        display: none !important;
+    }
+    
+    /* Hide specific reaction elements - be more selective */
+    .emoji-react-icon, .reaction-button, .reaction-list, .reaction-display {
+        display: none !important;
+    }
+    
+    /* Hide reaction counts specifically */
+    .reaction-count, .emoji-count {
+        display: none !important;
+    }
+    
+    /* Hide any element containing reaction data */
+    [data-reaction], [data-emoji], .reactions, .emoji-reactions {
+        display: none !important;
+    }
+    
+    /* Hide reaction summaries and displays */
+    .reaction-summary, .emoji-summary, .reaction-bar, .emoji-bar {
+        display: none !important;
+    }
+    /* Additional aggressive reaction hiding */
+    span[class*="reaction"], div[class*="reaction"], 
+    span[class*="emoji"], div[class*="emoji"],
+    [class*="Reaction"], [class*="Emoji"],
+    button[class*="reaction"], button[class*="emoji"] {
+        display: none !important;
+    }
+    
+    /* Hide specific reaction-related elements but NOT note content */
+    .reaction-container, .emoji-container, .reaction-wrapper, .emoji-wrapper,
+    .reaction-list, .emoji-list, .reaction-display, .emoji-display {
+        display: none !important;
+    }
+    
+    /* Hide the specific Tailwind classes used for reactions */
+    .flex.items-center.gap-1.px-2.py-1.rounded-full.text-xs.transition-all,
+    .flex.items-center.gap-1.px-2.py-1.rounded-full,
+    .rounded-full.text-xs.transition-all.hover\:bg-accent,
+    .bg-primary.text-primary-foreground.rounded-full {
+        display: none !important;
+    }
+    
+    /* Hide any element with reaction-specific Tailwind combination */
+    [class*="rounded-full"][class*="text-xs"][class*="gap-1"] {
+        display: none !important;
+    }
+    
+    /* Hide elements that are likely reaction buttons */
+    .rounded-full.bg-primary.text-primary-foreground,
+    .rounded-full.hover\:bg-accent {
+        display: none !important;
+    }
+    
+    /* Action buttons - move to header, remove fixed positioning */
+    .add-button, .settings-button, .user-info, .search-button {
+        position: relative !important;
+        z-index: auto !important;
+    }
+    
+    .add-button {
+        bottom: auto !important;
+        right: auto !important;
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 8px !important;
+        margin-left: 8px !important;
+    }
+    
+    .settings-button {
+        top: auto !important;
+        right: auto !important;
+        width: 44px !important;
+        height: 44px !important;
+    }
+    
+    .search-button {
+        top: auto !important;
+        right: auto !important;
+        width: 44px !important;
+        height: 44px !important;
+    }
+    
+    .user-info {
+        top: auto !important;
+        left: auto !important;
+        font-size: 12px !important;
+        max-width: 80px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+    
+    /* Sticky notes - better mobile layout */
+    .sticky-note {
+        width: calc(100vw - 40px) !important;
+        max-width: 350px !important;
+        min-height: 150px !important;
+        margin: 8px 20px !important;
+        padding: 12px !important;
+    }
+    
+    .sticky-note h3 {
+        font-size: 16px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .sticky-note p {
+        font-size: 14px !important;
+        line-height: 1.4 !important;
+    }
+    
+    /* Notes container - single column with proper spacing */
+    .notes-container, .notes-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        padding: 10px 0 !important;
+        width: 100% !important;
+        align-items: center !important;
+    }
+    
+    /* Modal adjustments */
+    .modal, .popup {
+        width: 95% !important;
+        max-width: 350px !important;
+        margin: 20px auto !important;
+        left: 2.5% !important;
+        right: 2.5% !important;
+    }
+    
+    /* New note dialog adjustments for mobile */
+    .dialog, .modal-dialog, [role="dialog"] {
+        width: 95% !important;
+        max-width: 320px !important;
+        margin: 10px auto !important;
+        padding: 15px !important;
+    }
+    
+    /* Add back button for mobile note creation */
+    .dialog-header, .modal-header, [class*="dialog-header"] {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-bottom: 10px !important;
+    }
+    
+    /* Show close/back button on mobile */
+    .dialog-header button, .modal-header button, [class*="dialog-header"] button {
+        display: flex !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+        padding: 8px !important;
+    }
+    
+    /* Make form elements smaller on mobile */
+    .dialog-content, .modal-content, [class*="dialog-content"] {
+        padding: 10px !important;
+    }
+    
+    .dialog-content textarea, .modal-content textarea, [class*="dialog-content"] textarea {
+        min-height: 100px !important;
+        font-size: 14px !important;
+        padding: 8px !important;
+    }
+    
+    .dialog-content input, .modal-content input, [class*="dialog-content"] input {
+        font-size: 14px !important;
+        padding: 8px !important;
+    }
+    
+    /* Make buttons smaller in dialogs */
+    .dialog-footer, .modal-footer, [class*="dialog-footer"] {
+        padding: 10px 0 0 0 !important;
+        gap: 8px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+    }
+    
+    .dialog-footer button, .modal-footer button, [class*="dialog-footer"] button {
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+        min-height: 36px !important;
+        min-width: 80px !important;
+        flex: 1 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* Ensure cancel button is visible */
+    button:contains("Cancel"), button:contains("Close"), button[variant="outline"], button[variant="secondary"] {
+        display: flex !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Make sure both save and cancel buttons are visible */
+    .dialog-footer button:nth-child(1), .dialog-footer button:nth-child(2),
+    .modal-footer button:nth-child(1), .modal-footer button:nth-child(2) {
+        display: flex !important;
+    }
+    
+    /* Hide keyboard shortcut hints on mobile */
+    .keyboard-hint, .shortcut-hint, .kbd, [class*="keyboard"], [class*="shortcut"] {
+        display: none !important;
+    }
+    
+    /* Hide specific keyboard shortcut text elements */
+    .text-xs.text-muted-foreground:contains("Ctrl+Enter"),
+    .text-xs.text-muted-foreground:contains("Press"),
+    .close-hint:contains("Ctrl+Enter"),
+    .controls:contains("Ctrl+Enter") {
+        display: none !important;
+    }
+    
+    /* Hide any paragraph containing keyboard shortcuts */
+    p:contains("Ctrl+Enter"), p:contains("Control+Enter"), p:contains("Cmd+Enter") {
+        display: none !important;
+    }
+    
+    /* Hide tooltip or help text about shortcuts */
+    .tooltip, .help-text, .hint-text, [data-tooltip], .close-hint {
+        display: none !important;
+    }
+    
+    /* Hide control elements with keyboard hints */
+    .controls {
+        display: none !important;
+    }
+    
+    /* Input fields - prevent zoom */
+    input, textarea {
+        font-size: 16px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 12px !important;
+        border: 1px solid #ccc !important;
+    }
+    
+    /* Footer adjustments - ensure it's visible and not overlapping */
+    footer {
+        font-size: 12px !important;
+        padding: 15px !important;
+        width: 100% !important;
+        position: relative !important;
+        margin-top: 20px !important;
+        z-index: 999 !important;
+        background: var(--light) !important;
+        border-top: 2px solid var(--dark) !important;
+        text-align: center !important;
+    }
+    
+    /* Touch-friendly buttons */
+    button, .btn {
+        min-width: 44px !important;
+        min-height: 44px !important;
+        padding: 10px !important;
+    }
+    
+    /* Pin icon positioning */
+    .pin-icon {
+        position: absolute !important;
+        top: 8px !important;
+        right: 8px !important;
+        width: 32px !important;
+        height: 32px !important;
+    }
+    
+    /* Ensure no horizontal scrolling */
+    .main-content, .content-wrapper {
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+    }
+}
+
+/* Extra small phones - iPhone SE dimensions (375x667) and similar */
+@media (max-width: 480px) {
+    .sticky-note {
+        width: calc(100vw - 20px) !important;
+        max-width: 300px !important;
+        min-height: 120px !important;
+        margin: 5px 10px !important;
+        padding: 10px !important;
+    }
+    
+    .add-button {
+        bottom: 80px !important;
+        right: 15px !important;
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    .settings-button {
+        top: 15px !important;
+        right: 15px !important;
+        width: 40px !important;
+        height: 40px !important;
+    }
+    
+    .search-button {
+        top: 15px !important;
+        right: 60px !important; /* Adjusted for smaller screen */
+        width: 40px !important;
+        height: 40px !important;
+    }
+    
+    .user-info {
+        top: 15px !important;
+        left: 15px !important;
+        font-size: 11px !important;
+        max-width: 120px !important;
+    }
+    
+    footer {
+        font-size: 11px !important;
+        padding: 10px !important;
+    }
+}
+
+/* Very small screens - ensure buttons don't overlap */
+@media (max-width: 360px) {
+    .search-button {
+        right: 55px !important;
+    }
+    
+    .user-info {
+        max-width: 100px !important;
+    }
 }
