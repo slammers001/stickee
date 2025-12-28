@@ -14,11 +14,16 @@ export const useDragAndDrop = (_items: any[], onReorder: (fromIndex: number, toI
 
   const handleMouseDown = (e: React.MouseEvent, index: number, id: string) => {
     console.log('Mouse down', { index, id });
+    e.preventDefault();
     setIsMouseDown(true);
     setDragStartPos({ x: e.clientX, y: e.clientY });
     dragStartTime.current = Date.now();
     setDraggedItem({ index, id });
     setIsDragging?.(true);
+    
+    // Prevent text selection during drag
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -47,6 +52,10 @@ export const useDragAndDrop = (_items: any[], onReorder: (fromIndex: number, toI
     setDraggedItem(null);
     setDragOverIndex(null);
     setIsDragging?.(false);
+    
+    // Restore text selection
+    document.body.style.userSelect = '';
+    document.body.style.webkitUserSelect = '';
   };
 
   const handleMouseOver = (index: number) => {
@@ -83,6 +92,10 @@ export const useDragAndDrop = (_items: any[], onReorder: (fromIndex: number, toI
       setDraggedItem(null);
       setDragOverIndex(null);
       setIsDragging?.(false);
+      
+      // Restore text selection
+      document.body.style.userSelect = '';
+      document.body.style.webkitUserSelect = '';
     },
   };
 };
