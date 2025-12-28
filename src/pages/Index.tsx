@@ -389,10 +389,20 @@ const Index = () => {
       // Find the actual index in the full notes array
       const actualFromIndex = allUnpinnedNotes.findIndex(n => n.id === actualNote.id);
       
-      // Create a copy of all unpinned notes and reorder them
+      // Create a copy of all unpinned notes and remove the dragged note
       const reorderedUnpinned = [...allUnpinnedNotes];
-      reorderedUnpinned.splice(actualFromIndex, 1);
-      reorderedUnpinned.splice(toIndex, 0, actualNote);
+      reorderedUnpinned.splice(actualFromIndex, 1); // Remove the dragged note
+      
+      // Find the actual position where we want to insert
+      // If dropping on a note after the dragged note's original position, we need to adjust the index
+      let actualToIndex = toIndex;
+      if (actualFromIndex < toIndex) {
+        // If moving forward, the index shifts by 1 after removal
+        actualToIndex = toIndex + 1;
+      }
+      
+      // Insert the dragged note at the new position
+      reorderedUnpinned.splice(actualToIndex, 0, actualNote);
       
       // Combine pinned notes (always first) with reordered unpinned notes
       const newOrder = [...allPinnedNotes, ...reorderedUnpinned];
@@ -403,7 +413,7 @@ const Index = () => {
       // Update local state
       setNotes(newOrder);
       setFilteredNotes(newOrder);
-      toast.success('Notes reordered!');
+      toast.success('Note moved!');
     } catch (error) {
       console.error('Error reordering notes:', error);
       toast.error('Failed to reorder notes');
