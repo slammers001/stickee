@@ -827,7 +827,7 @@ const Index = () => {
 
       {/* Version Display */}
       <div className="fixed bottom-4 left-4 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded shadow-sm" style={{ fontFamily: 'var(--font-family-handwriting)' }}>
-        Version 1.1.0
+        Version 1.2.0
       </div>
     </div>
   );
