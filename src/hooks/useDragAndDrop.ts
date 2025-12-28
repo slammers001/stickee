@@ -1,51 +1,101 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 interface DragItem {
   index: number;
   id: string;
 }
 
-export const useDragAndDrop = (_items: any[], onReorder: (fromIndex: number, toIndex: number) => void) => {
+export const useDragAndDrop = (_items: any[], onReorder: (fromIndex: number, toIndex: number) => void, setIsDragging?: (isDragging: boolean) => void) => {
   const [draggedItem, setDraggedItem] = useState<DragItem | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+  const dragStartTime = useRef<number>(0);
 
-  const handleDragStart = (e: React.DragEvent, index: number, id: string) => {
+  const handleMouseDown = (e: React.MouseEvent, index: number, id: string) => {
+    console.log('Mouse down', { index, id });
+    e.preventDefault();
+    setIsMouseDown(true);
+    setDragStartPos({ x: e.clientX, y: e.clientY });
+    dragStartTime.current = Date.now();
     setDraggedItem({ index, id });
-    e.dataTransfer.effectAllowed = 'move';
+    setIsDragging?.(true);
+    
+    // Prevent text selection during drag
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
   };
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDragOverIndex(index);
-  };
-
-  const handleDragLeave = () => {
-    setDragOverIndex(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    setDragOverIndex(null);
-
-    if (draggedItem && draggedItem.index !== dropIndex) {
-      onReorder(draggedItem.index, dropIndex);
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isMouseDown || !draggedItem) return;
+    
+    const deltaX = e.clientX - dragStartPos.x;
+    const deltaY = e.clientY - dragStartPos.y;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    // Only start dragging if moved enough
+    if (distance > 10) {
+      console.log('Dragging started');
     }
-    setDraggedItem(null);
   };
 
-  const handleDragEnd = () => {
+  const handleMouseUp = (targetIndex: number) => {
+    if (!isMouseDown || !draggedItem) return;
+    
+    console.log('Mouse up', { fromIndex: draggedItem.index, toIndex: targetIndex });
+    
+    if (draggedItem.index !== targetIndex) {
+      onReorder(draggedItem.index, targetIndex);
+    }
+    
+    setIsMouseDown(false);
     setDraggedItem(null);
+    setDragOverIndex(null);
+    setIsDragging?.(false);
+    
+    // Restore text selection
+    document.body.style.userSelect = '';
+    document.body.style.webkitUserSelect = '';
+  };
+
+  const handleMouseOver = (index: number) => {
+    if (isMouseDown) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleMouseLeave = () => {
     setDragOverIndex(null);
   };
 
   return {
     draggedItem,
     dragOverIndex,
-    handleDragStart,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop,
-    handleDragEnd,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    handleMouseOver,
+    handleMouseLeave,
+    // Keep old names for compatibility
+    handleDragStart: handleMouseDown,
+    handleDragOver: (e: React.DragEvent, index: number) => {
+      e.preventDefault();
+      setDragOverIndex(index);
+    },
+    handleDragLeave: handleMouseLeave,
+    handleDrop: (e: React.DragEvent, index: number) => {
+      e.preventDefault();
+      handleMouseUp(index);
+    },
+    handleDragEnd: () => {
+      setIsMouseDown(false);
+      setDraggedItem(null);
+      setDragOverIndex(null);
+      setIsDragging?.(false);
+      
+      // Restore text selection
+      document.body.style.userSelect = '';
+      document.body.style.webkitUserSelect = '';
+    },
   };
 };
