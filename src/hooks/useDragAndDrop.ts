@@ -8,64 +8,81 @@ interface DragItem {
 export const useDragAndDrop = (_items: any[], onReorder: (fromIndex: number, toIndex: number) => void, setIsDragging?: (isDragging: boolean) => void) => {
   const [draggedItem, setDraggedItem] = useState<DragItem | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const dragStartTime = useRef<number>(0);
-  const dragStartPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  const handleDragStart = (e: React.DragEvent, index: number, id: string) => {
+  const handleMouseDown = (e: React.MouseEvent, index: number, id: string) => {
+    console.log('Mouse down', { index, id });
+    setIsMouseDown(true);
+    setDragStartPos({ x: e.clientX, y: e.clientY });
     dragStartTime.current = Date.now();
-    dragStartPos.current = { x: e.clientX, y: e.clientY };
     setDraggedItem({ index, id });
     setIsDragging?.(true);
-    e.dataTransfer.effectAllowed = 'move';
-    
-    // Set a custom drag image if needed
-    const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
-    dragImage.style.opacity = '0.5';
-    document.body.appendChild(dragImage);
-    
-    // Use clientX/clientY instead of offsetX/offsetY
-    const rect = e.currentTarget.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
-    
-    e.dataTransfer.setDragImage(dragImage, offsetX, offsetY);
-    setTimeout(() => document.body.removeChild(dragImage), 0);
   };
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDragOverIndex(index);
-  };
-
-  const handleDragLeave = () => {
-    setDragOverIndex(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOverIndex(null);
-
-    if (draggedItem && draggedItem.index !== dropIndex) {
-      onReorder(draggedItem.index, dropIndex);
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isMouseDown || !draggedItem) return;
+    
+    const deltaX = e.clientX - dragStartPos.x;
+    const deltaY = e.clientY - dragStartPos.y;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    // Only start dragging if moved enough
+    if (distance > 10) {
+      console.log('Dragging started');
     }
-    setDraggedItem(null);
   };
 
-  const handleDragEnd = () => {
+  const handleMouseUp = (targetIndex: number) => {
+    if (!isMouseDown || !draggedItem) return;
+    
+    console.log('Mouse up', { fromIndex: draggedItem.index, toIndex: targetIndex });
+    
+    if (draggedItem.index !== targetIndex) {
+      onReorder(draggedItem.index, targetIndex);
+    }
+    
+    setIsMouseDown(false);
     setDraggedItem(null);
     setDragOverIndex(null);
     setIsDragging?.(false);
   };
 
+  const handleMouseOver = (index: number) => {
+    if (isMouseDown) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setDragOverIndex(null);
+  };
+
   return {
     draggedItem,
     dragOverIndex,
-    handleDragStart,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop,
-    handleDragEnd,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    handleMouseOver,
+    handleMouseLeave,
+    // Keep old names for compatibility
+    handleDragStart: handleMouseDown,
+    handleDragOver: (e: React.DragEvent, index: number) => {
+      e.preventDefault();
+      setDragOverIndex(index);
+    },
+    handleDragLeave: handleMouseLeave,
+    handleDrop: (e: React.DragEvent, index: number) => {
+      e.preventDefault();
+      handleMouseUp(index);
+    },
+    handleDragEnd: () => {
+      setIsMouseDown(false);
+      setDraggedItem(null);
+      setDragOverIndex(null);
+      setIsDragging?.(false);
+    },
   };
 };

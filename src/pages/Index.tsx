@@ -427,11 +427,11 @@ const Index = () => {
   const {
     draggedItem,
     dragOverIndex,
-    handleDragStart,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop,
-    handleDragEnd,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    handleMouseOver,
+    handleMouseLeave,
   } = useDragAndDrop(unpinnedNotes, reorderNotes);
 
   const handleNoteClick = (note: Note) => {
@@ -602,14 +602,13 @@ const Index = () => {
             {unpinnedNotes.map((note, index) => (
               <div
                 key={note.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, index, note.id)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, index)}
-                onDragEnd={handleDragEnd}
+                onMouseDown={(e) => handleMouseDown(e, index, note.id)}
+                onMouseMove={handleMouseMove}
+                onMouseUp={() => handleMouseUp(index)}
+                onMouseOver={() => handleMouseOver(index)}
+                onMouseLeave={handleMouseLeave}
                 className={cn(
-                  "transition-all duration-200 relative",
+                  "transition-all duration-200 relative cursor-move",
                   draggedItem?.index === index ? "opacity-50" : ""
                 )}
               >
@@ -720,14 +719,13 @@ const Index = () => {
                     <div className="absolute -top-1 left-0 right-0 h-1 bg-primary rounded-full transition-all duration-200 z-10" />
                   )}
                   <div
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, index, note.id)}
-                    onDragOver={(e) => handleDragOver(e, index)}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, index)}
-                    onDragEnd={handleDragEnd}
+                    onMouseDown={(e) => handleMouseDown(e, index, note.id)}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={() => handleMouseUp(index)}
+                    onMouseOver={() => handleMouseOver(index)}
+                    onMouseLeave={handleMouseLeave}
                     className={cn(
-                      "p-4 bg-card border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer",
+                      "p-4 bg-card border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-move",
                       colorMap[note.color],
                       draggedItem?.index === index ? "opacity-50" : ""
                     )}
