@@ -12,14 +12,18 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/favicons/android-chrome-192x192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/favicons/android-chrome-512x512.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />
-    <script src="https://cdn.jsdelivr.net/npm/posthog-js@1.126.2/dist/index.umd.js"></script>
     <script>
       // Initialize PostHog with environment variables
       const POSTHOG_API_KEY = 'phc_dOBViKPhL2wwSDvkWprVr9vmD5L5303U10sVxcqda3T';
       const POSTHOG_API_HOST = 'https://us.posthog.com';
       
-      // Wait for PostHog to load and initialize
-      setTimeout(() => {
+      // Load PostHog script with error handling
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/posthog-js@1.126.2/dist/index.umd.js';
+      script.async = true;
+      
+      script.onload = function() {
+        console.log('PostHog script loaded successfully');
         if (typeof posthog !== 'undefined') {
           posthog.init(POSTHOG_API_KEY, {
             api_host: POSTHOG_API_HOST,
@@ -31,9 +35,15 @@
           });
           console.log('PostHog initialized successfully');
         } else {
-          console.error('PostHog failed to load');
+          console.error('PostHog not available after script load');
         }
-      }, 1000);
+      };
+      
+      script.onerror = function() {
+        console.error('Failed to load PostHog script from CDN');
+      };
+      
+      document.head.appendChild(script);
     </script>
   </head>
 
