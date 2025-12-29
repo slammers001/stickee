@@ -17,9 +17,9 @@
       const POSTHOG_API_KEY = 'phc_dOBViKPhL2wwSDvkWprVr9vmD5L5303U10sVxcqda3T';
       const POSTHOG_API_HOST = 'https://us.posthog.com';
       
-      // Load PostHog script with error handling
+      // Load PostHog script with error handling - try official CDN
       const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/posthog-js@1.126.2/dist/index.umd.js';
+      script.src = 'https://us.posthog.com/static/array.js';
       script.async = true;
       
       script.onload = function() {
@@ -40,7 +40,34 @@
       };
       
       script.onerror = function() {
-        console.error('Failed to load PostHog script from CDN');
+        console.error('Failed to load PostHog script from official CDN, trying unpkg...');
+        // Fallback to unpkg
+        const fallbackScript = document.createElement('script');
+        fallbackScript.src = 'https://unpkg.com/posthog-js@latest/dist/index.umd.js';
+        fallbackScript.async = true;
+        
+        fallbackScript.onload = function() {
+          console.log('PostHog script loaded from unpkg successfully');
+          if (typeof posthog !== 'undefined') {
+            posthog.init(POSTHOG_API_KEY, {
+              api_host: POSTHOG_API_HOST,
+              autocapture: true,
+              capture_pageview: true,
+              debug: false,
+              persistence: 'localStorage',
+              property_blacklist: ['$current_url']
+            });
+            console.log('PostHog initialized successfully');
+          } else {
+            console.error('PostHog not available after fallback script load');
+          }
+        };
+        
+        fallbackScript.onerror = function() {
+          console.error('Failed to load PostHog script from all CDNs');
+        };
+        
+        document.head.appendChild(fallbackScript);
       };
       
       document.head.appendChild(script);
