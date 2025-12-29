@@ -18,8 +18,8 @@
       const POSTHOG_API_KEY = 'phc_dOBViKPhL2wwSDvkWprVr9vmD5L5303U10sVxcqda3T';
       const POSTHOG_API_HOST = 'https://us.posthog.com';
       
-      // Wait for PostHog to be available
-      function initPostHog() {
+      // Wait for PostHog to load and initialize
+      setTimeout(() => {
         if (typeof posthog !== 'undefined') {
           posthog.init(POSTHOG_API_KEY, {
             api_host: POSTHOG_API_HOST,
@@ -27,20 +27,13 @@
             capture_pageview: true,
             debug: false,
             persistence: 'localStorage',
-            property_blacklist: ['$current_url']  // Don't capture full URLs
+            property_blacklist: ['$current_url']
           });
-          
-          // Make posthog available on window for toolbar access
-          window.posthog = posthog;
           console.log('PostHog initialized successfully');
         } else {
-          console.warn('PostHog not available yet, retrying...');
-          setTimeout(initPostHog, 100);
+          console.error('PostHog failed to load');
         }
-      }
-      
-      // Initialize PostHog
-      initPostHog();
+      }, 1000);
     </script>
   </head>
 
