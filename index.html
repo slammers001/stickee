@@ -18,19 +18,29 @@
       const POSTHOG_API_KEY = 'phc_dOBViKPhL2wwSDvkWprVr9vmD5L5303U10sVxcqda3T';
       const POSTHOG_API_HOST = 'https://us.posthog.com';
       
-      if (typeof posthog !== 'undefined') {
-        posthog.init(POSTHOG_API_KEY, {
-          api_host: POSTHOG_API_HOST,
-          autocapture: true,
-          capture_pageview: true,
-          debug: false,
-          persistence: 'localStorage',
-          property_blacklist: ['$current_url']  // Don't capture full URLs
-        });
-        
-        // Make posthog available on window for toolbar access
-        window.posthog = posthog;
+      // Wait for PostHog to be available
+      function initPostHog() {
+        if (typeof posthog !== 'undefined') {
+          posthog.init(POSTHOG_API_KEY, {
+            api_host: POSTHOG_API_HOST,
+            autocapture: true,
+            capture_pageview: true,
+            debug: false,
+            persistence: 'localStorage',
+            property_blacklist: ['$current_url']  // Don't capture full URLs
+          });
+          
+          // Make posthog available on window for toolbar access
+          window.posthog = posthog;
+          console.log('PostHog initialized successfully');
+        } else {
+          console.warn('PostHog not available yet, retrying...');
+          setTimeout(initPostHog, 100);
+        }
       }
+      
+      // Initialize PostHog
+      initPostHog();
     </script>
   </head>
 
