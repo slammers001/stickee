@@ -24,10 +24,12 @@
           autocapture: true,
           capture_pageview: true,
           debug: false,
-          disable_toolbar: true,  // Disable the toolbar to prevent 404 errors
           persistence: 'localStorage',
           property_blacklist: ['$current_url']  // Don't capture full URLs
         });
+        
+        // Make posthog available on window for toolbar access
+        window.posthog = posthog;
       }
     </script>
   </head>
