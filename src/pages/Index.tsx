@@ -28,6 +28,7 @@ import { useChecklist } from "@/hooks/useChecklist";
 import { cn } from "@/lib/utils";
 import type { Note } from "@/types/note";
 import type { StickyNoteStatus } from "@/types/note";
+import { analytics, AnalyticsEvents } from "@/utils/analytics";
 
 // Using the Note interface from types/note.ts
 
@@ -110,6 +111,11 @@ const Index = () => {
   const handleTermsAgree = () => {
     setTermsAgreed(true);
     localStorage.setItem("stickee-terms-agreed", "true");
+    
+    // Track terms agreement event
+    analytics.track(AnalyticsEvents.TERMS_AGREED, {
+      source: 'terms_popup'
+    });
   };
 
   // Handle showing terms dialog
@@ -281,6 +287,15 @@ const Index = () => {
       
       setDialogOpen(false);
       toast.success('Note added successfully!');
+      
+      // Track note creation event
+      analytics.track(AnalyticsEvents.NOTE_CREATED, {
+        note_id: newNote.id,
+        color: color,
+        status: status,
+        has_title: !!title,
+        content_length: content.length
+      });
     } catch (error) {
       console.error('Error in addNote:', {
         error,
@@ -434,17 +449,16 @@ const Index = () => {
     handleMouseLeave,
   } = useDragAndDrop(unpinnedNotes, reorderNotes);
 
-  const handleNoteClick = (note: Note) => {
-    if (!termsAgreed) {
-      toast.error("You must agree to the Terms of Service to view notes");
-      return;
-    }
-    setSelectedNote(note);
-    setDetailDialogOpen(true);
-  };
-
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    
+    // Track search events
+    if (query.trim()) {
+      analytics.track(AnalyticsEvents.SEARCH_PERFORMED, {
+        query_length: query.length,
+        query_type: 'text_search'
+      });
+    }
   };
 
   const handleQuickNote = async (content: string, color: string) => {
@@ -476,6 +490,15 @@ const Index = () => {
         toast.error('Failed to add sticky note');
       }
     }
+  };
+
+  const handleNoteClick = (note: Note) => {
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to view notes");
+      return;
+    }
+    setSelectedNote(note);
+    setDetailDialogOpen(true);
   };
 
   if (loading) {
