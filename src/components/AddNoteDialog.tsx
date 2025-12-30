@@ -134,7 +134,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
           <DialogTitle>Add a New Stickee Note</DialogTitle>
         </DialogHeader>
         <div className="py-4 space-y-4 flex-1 overflow-y-auto">
-          <div>
+          <div className="order-1">
             <label className="text-sm font-medium mb-2 block">Title (Optional)</label>
             <Input
               placeholder="Add a title..."
@@ -147,7 +147,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               {title.length}/20 characters
             </div>
           </div>
-          <div>
+          <div className="order-2 sm:order-3">
             <label className="text-sm font-medium mb-2 block">Color</label>
             <div className="flex gap-2 flex-wrap">
               {colors.map((c) => {
@@ -178,7 +178,24 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               })}
             </div>
           </div>
-          <div>
+          <div className="order-3 sm:order-2">
+            <label className="text-sm font-medium mb-2 block">Content</label>
+            <Textarea
+              placeholder="Type your note here..."
+              value={content}
+              onChange={handleContentChange}
+              onKeyDown={handleKeyDown}
+              className="min-h-[150px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400"
+              autoFocus
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              Press Ctrl+Enter to save quickly • Maximum 1500 characters
+            </p>
+            <div className="text-xs text-muted-foreground mt-1">
+              {content.length}/1500 characters
+            </div>
+          </div>
+          <div className="order-4">
             <label className="text-sm font-medium mb-2 block">Status</label>
             <div className="flex gap-2">
               {statuses.map((s) => (
@@ -195,23 +212,6 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
                   {s}
                 </Badge>
               ))}
-            </div>
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-2 block">Content</label>
-            <Textarea
-              placeholder="Type your note here..."
-              value={content}
-              onChange={handleContentChange}
-              onKeyDown={handleKeyDown}
-              className="min-h-[150px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400"
-              autoFocus
-            />
-            <p className="text-xs text-muted-foreground mt-2">
-              Press Ctrl+Enter to save quickly • Maximum 1500 characters
-            </p>
-            <div className="text-xs text-muted-foreground mt-1">
-              {content.length}/1500 characters
             </div>
           </div>
         </div>
