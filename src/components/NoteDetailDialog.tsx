@@ -210,7 +210,7 @@ export const NoteDetailDialog = ({
               value={content}
               onChange={handleContentChange}
               onKeyDown={handleContentKeyDown}
-              className="min-h-[300px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400"
+              className="min-h-[300px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400 w-full"
               placeholder="Type your note here..."
             />
             <p className="text-xs text-muted-foreground mt-2">

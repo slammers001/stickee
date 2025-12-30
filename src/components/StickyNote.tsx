@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Pin, Smile } from "lucide-react";
+import { Pin, Smile, CheckSquare } from "lucide-react";
 import { EmojiPicker } from "./EmojiPicker";
 import { ReactionSummary } from "@/types/emojiReaction";
 import { toggleReaction } from "@/services/emojiReactionService";
@@ -18,13 +18,16 @@ interface StickyNoteProps {
   content: string;
   color: string;
   status: NoteStatus;
-  index: number;
-  lastUpdated: number;
+  index?: number;
+  lastUpdated?: number;
   pinned: boolean;
   reactions?: ReactionSummary[];
   onClick: () => void;
   onTogglePin: () => void;
   onReactionUpdate?: (reactions: ReactionSummary[]) => void;
+  onToggleSelect?: () => void;
+  isSelected?: boolean;
+  showSelectionCheckbox?: boolean;
 }
 
 const colorMap: Record<string, string> = {
@@ -57,7 +60,10 @@ export const StickyNote = memo(({
   reactions = [], 
   onClick, 
   onTogglePin,
-  onReactionUpdate 
+  onReactionUpdate,
+  onToggleSelect,
+  isSelected = false,
+  showSelectionCheckbox = false
 }: Omit<StickyNoteProps, 'index' | 'lastUpdated'>) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiPickerPosition, setEmojiPickerPosition] = useState({ x: 0, y: 0 });
@@ -117,7 +123,8 @@ export const StickyNote = memo(({
           "border-0 animate-in fade-in-0 zoom-in-95 relative",
           "before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-16 before:h-6",
           "before:bg-background/40 before:shadow-sm before:-translate-y-2 before:rounded-sm",
-          colorMap[color]
+          colorMap[color],
+          isSelected && "ring-2 ring-primary ring-offset-2"
         )}
         style={{
           transform: `rotate(${rotation}deg)`,
@@ -131,6 +138,26 @@ export const StickyNote = memo(({
         }}
         onClick={onClick}
       >
+        {/* Selection Checkbox Overlay */}
+        {showSelectionCheckbox ? (
+          <div 
+            className="absolute top-2 left-2 z-10"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSelect?.();
+            }}
+          >
+            <div className={cn(
+              "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer",
+              isSelected 
+                ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90" 
+                : "bg-background border-primary border-primary/50 hover:bg-primary/20"
+            )}>
+              {isSelected && <CheckSquare className="w-4 h-4" />}
+            </div>
+          </div>
+        ) : null}
+        
         <div className="flex-1">
           {title && (
             <h3 className="text-foreground text-xl font-bold mb-2 font-title leading-tight">

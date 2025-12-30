@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { Plus, Pin, Settings } from "lucide-react";
+import { CheckSquare, Trash2, Pin, Settings, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -17,9 +17,9 @@ import type { ReactionSummary } from "@/types/emojiReaction";
 import { TermsPopup } from "@/components/TermsPopup";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { SearchBar } from "@/components/SearchBar";
-import { UserProfile } from "@/components/UserProfile";
 import { StickyNote } from "@/components/StickyNote";
 import { AddNoteDialog } from "@/components/AddNoteDialog";
+import { MassDeleteDialog } from "@/components/MassDeleteDialog";
 import { useChecklist } from "@/hooks/useChecklist";
 import { cn } from "@/lib/utils";
 import type { Note } from "@/types/note";
@@ -57,6 +57,8 @@ const Index = () => {
     const [settingsOpen, setSettingsOpen] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [noteReactions, setNoteReactions] = useState<Record<string, ReactionSummary[]>>({});
+  const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
+  const [showMassDeleteDialog, setShowMassDeleteDialog] = useState(false);
   
   // Checklist state and handlers
   const {
@@ -509,8 +511,39 @@ const Index = () => {
       toast.error("You must agree to the Terms of Service to view notes");
       return;
     }
+    
+    // Only open detail dialog - don't toggle selection
     setSelectedNote(note);
     setDetailDialogOpen(true);
+  };
+
+  const handleToggleSelect = (noteId: string) => {
+    const newSelectedNotes = new Set(selectedNotes);
+    if (newSelectedNotes.has(noteId)) {
+      newSelectedNotes.delete(noteId);
+    } else {
+      newSelectedNotes.add(noteId);
+    }
+    setSelectedNotes(newSelectedNotes);
+  };
+
+  const handleMassDelete = async () => {
+    try {
+      const notesToDelete = Array.from(selectedNotes);
+      await Promise.all(notesToDelete.map(noteId => deleteNoteService(noteId)));
+      
+      setNotes(prevNotes => prevNotes.filter(note => !selectedNotes.has(note.id)));
+      setFilteredNotes(prevNotes => prevNotes.filter(note => !selectedNotes.has(note.id)));
+      
+      // Clear selections
+      setSelectedNotes(new Set());
+      setShowMassDeleteDialog(false);
+      
+      toast.success(`Deleted ${notesToDelete.length} note${notesToDelete.length > 1 ? 's' : ''} successfully!`);
+    } catch (error) {
+      console.error('Error mass deleting notes:', error);
+      toast.error('Failed to delete notes');
+    }
   };
 
   if (loading) {
@@ -554,7 +587,52 @@ const Index = () => {
             <div className="flex items-center gap-4">
               <SearchBar onSearch={termsAgreed ? handleSearch : () => {}} disabled={!termsAgreed} />
               <div className="h-6 w-px bg-border"></div>
-              <UserProfile />
+              
+              {/* Select All Button */}
+              {filteredNotes.length > 0 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (selectedNotes.size === filteredNotes.length) {
+                        setSelectedNotes(new Set());
+                      } else {
+                        setSelectedNotes(new Set(filteredNotes.map(note => note.id)));
+                      }
+                    }}
+                  >
+                    {selectedNotes.size === filteredNotes.length ? (
+                      <>
+                        <CheckSquare className="h-4 w-4 mr-2" />
+                        Deselect All
+                      </>
+                    ) : (
+                      <>
+                        <CheckSquare className="h-4 w-4 mr-2" />
+                        Select All ({filteredNotes.length})
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
+              
+              {/* Mass Delete Button - appears when notes are selected */}
+              {selectedNotes.size > 0 && (
+                <>
+                  <div className="h-6 w-px bg-border"></div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setShowMassDeleteDialog(true)}
+                    className="bg-red-500 hover:bg-red-600"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete ({selectedNotes.size})
+                  </Button>
+                </>
+              )}
+              
               <div className="h-6 w-px bg-border"></div>
               <Button
                 variant="outline"
@@ -631,6 +709,9 @@ const Index = () => {
                 onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
                 onClick={() => handleNoteClick(note)}
                 onTogglePin={() => togglePin(note.id)}
+                onToggleSelect={() => handleToggleSelect(note.id)}
+                isSelected={selectedNotes.has(note.id)}
+                showSelectionCheckbox={selectedNotes.size > 0}
               />
             ))}
             {/* Unpinned notes - draggable */}
@@ -662,6 +743,9 @@ const Index = () => {
                   onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
                   onClick={() => handleNoteClick(note)}
                   onTogglePin={() => togglePin(note.id)}
+                  onToggleSelect={() => handleToggleSelect(note.id)}
+                  isSelected={selectedNotes.has(note.id)}
+                  showSelectionCheckbox={selectedNotes.size > 0}
                 />
               </div>
             ))}
@@ -687,11 +771,32 @@ const Index = () => {
                 <div
                   key={note.id}
                   className={cn(
-                    "p-4 bg-card border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer",
-                    colorMap[note.color]
+                    "p-4 bg-card border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer relative",
+                    colorMap[note.color],
+                    selectedNotes.has(note.id) && "ring-2 ring-primary ring-offset-2"
                   )}
                   onClick={() => handleNoteClick(note)}
                 >
+                  {/* Selection Checkbox for List View */}
+                  {selectedNotes.size > 0 && (
+                    <div 
+                      className="absolute top-2 right-2 z-10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleSelect(note.id);
+                      }}
+                    >
+                      <div className={cn(
+                        "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer",
+                        selectedNotes.has(note.id)
+                          ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90" 
+                          : "bg-background border-primary border-primary/50 hover:bg-primary/20"
+                      )}>
+                        {selectedNotes.has(note.id) && <CheckSquare className="w-4 h-4" />}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3 flex-1">
                       <button
@@ -760,12 +865,33 @@ const Index = () => {
                     onMouseOver={() => handleMouseOver(index)}
                     onMouseLeave={handleMouseLeave}
                     className={cn(
-                      "p-4 bg-card border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-move",
+                      "p-4 bg-card border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-move relative",
                       colorMap[note.color],
-                      draggedItem?.index === index ? "opacity-50" : ""
+                      draggedItem?.index === index ? "opacity-50" : "",
+                      selectedNotes.has(note.id) && "ring-2 ring-primary ring-offset-2"
                     )}
                     onClick={() => handleNoteClick(note)}
                   >
+                    {/* Selection Checkbox for List View */}
+                    {selectedNotes.size > 0 && (
+                      <div 
+                        className="absolute top-2 right-2 z-10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleSelect(note.id);
+                        }}
+                      >
+                        <div className={cn(
+                          "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer",
+                          selectedNotes.has(note.id)
+                            ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90" 
+                            : "bg-background border-primary border-primary/50 hover:bg-primary/20"
+                        )}>
+                          {selectedNotes.has(note.id) && <CheckSquare className="w-4 h-4" />}
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-3 flex-1">
                         <button
@@ -868,6 +994,14 @@ const Index = () => {
         />
       </Suspense>
 
+      {/* Mass Delete Dialog */}
+      <MassDeleteDialog
+        open={showMassDeleteDialog}
+        selectedCount={selectedNotes.size}
+        onConfirm={handleMassDelete}
+        onCancel={() => setShowMassDeleteDialog(false)}
+      />
+
       {/* Version Display */}
       <div className="fixed bottom-4 left-4 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded shadow-sm" style={{ fontFamily: 'var(--font-family-handwriting)' }}>
         Version 1.2.0
@@ -877,3 +1011,5 @@ const Index = () => {
 };
 
 export default Index;
+
+
