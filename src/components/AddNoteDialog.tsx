@@ -52,6 +52,13 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     }
   };
 
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Handle Ctrl+Enter to save
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      handleSave();
+    }
+  };
+
   const handleSave = () => {
     if (content.trim()) {
       soundEffects.playNewNoteSound();
@@ -77,6 +84,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               placeholder="Add a title..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={handleTitleKeyDown}
               className="font-title text-lg dark:text-white dark:placeholder:text-gray-400"
             />
           </div>
