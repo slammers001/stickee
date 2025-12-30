@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Plus, Pin, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,20 +15,22 @@ import { ensureUserExists, updateUserVersion } from "@/services/userService";
 import { getReactionsForNote } from "@/services/emojiReactionService";
 import type { ReactionSummary } from "@/types/emojiReaction";
 import { TermsPopup } from "@/components/TermsPopup";
-import { StickyNoteWindow } from "@/components/StickyNoteWindow";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { SearchBar } from "@/components/SearchBar";
 import { UserProfile } from "@/components/UserProfile";
 import { StickyNote } from "@/components/StickyNote";
 import { AddNoteDialog } from "@/components/AddNoteDialog";
-import { NoteDetailDialog } from "@/components/NoteDetailDialog";
-import { SettingsDialog } from "@/components/SettingsDialog";
-import { Checklist } from "@/components/Checklist";
 import { useChecklist } from "@/hooks/useChecklist";
 import { cn } from "@/lib/utils";
 import type { Note } from "@/types/note";
 import type { StickyNoteStatus } from "@/types/note";
 import { analytics, AnalyticsEvents } from "@/utils/analytics";
+
+// Lazy load non-critical components
+const NoteDetailDialog = lazy(() => import("@/components/NoteDetailDialog").then(module => ({ default: module.NoteDetailDialog })));
+const SettingsDialog = lazy(() => import("@/components/SettingsDialog").then(module => ({ default: module.SettingsDialog })));
+const Checklist = lazy(() => import("@/components/Checklist").then(module => ({ default: module.Checklist })));
+const StickyNoteWindow = lazy(() => import("@/components/StickyNoteWindow").then(module => ({ default: module.StickyNoteWindow })));
 
 // Using the Note interface from types/note.ts
 
@@ -83,12 +85,8 @@ const Index = () => {
 
     window.addEventListener('storage', handleStorageChange);
     
-    // Also check periodically as a fallback
-    const interval = setInterval(handleStorageChange, 1000);
-
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
   }, []);
 
@@ -141,25 +139,21 @@ const Index = () => {
 
     window.addEventListener('storage', handleStorageChange);
     
-    // Also check periodically as a fallback for same-tab changes
-    const interval = setInterval(() => {
-      const currentView = localStorage.getItem("stickee-default-view") as "grid" | "list";
-      if (currentView && currentView !== viewMode) {
-        setViewMode(currentView);
-      }
-    }, 500);
-
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
   }, [viewMode]);
 
-  // Keyboard shortcut for new note
+  // Keyboard shortcut for new note - optimized for INP
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
     const handleKeyDown = (e: KeyboardEvent) => {
       // Check if terms are agreed
       if (!termsAgreed) return;
+      
+      // Debounce rapid key presses to improve INP
+      if (timeoutId) return;
       
       // Only trigger 'n' key if no input fields are focused and no dialogs are open
       if (
@@ -175,6 +169,8 @@ const Index = () => {
       ) {
         e.preventDefault();
         setDialogOpen(true);
+        timeoutId = setTimeout(() => { timeoutId = undefined as any; }, 100);
+        return;
       }
       
       // Sticky note window shortcut - Alt+P keys
@@ -191,31 +187,47 @@ const Index = () => {
       ) {
         e.preventDefault();
         setStickyNoteWindowOpen(true);
+        timeoutId = setTimeout(() => { timeoutId = undefined as any; }, 100);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    // Use passive listener for better performance
+    document.addEventListener('keydown', handleKeyDown, { passive: false });
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [dialogOpen, detailDialogOpen, stickyNoteWindowOpen, termsAgreed]);
 
   // Load reactions for all notes
   const loadReactions = async (notesToLoad: Note[]) => {
-    const reactionsMap: Record<string, ReactionSummary[]> = {};
+    if (notesToLoad.length === 0) return;
     
-    for (const note of notesToLoad) {
-      try {
-        const reactions = await getReactionsForNote(note.id);
-        reactionsMap[note.id] = reactions;
-      } catch (error) {
-        console.error('Error loading reactions for note:', error);
-        reactionsMap[note.id] = [];
-      }
+    try {
+      const reactionPromises = notesToLoad.map(async (note) => {
+        try {
+          const reactions = await getReactionsForNote(note.id);
+          return { noteId: note.id, reactions };
+        } catch (error) {
+          console.error('Error loading reactions for note:', error);
+          return { noteId: note.id, reactions: [] };
+        }
+      });
+
+      const reactionResults = await Promise.all(reactionPromises);
+      
+      const reactionsMap: Record<string, ReactionSummary[]> = {};
+      reactionResults.forEach(({ noteId, reactions }) => {
+        reactionsMap[noteId] = reactions;
+      });
+      
+      setNoteReactions(prev => ({
+        ...prev,
+        ...reactionsMap
+      }));
+    } catch (error) {
+      console.error('Error in loadReactions:', error);
     }
-    
-    setNoteReactions(prev => ({
-      ...prev,
-      ...reactionsMap
-    }));
   };
 
   const handleReactionUpdate = (noteId: string, reactions: ReactionSummary[]) => {
@@ -808,13 +820,15 @@ const Index = () => {
 
       {/* Note Detail Dialog */}
       {selectedNote && (
-        <NoteDetailDialog
-          open={detailDialogOpen}
-          onOpenChange={setDetailDialogOpen}
-          note={selectedNote}
-          onSave={updateNote}
-          onDelete={deleteNote}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <NoteDetailDialog
+            open={detailDialogOpen}
+            onOpenChange={setDetailDialogOpen}
+            note={selectedNote}
+            onSave={updateNote}
+            onDelete={deleteNote}
+          />
+        </Suspense>
       )}
 
       {/* Terms Popup */}
@@ -827,26 +841,32 @@ const Index = () => {
       )}
 
       {/* Settings Dialog */}
-      <SettingsDialog 
-        open={settingsOpen} 
-        onOpenChange={setSettingsOpen}
-      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <SettingsDialog 
+          open={settingsOpen} 
+          onOpenChange={setSettingsOpen}
+        />
+      </Suspense>
       
-      <StickyNoteWindow
-        isOpen={stickyNoteWindowOpen}
-        onClose={handleQuickNote}
-      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <StickyNoteWindow
+          isOpen={stickyNoteWindowOpen}
+          onClose={handleQuickNote}
+        />
+      </Suspense>
 
       {/* Checklist */}
-      <Checklist
-        items={checklistItems}
-        isOpen={isChecklistOpen}
-        onAdd={addChecklistItem}
-        onToggle={toggleChecklistItem}
-        onUpdate={updateChecklistItem}
-        onDelete={deleteChecklistItem}
-        onToggleOpen={toggleChecklist}
-      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <Checklist
+          items={checklistItems}
+          isOpen={isChecklistOpen}
+          onAdd={addChecklistItem}
+          onToggle={toggleChecklistItem}
+          onUpdate={updateChecklistItem}
+          onDelete={deleteChecklistItem}
+          onToggleOpen={toggleChecklist}
+        />
+      </Suspense>
 
       {/* Version Display */}
       <div className="fixed bottom-4 left-4 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded shadow-sm" style={{ fontFamily: 'var(--font-family-handwriting)' }}>

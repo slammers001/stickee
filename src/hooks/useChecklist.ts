@@ -62,37 +62,10 @@ export const useChecklist = () => {
     }
   }, []);
 
-  // Set up data loading and real-time subscription
+  // Set up data loading (realtime disabled)
   useEffect(() => {
-    let isMounted = true;
-    
     loadItems();
-
-    // Set up real-time subscription
-    const user = getCurrentUser();
-    if (user?.id) {
-      const subscription = supabase
-        .channel('checklist_changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'checklist_items',
-          filter: `user_id=eq.${user.id}`
-        }, () => {
-          if (isMounted) loadItems();
-        })
-        .subscribe();
-
-      return () => {
-        isMounted = false;
-        subscription.unsubscribe();
-      };
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [loadItems, supabase, getCurrentUser]);
+  }, [loadItems]);
 
   const addItem = useCallback(async (text: string) => {
     // Check if terms are agreed

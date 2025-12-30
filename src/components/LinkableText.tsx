@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { URL_REGEX, normalizeUrl, openLinkInBrowser } from '@/utils/linkUtils';
 
 interface LinkableTextProps {
@@ -6,7 +6,7 @@ interface LinkableTextProps {
   className?: string;
 }
 
-export const LinkableText: React.FC<LinkableTextProps> = ({ text, className }) => {
+export const LinkableText: React.FC<LinkableTextProps> = memo(({ text, className }) => {
   if (!text) return null;
 
   const elements: React.ReactNode[] = [];
@@ -56,4 +56,4 @@ export const LinkableText: React.FC<LinkableTextProps> = ({ text, className }) =
   }
 
   return <div className={className}>{elements}</div>;
-};
+});

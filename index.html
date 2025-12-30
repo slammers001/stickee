@@ -6,72 +6,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap" rel="stylesheet">
+    
+    <!-- Preload handwriting font for faster LCP -->
+    <link rel="preload" href="https://fonts.gstatic.com/s/indieflower/v17/m8JVjfNVeKWVnh3QMuKkFcZVaUuH.woff2" as="font" type="font/woff2" crossorigin>
     <title>Stickee</title>
     <meta name="description" content="Create and organize your thoughts with beautiful digital sticky notes. Simple, fast, and colorful note-taking for everyone." />
     <meta name="author" content="slammers001" />
     <link rel="icon" type="image/png" sizes="192x192" href="/favicons/android-chrome-192x192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/favicons/android-chrome-512x512.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />
-    <script>
-      // Initialize PostHog with environment variables
-      const POSTHOG_API_KEY = 'phc_dOBViKPhL2wwSDvkWprVr9vmD5L5303U10sVxcqda3T';
-      const POSTHOG_API_HOST = 'https://us.posthog.com';
-      
-      // Load PostHog script with error handling - try official CDN
-      const script = document.createElement('script');
-      script.src = 'https://us.posthog.com/static/array.js';
-      script.async = true;
-      
-      script.onload = function() {
-        console.log('PostHog script loaded successfully');
-        if (typeof posthog !== 'undefined') {
-          posthog.init(POSTHOG_API_KEY, {
-            api_host: POSTHOG_API_HOST,
-            autocapture: true,
-            capture_pageview: true,
-            debug: false,
-            persistence: 'localStorage',
-            property_blacklist: ['$current_url']
-          });
-          console.log('PostHog initialized successfully');
-        } else {
-          console.error('PostHog not available after script load');
-        }
-      };
-      
-      script.onerror = function() {
-        console.error('Failed to load PostHog script from official CDN, trying unpkg...');
-        // Fallback to unpkg
-        const fallbackScript = document.createElement('script');
-        fallbackScript.src = 'https://unpkg.com/posthog-js@latest/dist/index.umd.js';
-        fallbackScript.async = true;
-        
-        fallbackScript.onload = function() {
-          console.log('PostHog script loaded from unpkg successfully');
-          if (typeof posthog !== 'undefined') {
-            posthog.init(POSTHOG_API_KEY, {
-              api_host: POSTHOG_API_HOST,
-              autocapture: true,
-              capture_pageview: true,
-              debug: false,
-              persistence: 'localStorage',
-              property_blacklist: ['$current_url']
-            });
-            console.log('PostHog initialized successfully');
-          } else {
-            console.error('PostHog not available after fallback script load');
-          }
-        };
-        
-        fallbackScript.onerror = function() {
-          console.error('Failed to load PostHog script from all CDNs');
-        };
-        
-        document.head.appendChild(fallbackScript);
-      };
-      
-      document.head.appendChild(script);
-    </script>
   </head>
 
   <body>

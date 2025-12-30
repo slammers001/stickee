@@ -13,7 +13,6 @@ export const useDragAndDrop = (_items: any[], onReorder: (fromIndex: number, toI
   const dragStartTime = useRef<number>(0);
 
   const handleMouseDown = (e: React.MouseEvent, index: number, id: string) => {
-    console.log('Mouse down', { index, id });
     e.preventDefault();
     setIsMouseDown(true);
     setDragStartPos({ x: e.clientX, y: e.clientY });
@@ -35,14 +34,12 @@ export const useDragAndDrop = (_items: any[], onReorder: (fromIndex: number, toI
     
     // Only start dragging if moved enough
     if (distance > 10) {
-      console.log('Dragging started');
+      // Dragging started
     }
   };
 
   const handleMouseUp = (targetIndex: number) => {
     if (!isMouseDown || !draggedItem) return;
-    
-    console.log('Mouse up', { fromIndex: draggedItem.index, toIndex: targetIndex });
     
     if (draggedItem.index !== targetIndex) {
       onReorder(draggedItem.index, targetIndex);

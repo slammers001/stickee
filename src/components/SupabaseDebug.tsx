@@ -7,6 +7,7 @@ interface DebugInfo {
   supabaseUrl: string;
   hasRealtime: boolean;
   hasAuth: boolean;
+  realtimeEnabled: boolean; // New field to track if realtime is enabled in app
   envVars: {
     VITE_SUPABASE_URL: string;
     VITE_SUPABASE_ANON_KEY: string;
@@ -25,6 +26,7 @@ export const SupabaseDebug = () => {
           supabaseUrl: import.meta.env.VITE_SUPABASE_URL || 'Not available',
           hasRealtime: !!supabase?.realtime,
           hasAuth: !!supabase?.auth,
+          realtimeEnabled: false, // Realtime is disabled in the application
           envVars: {
             VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Not set',
             VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Not set',
@@ -116,8 +118,8 @@ export const SupabaseDebug = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">Realtime:</span>
-                  <Badge variant={debugInfo.hasRealtime ? 'default' : 'secondary'}>
-                    {debugInfo.hasRealtime ? 'Available' : 'Not available'}
+                  <Badge variant={debugInfo.realtimeEnabled ? 'default' : 'destructive'}>
+                    {debugInfo.realtimeEnabled ? 'Enabled' : 'Disabled'}
                   </Badge>
                 </div>
               </div>

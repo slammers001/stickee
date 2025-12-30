@@ -8,6 +8,7 @@ import { ReactionSummary } from "@/types/emojiReaction";
 import { toggleReaction } from "@/services/emojiReactionService";
 import { toast } from "sonner";
 import { LinkableText } from "./LinkableText";
+import { memo } from "react";
 
 export type NoteStatus = 'To-Do' | 'Doing' | 'Done' | 'Backlog';
 
@@ -46,7 +47,7 @@ const statusColors: Record<NoteStatus, string> = {
   "Backlog": "bg-gray-100 text-gray-800 border-gray-200",
 };
 
-export const StickyNote = ({ 
+export const StickyNote = memo(({ 
   id, 
   title, 
   content, 
@@ -209,4 +210,4 @@ export const StickyNote = ({
       )}
     </>
   );
-};
+});
