@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Trash2 } from "lucide-react";
 import { NoteStatus } from "./StickyNote";
+import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 import { cn } from "@/lib/utils";
 import { soundEffects } from "@/utils/soundEffects";
 
@@ -56,6 +57,39 @@ export const NoteDetailDialog = ({
   const [initialStatus, setInitialStatus] = useState<NoteStatus>(note?.status || "To-Do");
   const [initialColor, setInitialColor] = useState(note?.color || "yellow");
   const [initialTitle, setInitialTitle] = useState(note?.title || "");
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+
+  const hasUnsavedChanges = 
+    title.trim() !== (initialTitle || "") ||
+    content.trim() !== (note?.content || "") ||
+    status !== initialStatus ||
+    color !== initialColor;
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && hasUnsavedChanges) {
+      setShowUnsavedDialog(true);
+      return;
+    }
+    onOpenChange(newOpen);
+  };
+
+  const handleSaveAndClose = () => {
+    if (note && content.trim()) {
+      soundEffects.playSaveSound();
+      onSave(note.id, title.trim(), content, status, color);
+      setShowUnsavedDialog(false);
+      onOpenChange(false);
+    }
+  };
+
+  const handleDiscardAndClose = () => {
+    setShowUnsavedDialog(false);
+    onOpenChange(false);
+  };
+
+  const handleCancelUnsaved = () => {
+    setShowUnsavedDialog(false);
+  };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -119,12 +153,13 @@ export const NoteDetailDialog = ({
   if (!note) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>View & Edit Note</DialogTitle>
         </DialogHeader>
-        <div className="py-4 space-y-4">
+        <div className="py-4 space-y-4 flex-1 overflow-y-auto">
           <div>
             <label className="text-sm font-medium mb-2 block">Title (Optional)</label>
             <Input
@@ -214,11 +249,22 @@ export const NoteDetailDialog = ({
           >
             <Trash2 className="h-5 w-5" />
           </Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
           <Button onClick={handleSave} disabled={!content.trim() && title === initialTitle && status === initialStatus && color === initialColor}>
             Save Changes
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    
+    <UnsavedChangesDialog
+      open={showUnsavedDialog}
+      onSave={handleSaveAndClose}
+      onDiscard={handleDiscardAndClose}
+      onCancel={handleCancelUnsaved}
+    />
+    </>
   );
 };
