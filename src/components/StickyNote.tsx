@@ -134,7 +134,7 @@ export const StickyNote = memo(({
         <div className="flex-1">
           {title && (
             <h3 className="text-foreground text-xl font-bold mb-2 font-title leading-tight">
-              {title.length > 12 ? `${title.substring(0, 12)}...` : title}
+              {title.length > 20 ? `${title.substring(0, 20)}...` : title}
             </h3>
           )}
           <LinkableText 

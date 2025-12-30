@@ -65,6 +65,28 @@ export const NoteDetailDialog = ({
     }
   };
 
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Limit to 20 characters
+    if (value.length <= 20) {
+      setTitle(value);
+    }
+  };
+
+  const handleContentKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Handle Ctrl+Enter to save
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      handleSave();
+    }
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Handle Ctrl+Enter to save
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      handleSave();
+    }
+  };
+
   // Update local state when note prop changes
   useEffect(() => {
     if (note) {
@@ -108,9 +130,13 @@ export const NoteDetailDialog = ({
             <Input
               placeholder="Add a title..."
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={handleTitleChange}
+              onKeyDown={handleTitleKeyDown}
               className="font-title text-lg dark:text-white dark:placeholder:text-gray-400"
             />
+            <div className="text-xs text-muted-foreground mt-1">
+              {title.length}/20 characters
+            </div>
           </div>
           <div>
             <label className="text-sm font-medium mb-2 block">Color</label>
@@ -167,11 +193,12 @@ export const NoteDetailDialog = ({
             <Textarea
               value={content}
               onChange={handleContentChange}
+              onKeyDown={handleContentKeyDown}
               className="min-h-[300px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400"
               placeholder="Type your note here..."
             />
             <p className="text-xs text-muted-foreground mt-2">
-              Maximum 1500 characters
+              Press Ctrl+Enter to save quickly • Maximum 1500 characters
             </p>
             <div className="text-xs text-muted-foreground mt-1">
               {content.length}/1500 characters
