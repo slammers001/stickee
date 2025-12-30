@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Heart, Settings, Download } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "next-themes";
+import { useViewMode } from "@/contexts/ViewModeContext";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -34,10 +35,10 @@ interface SettingsDialogProps {
 
 export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const { theme, setTheme } = useTheme();
+  const { viewMode, setViewMode } = useViewMode();
   const [fontMode, setFontMode] = useState<FontMode>("basic");
   const [fontFamily, setFontFamily] = useState<FontFamily>("indie-flower");
   const [titleFont, setTitleFont] = useState<TitleFontFamily>("arbutus");
-  const [defaultView, setDefaultView] = useState<ViewMode>("grid");
   const [favoriteFonts, setFavoriteFonts] = useState<FontFamily[]>([]);
   const [activeTab, setActiveTab] = useState<ActiveTab>("ui");
   const [visibleFontCount, setVisibleFontCount] = useState(20); // Lazy loading state
@@ -208,7 +209,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
           setTitleFont(savedTitleFont);
           applyTitleFont(savedTitleFont);
         }
-        if (savedView) setDefaultView(savedView);
+        if (savedView) setViewMode(savedView);
         return;
       }
       
@@ -260,7 +261,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       // Load view settings from localStorage (keep this local)
       const savedView = localStorage.getItem("stickee-default-view") as ViewMode;
       if (savedView) {
-        setDefaultView(savedView);
+        setViewMode(savedView);
       }
     };
     
@@ -723,11 +724,6 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
     localStorage.setItem("stickee-font-mode", mode);
   };
 
-  const handleViewChange = (value: ViewMode) => {
-    setDefaultView(value);
-    localStorage.setItem("stickee-default-view", value);
-  };
-
   const toggleFavoriteFont = async (font: FontFamily) => {
     const newFavorites = favoriteFonts.includes(font) 
       ? favoriteFonts.filter(f => f !== font)
@@ -985,7 +981,7 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
               
               <div className="space-y-4">
                 <h3 className="text-sm font-medium">Default View</h3>
-                <RadioGroup value={defaultView} onValueChange={handleViewChange}>
+                <RadioGroup value={viewMode} onValueChange={setViewMode}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="grid" id="grid" />
                     <Label htmlFor="grid">

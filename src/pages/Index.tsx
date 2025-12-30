@@ -22,6 +22,7 @@ import { AddNoteDialog } from "@/components/AddNoteDialog";
 import { MassDeleteDialog } from "@/components/MassDeleteDialog";
 import { useChecklist } from "@/hooks/useChecklist";
 import { cn } from "@/lib/utils";
+import { useViewMode } from "@/contexts/ViewModeContext";
 import type { Note } from "@/types/note";
 import type { StickyNoteStatus } from "@/types/note";
 import { analytics, AnalyticsEvents } from "@/utils/analytics";
@@ -41,23 +42,23 @@ const statusColors: Record<StickyNoteStatus, string> = {
   "Backlog": "bg-gray-100 text-gray-800 border-gray-200",
 };
 
-const Index = () => {
+export default function Index() {
+  const { viewMode, setViewMode } = useViewMode();
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [stickyNoteWindowOpen, setStickyNoteWindowOpen] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(() => {
     return localStorage.getItem("stickee-terms-agreed") === "true";
   });
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-    const [settingsOpen, setSettingsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [noteReactions, setNoteReactions] = useState<Record<string, ReactionSummary[]>>({});
-  const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
   const [showMassDeleteDialog, setShowMassDeleteDialog] = useState(false);
   
   // Checklist state and handlers
@@ -122,29 +123,6 @@ const Index = () => {
   const handleShowTermsDialog = (show: boolean) => {
     setShowTermsDialog(show);
   };
-
-  // Apply saved default view preference on component mount and listen for changes
-  useEffect(() => {
-    const savedView = localStorage.getItem("stickee-default-view") as "grid" | "list";
-    if (savedView) {
-      setViewMode(savedView);
-    }
-  }, []);
-
-  // Listen for view mode changes in localStorage
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "stickee-default-view" && e.newValue) {
-        setViewMode(e.newValue as "grid" | "list");
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [viewMode]);
 
   // Keyboard shortcut for new note - optimized for INP
   useEffect(() => {
@@ -1009,7 +987,5 @@ const Index = () => {
     </div>
   );
 };
-
-export default Index;
 
 
