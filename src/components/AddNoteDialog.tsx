@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { NoteStatus } from "@/components/StickyNote";
+import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 import { cn } from "@/lib/utils";
 import { soundEffects } from "@/utils/soundEffects";
 
@@ -36,6 +37,51 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<NoteStatus>("To-Do");
   const [color, setColor] = useState(colors[0]);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+
+  const hasUnsavedChanges = title.trim() !== "" || content.trim() !== "";
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && hasUnsavedChanges) {
+      setShowUnsavedDialog(true);
+      return;
+    }
+    onOpenChange(newOpen);
+    if (!newOpen) {
+      // Reset form when closing successfully
+      setTitle("");
+      setContent("");
+      setStatus("To-Do");
+      setColor(colors[0]);
+    }
+  };
+
+  const handleSaveAndClose = () => {
+    if (content.trim()) {
+      soundEffects.playNewNoteSound();
+      onSave(title.trim(), content, status, color);
+      // Reset form after successful save
+      setTitle("");
+      setContent("");
+      setStatus("To-Do");
+      setColor(colors[0]);
+      setShowUnsavedDialog(false);
+      onOpenChange(false);
+    }
+  };
+
+  const handleDiscardAndClose = () => {
+    setTitle("");
+    setContent("");
+    setStatus("To-Do");
+    setColor(colors[0]);
+    setShowUnsavedDialog(false);
+    onOpenChange(false);
+  };
+
+  const handleCancelUnsaved = () => {
+    setShowUnsavedDialog(false);
+  };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -71,6 +117,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     if (content.trim()) {
       soundEffects.playNewNoteSound();
       onSave(title.trim(), content, status, color);
+      // Reset form after successful save
       setTitle("");
       setContent("");
       setStatus("To-Do");
@@ -80,12 +127,13 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Add a New Stickee Note</DialogTitle>
         </DialogHeader>
-        <div className="py-4 space-y-4">
+        <div className="py-4 space-y-4 flex-1 overflow-y-auto">
           <div>
             <label className="text-sm font-medium mb-2 block">Title (Optional)</label>
             <Input
@@ -168,7 +216,13 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
           </div>
         </div>
         <DialogFooter className="flex gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => {
+            setTitle("");
+            setContent("");
+            setStatus("To-Do");
+            setColor(colors[0]);
+            onOpenChange(false);
+          }}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={!content.trim()}>
@@ -177,5 +231,13 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    
+    <UnsavedChangesDialog
+      open={showUnsavedDialog}
+      onSave={handleSaveAndClose}
+      onDiscard={handleDiscardAndClose}
+      onCancel={handleCancelUnsaved}
+    />
+    </>
   );
 };
