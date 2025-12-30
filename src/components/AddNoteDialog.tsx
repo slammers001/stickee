@@ -52,6 +52,14 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     }
   };
 
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Limit to 20 characters
+    if (value.length <= 20) {
+      setTitle(value);
+    }
+  };
+
   const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // Handle Ctrl+Enter to save
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
@@ -83,10 +91,13 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
             <Input
               placeholder="Add a title..."
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={handleTitleChange}
               onKeyDown={handleTitleKeyDown}
               className="font-title text-lg dark:text-white dark:placeholder:text-gray-400"
             />
+            <div className="text-xs text-muted-foreground mt-1">
+              {title.length}/20 characters
+            </div>
           </div>
           <div>
             <label className="text-sm font-medium mb-2 block">Color</label>
