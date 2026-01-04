@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { CheckSquare, Trash2, Pin, Settings, Plus } from "lucide-react";
+import { CheckSquare, Trash2, Pin, Settings, Plus, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -16,6 +16,8 @@ import { getReactionsForNote } from "@/services/emojiReactionService";
 import type { ReactionSummary } from "@/types/emojiReaction";
 import { TermsPopup } from "@/components/TermsPopup";
 import { IssueReportButton } from "@/components/IssueReportButton";
+import { IssueReportDialog } from "@/components/IssueReportDialog";
+import { LinkableText } from "@/components/LinkableText";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { SearchBar } from "@/components/SearchBar";
 import { StickyNote } from "@/components/StickyNote";
@@ -58,6 +60,7 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [issueDialogOpen, setIssueDialogOpen] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [noteReactions, setNoteReactions] = useState<Record<string, ReactionSummary[]>>({});
   const [showMassDeleteDialog, setShowMassDeleteDialog] = useState(false);
@@ -255,11 +258,22 @@ export default function Index() {
     const filtered = notes.filter(note => 
       note.content.toLowerCase().includes(query) ||
       note.status.toLowerCase().includes(query) ||
-      note.color.toLowerCase().includes(query) ||
       (note.title && note.title.toLowerCase().includes(query))
     );
     setFilteredNotes(filtered);
   }, [searchQuery, notes]);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    
+    // Track search events
+    if (query.trim()) {
+      analytics.track(AnalyticsEvents.SEARCH_PERFORMED, {
+        query_length: query.length,
+        query_type: 'text_search'
+      });
+    }
+  };
 
   const addNote = async (title: string, content: string, status: StickyNoteStatus, color: string) => {
     try {
@@ -442,18 +456,6 @@ export default function Index() {
     handleMouseLeave,
   } = useDragAndDrop(unpinnedNotes, reorderNotes);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    
-    // Track search events
-    if (query.trim()) {
-      analytics.track(AnalyticsEvents.SEARCH_PERFORMED, {
-        query_length: query.length,
-        query_type: 'text_search'
-      });
-    }
-  };
-
   const handleQuickNote = async (content: string, color: string) => {
     if (!termsAgreed) {
       toast.error("You must agree to the Terms of Service to create notes");
@@ -535,7 +537,7 @@ export default function Index() {
       <header className="border-b bg-card shadow-sm">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-shrink-0">
               <img 
                 src="./stickee.png" 
                 alt="Stickee" 
@@ -548,26 +550,38 @@ export default function Index() {
                   }
                 }}
               />
-              <h1 className="text-4xl font-bold text-foreground tracking-tight font-handwriting">
-                Stickee
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Made by{" "}
-                <a 
-                  href="https://github.com/slammers001" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="underline hover:text-foreground transition-colors"
-                >
-                  slammers001
-                </a>
-              </p>
+              <div className="flex flex-col">
+                <h1 className="text-2xl sm:text-4xl font-bold text-foreground tracking-tight font-handwriting">
+                  Stickee
+                </h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Made by{" "}
+                  <a 
+                    href="https://github.com/slammers001" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline hover:text-foreground transition-colors"
+                  >
+                    slammers001
+                  </a>
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 ml-auto flex-shrink-0">
               <SearchBar onSearch={termsAgreed ? handleSearch : () => {}} disabled={!termsAgreed} />
-              <div className="h-6 w-px bg-border"></div>
+              <div className="h-6 w-px bg-border hidden md:block"></div>
               
-              {/* Select All Button */}
+              {/* Mobile Issue Icon Button */}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIssueDialogOpen(true)}
+                className="md:hidden flex-shrink-0"
+              >
+                <AlertCircle className="h-4 w-4" />
+              </Button>
+              
+              {/* Select All Button - Hidden on mobile and tablet */}
               {filteredNotes.length > 0 && (
                 <>
                   <Button
@@ -580,6 +594,7 @@ export default function Index() {
                         setSelectedNotes(new Set(filteredNotes.map(note => note.id)));
                       }
                     }}
+                    className="hidden md:flex"
                   >
                     {selectedNotes.size === filteredNotes.length ? (
                       <>
@@ -604,21 +619,29 @@ export default function Index() {
                     variant="destructive"
                     size="sm"
                     onClick={() => setShowMassDeleteDialog(true)}
-                    className="bg-red-500 hover:bg-red-600"
+                    className="bg-red-500 hover:bg-red-600 flex-shrink-0"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Delete ({selectedNotes.size})
+                    <span className="hidden sm:inline">Delete ({selectedNotes.size})</span>
+                    <span className="sm:hidden">({selectedNotes.size})</span>
                   </Button>
                 </>
               )}
               
-              <div className="h-6 w-px bg-border"></div>
-              <IssueReportButton />
-              <div className="h-6 w-px bg-border"></div>
+              <div className="h-6 w-px bg-border hidden md:block"></div>
+              
+              {/* Issue Report Button - Hidden on mobile */}
+              <IssueReportButton 
+                size="sm"
+                className="hidden md:flex flex-1 md:flex-none"
+              />
+              
+              <div className="h-6 w-px bg-border hidden md:block"></div>
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setSettingsOpen(true)}
+                className="hidden md:flex"
               >
                 <Settings className="h-5 w-5" />
               </Button>
@@ -634,7 +657,7 @@ export default function Index() {
                   setDialogOpen(true);
                 }}
                 disabled={!termsAgreed}
-                className="bg-primary hover:bg-primary/90"
+                className="bg-primary hover:bg-primary/90 flex-shrink-0"
               >
                 <Plus className="h-5 w-5" />
               </Button>
@@ -732,7 +755,7 @@ export default function Index() {
             ))}
           </div>
         ) : (
-          <div className="max-w-4xl mx-auto space-y-3">
+          <div className="max-w-4xl mx-auto space-y-4">
             {/* Pinned notes - not draggable */}
             {pinnedNotes.map((note) => {
               const colorMap: Record<string, string> = {
@@ -749,73 +772,22 @@ export default function Index() {
               };
               
               return (
-                <div
+                <StickyNote
                   key={note.id}
-                  className={cn(
-                    "p-4 bg-card border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer relative",
-                    colorMap[note.color],
-                    selectedNotes.has(note.id) && "ring-2 ring-primary ring-offset-2"
-                  )}
+                  id={note.id}
+                  title={note.title}
+                  content={note.content}
+                  color={note.color}
+                  status={note.status}
+                  pinned={note.pinned}
+                  reactions={noteReactions[note.id] || []}
                   onClick={() => handleNoteClick(note)}
-                >
-                  {/* Selection Checkbox for List View */}
-                  {selectedNotes.size > 0 && (
-                    <div 
-                      className="absolute top-2 right-2 z-10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleSelect(note.id);
-                      }}
-                    >
-                      <div className={cn(
-                        "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer",
-                        selectedNotes.has(note.id)
-                          ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90" 
-                          : "bg-background border-primary border-primary/50 hover:bg-primary/20"
-                      )}>
-                        {selectedNotes.has(note.id) && <CheckSquare className="w-4 h-4" />}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 flex-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          togglePin(note.id);
-                        }}
-                        className={cn(
-                          "mt-1 flex-shrink-0 transition-colors pin-icon",
-                          note.pinned 
-                            ? "text-red-500 hover:text-red-600" 
-                            : "text-foreground/40 hover:text-foreground/70"
-                        )}
-                      >
-                        <Pin 
-                          size={16} 
-                          fill={note.pinned ? "currentColor" : "none"} 
-                        />
-                      </button>
-                      <div className="flex-1">
-                        {note.title && (
-                          <h4 className="text-foreground font-title text-xl font-bold mb-1 leading-tight">
-                            {note.title.length > 12 ? `${note.title.substring(0, 12)}...` : note.title}
-                          </h4>
-                        )}
-                        <p className="text-foreground font-handwriting text-lg line-clamp-2 note-text">
-                          {note.content}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className={cn("text-xs font-handwriting shrink-0 note-status dark:text-white", statusColors[note.status])}
-                    >
-                      {note.status}
-                    </Badge>
-                  </div>
-                </div>
+                  onTogglePin={() => togglePin(note.id)}
+                  onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
+                  onToggleSelect={() => handleToggleSelect(note.id)}
+                  isSelected={selectedNotes.has(note.id)}
+                  showSelectionCheckbox={selectedNotes.size > 0}
+                />
               );
             })}
             {/* Unpinned notes - draggable */}
@@ -834,10 +806,10 @@ export default function Index() {
               };
               
               return (
-                <div key={note.id} className="relative">
+                <div key={note.id} className="relative min-h-[120px]">
                   {/* Drop indicator line */}
                   {dragOverIndex === index && (
-                    <div className="absolute -top-1 left-0 right-0 h-1 bg-primary rounded-full transition-all duration-200 z-10" />
+                    <div className="absolute -top-2 left-0 right-0 h-2 bg-primary rounded-full transition-all duration-200 z-20 shadow-lg" />
                   )}
                   <div
                     onMouseDown={(e) => handleMouseDown(e, index, note.id)}
@@ -846,9 +818,9 @@ export default function Index() {
                     onMouseOver={() => handleMouseOver(index)}
                     onMouseLeave={handleMouseLeave}
                     className={cn(
-                      "p-4 bg-card border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-move relative",
+                      "p-4 bg-card border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-move relative z-10 min-h-[120px]",
                       colorMap[note.color],
-                      draggedItem?.index === index ? "opacity-50" : "",
+                      draggedItem?.index === index ? "opacity-50 scale-95" : "hover:scale-[1.01]",
                       selectedNotes.has(note.id) && "ring-2 ring-primary ring-offset-2"
                     )}
                     onClick={() => handleNoteClick(note)}
@@ -856,7 +828,7 @@ export default function Index() {
                     {/* Selection Checkbox for List View */}
                     {selectedNotes.size > 0 && (
                       <div 
-                        className="absolute top-2 right-2 z-10"
+                        className="absolute top-2 right-2 z-30"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleToggleSelect(note.id);
@@ -866,47 +838,35 @@ export default function Index() {
                           "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer",
                           selectedNotes.has(note.id)
                             ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90" 
-                            : "bg-background border-primary border-primary/50 hover:bg-primary/20"
+                            : "border-border hover:border-primary/50 bg-background"
                         )}>
-                          {selectedNotes.has(note.id) && <CheckSquare className="w-4 h-4" />}
+                          {selectedNotes.has(note.id) && <CheckSquare className="w-3 h-3" />}
                         </div>
                       </div>
                     )}
                     
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-start gap-3 flex-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            togglePin(note.id);
-                          }}
-                          className={cn(
-                            "mt-1 flex-shrink-0 transition-colors pin-icon",
-                            note.pinned 
-                              ? "text-red-500 hover:text-red-600" 
-                              : "text-foreground/40 hover:text-foreground/70"
-                          )}
-                        >
-                          <Pin 
-                            size={16} 
-                            fill={note.pinned ? "currentColor" : "none"} 
-                          />
-                        </button>
-                        <div className="flex-1">
-                          {note.title && (
-                            <h4 className="text-foreground font-title text-xl font-bold mb-1 leading-tight">
-                              {note.title.length > 12 ? `${note.title.substring(0, 12)}...` : note.title}
-                            </h4>
-                          )}
-                          <p className="text-foreground font-handwriting text-lg line-clamp-2 note-text">
-                            {note.content}
-                          </p>
-                        </div>
+                    {/* Pin indicator */}
+                    {note.pinned && (
+                      <div className="absolute top-2 left-2 z-20">
+                        <Pin className="w-4 h-4 text-primary" />
                       </div>
-                      <Badge
-                        variant="outline"
-                        className={cn("text-xs font-handwriting shrink-0 note-status dark:text-white", statusColors[note.status])}
-                      >
+                    )}
+                    
+                    {/* Note content */}
+                    <div className="pr-8">
+                      {note.title && (
+                        <h3 className="font-semibold text-lg mb-2 font-handwriting text-foreground">
+                          {note.title}
+                        </h3>
+                      )}
+                      <div className="text-sm text-foreground/90 whitespace-pre-wrap break-words">
+                        <LinkableText text={note.content} />
+                      </div>
+                    </div>
+                    
+                    {/* Status badge */}
+                    <div className="absolute bottom-2 right-2 z-20">
+                      <Badge className={statusColors[note.status]}>
                         {note.status}
                       </Badge>
                     </div>
@@ -981,6 +941,12 @@ export default function Index() {
         selectedCount={selectedNotes.size}
         onConfirm={handleMassDelete}
         onCancel={() => setShowMassDeleteDialog(false)}
+      />
+
+      {/* Issue Report Dialog */}
+      <IssueReportDialog
+        open={issueDialogOpen}
+        onOpenChange={setIssueDialogOpen}
       />
 
       {/* Version Display */}

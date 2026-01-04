@@ -99,7 +99,7 @@ export const createNote = async (noteData: Omit<Note, 'id'>): Promise<Note> => {
 
 // Update an existing note
 export const updateNote = async (id: string, updates: Partial<Omit<Note, 'id'>>): Promise<Note | null> => {
-  const userId = getUserId();
+  const userId = await getUserId();
   
   // Create update data with proper field names for Supabase
   const updateData: any = {
@@ -141,7 +141,7 @@ export const updateNote = async (id: string, updates: Partial<Omit<Note, 'id'>>)
 
 // Delete a note
 export const deleteNote = async (id: string): Promise<boolean> => {
-  const userId = getUserId();
+  const userId = await getUserId();
   
   try {
     const { error } = await supabase
@@ -171,7 +171,7 @@ export const updateNotePinStatus = async (id: string, pinned: boolean): Promise<
 // Reorder notes (update lastUpdated to maintain new order)
 export const reorderNotes = async (notes: Note[]): Promise<void> => {
   try {
-    const userId = getUserId();
+    const userId = await getUserId();
     
     // Use a base timestamp and add index to create sequential order
     const baseTimestamp = Date.now() - 1000000; // Base timestamp in the past
