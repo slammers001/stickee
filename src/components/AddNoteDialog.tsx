@@ -129,12 +129,12 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col mx-4 sm:mx-0">
         <DialogHeader>
           <DialogTitle>Add a New Stickee Note</DialogTitle>
         </DialogHeader>
         <div className="py-4 space-y-4 flex-1 overflow-y-auto">
-          <div className="order-1">
+          <div className="order-1 ml-2">
             <label className="text-sm font-medium mb-2 block">Title (Optional)</label>
             <Input
               placeholder="Add a title..."
@@ -149,7 +149,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
           </div>
           <div className="order-2 sm:order-3">
             <label className="text-sm font-medium mb-2 block">Color</label>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap ml-2">
               {colors.map((c) => {
                 const colorMap: Record<string, string> = {
                   yellow: "bg-[hsl(var(--note-yellow))]",

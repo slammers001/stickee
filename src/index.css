@@ -459,13 +459,22 @@ All colors MUST be HSL.
         align-items: center !important;
     }
     
-    /* Modal adjustments */
+    /* Dialog adjustments */
     .modal, .popup {
         width: 95% !important;
         max-width: 350px !important;
         margin: 20px auto !important;
         left: 2.5% !important;
         right: 2.5% !important;
+    }
+    
+    /* Fix dialog content positioning to prevent left cutoff */
+    [data-radix-dialog-content] {
+        margin-left: 1rem !important;
+        margin-right: 1rem !important;
+        max-width: calc(100vw - 2rem) !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
     }
     
     /* New note dialog adjustments for mobile */
