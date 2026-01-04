@@ -27,7 +27,7 @@ const mapSupabaseNote = (note: any): Note => {
 // Get all notes for the current user
 export const getNotes = async (): Promise<Note[]> => {
   try {
-    const userId = getUserId();
+    const userId = await getUserId();
     const { data: notes, error } = await supabase
       .from('notes')
       .select('*')
@@ -50,7 +50,7 @@ export const createNote = async (noteData: Omit<Note, 'id'>): Promise<Note> => {
   
   try {
     // Get current user ID from our local service
-    const userId = getUserId();
+    const userId = await getUserId();
     
     // Prepare the note data to send to Supabase
     const noteDataToSend = {

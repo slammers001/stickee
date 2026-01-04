@@ -15,6 +15,7 @@ import { ensureUserExists, updateUserVersion } from "@/services/userService";
 import { getReactionsForNote } from "@/services/emojiReactionService";
 import type { ReactionSummary } from "@/types/emojiReaction";
 import { TermsPopup } from "@/components/TermsPopup";
+import { IssueReportButton } from "@/components/IssueReportButton";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { SearchBar } from "@/components/SearchBar";
 import { StickyNote } from "@/components/StickyNote";
@@ -611,6 +612,8 @@ export default function Index() {
                 </>
               )}
               
+              <div className="h-6 w-px bg-border"></div>
+              <IssueReportButton />
               <div className="h-6 w-px bg-border"></div>
               <Button
                 variant="outline"

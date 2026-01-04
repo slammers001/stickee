@@ -12,7 +12,7 @@ export interface FontSettings {
 }
 
 export const getFontSettings = async (): Promise<FontSettings | null> => {
-  const userId = getUserId();
+  const userId = await getUserId();
   
   try {
     // Use .maybeSingle() instead of .single() to handle no results gracefully
@@ -35,7 +35,7 @@ export const getFontSettings = async (): Promise<FontSettings | null> => {
 };
 
 export const saveFontSettings = async (currentFont: string, titleFont: string, favoriteFonts: string[]): Promise<boolean> => {
-  const userId = getUserId();
+  const userId = await getUserId();
   
   try {
     // First check if user exists

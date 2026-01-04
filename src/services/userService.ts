@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/lib/supabase';
 
 // Get current app version from package.json (embedded during build)
@@ -6,32 +5,33 @@ const APP_VERSION = import.meta.env.VITE_APP_VERSION;
 
 const USER_ID_KEY = 'stickee_user_id';
 
-export const getUserId = (): string => {
-  // Try to get existing user ID from localStorage
+// Get user ID with fallback to localStorage
+export const getUserId = async (): Promise<string> => {
+  // Fallback to localStorage for backward compatibility
   let userId = localStorage.getItem(USER_ID_KEY);
-  
-  // If no user ID exists, create a new one
   if (!userId) {
-    userId = uuidv4();
+    console.log('No user ID found, creating new one');
+    userId = 'guest_' + Date.now();
     localStorage.setItem(USER_ID_KEY, userId);
   }
   
+  console.log('Using user ID from public.users system:', userId);
   return userId;
 };
 
-export const getCurrentUser = () => {
-  const userId = getUserId();
+export const getCurrentUser = async () => {
+  const userId = await getUserId();
   return {
     id: userId,
     isGuest: true,
-    displayName: `User ${userId.substring(0, 8)}` // Show first 8 chars of UUID
+    displayName: `User ${userId.substring(0, 8)}`
   };
 };
 
 // Create user in Supabase if they don't exist
 // Save terms agreement to Supabase
 export const saveTermsAgreement = async (): Promise<boolean> => {
-  const userId = getUserId();
+  const userId = await getUserId();
   console.log('Saving terms agreement for user:', userId);
   
   try {
@@ -76,7 +76,7 @@ export const saveTermsAgreement = async (): Promise<boolean> => {
 };
 
 export const ensureUserExists = async (): Promise<boolean> => {
-  const userId = getUserId();
+  const userId = await getUserId();
   console.log('Ensuring user exists for ID:', userId);
   
   try {
@@ -134,7 +134,7 @@ export const ensureUserExists = async (): Promise<boolean> => {
 
 // Update user's app version
 export const updateUserVersion = async (): Promise<boolean> => {
-  const userId = getUserId();
+  const userId = await getUserId();
   console.log('Updating app version for user:', userId, 'to version:', APP_VERSION);
   
   try {

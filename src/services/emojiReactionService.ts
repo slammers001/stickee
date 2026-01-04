@@ -12,7 +12,7 @@ export const getAvailableEmojis = () => {
 
 // Add a reaction to a note
 export const addReaction = async (noteId: string, emoji: string): Promise<EmojiReaction> => {
-  const userId = getUserId();
+  const userId = await getUserId();
   
   try {
     const { data, error } = await supabase
@@ -36,7 +36,7 @@ export const addReaction = async (noteId: string, emoji: string): Promise<EmojiR
 
 // Remove a reaction from a note
 export const removeReaction = async (noteId: string, emoji: string): Promise<void> => {
-  const userId = getUserId();
+  const userId = await getUserId();
   
   try {
     const { error } = await supabase
@@ -65,7 +65,7 @@ export const getReactionsForNote = async (noteId: string): Promise<ReactionSumma
     
     if (!data || data.length === 0) return [];
     
-    const currentUserId = getUserId();
+    const currentUserId = await getUserId();
     
     // Group reactions by emoji and count them
     const reactionMap = new Map<string, ReactionSummary>();
@@ -120,7 +120,7 @@ export const hasUserReacted = async (noteId: string, emoji: string): Promise<boo
 };
 // Get reaction statistics for a user
 export const getReactionStats = async (userId?: string): Promise<EmojiReactionStats> => {
-  const targetUserId = userId || getUserId();
+  const targetUserId = userId || await getUserId();
   
   try {
     const { data, error } = await supabase

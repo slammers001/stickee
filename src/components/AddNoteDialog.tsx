@@ -129,19 +129,19 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col mx-4 sm:mx-0">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col mx-4 sm:mx-0">
         <DialogHeader>
           <DialogTitle>Add a New Stickee Note</DialogTitle>
         </DialogHeader>
         <div className="py-4 space-y-4 flex-1 overflow-y-auto">
-          <div className="order-1 ml-2">
+          <div className="order-1 ml-2 mr-4">
             <label className="text-sm font-medium mb-2 block">Title (Optional)</label>
             <Input
               placeholder="Add a title..."
               value={title}
               onChange={handleTitleChange}
               onKeyDown={handleTitleKeyDown}
-              className="font-title text-lg dark:text-white dark:placeholder:text-gray-400"
+              className="font-title text-lg dark:text-white dark:placeholder:text-gray-400 max-w-md"
             />
             <div className="text-xs text-muted-foreground mt-1">
               {title.length}/20 characters
