@@ -168,6 +168,85 @@ class SoundEffects {
     rumbleOsc.start(currentTime + 0.7);
     rumbleOsc.stop(currentTime + 0.9);
   }
+// Play a notification/alert sound for issue submission
+  playIssueSubmitSound() {
+    if (!this.audioContext) return;
+
+    const ctx = this.audioContext;
+    const currentTime = ctx.currentTime;
+
+    // Create a longer, more elaborate attention-grabbing sequence
+    const notes = [
+      { freq: 587.33, time: 0, duration: 0.1 },      // D5
+      { freq: 698.46, time: 0.05, duration: 0.1 },   // F5
+      { freq: 880.00, time: 0.1, duration: 0.15 },    // A5
+      { freq: 1046.50, time: 0.2, duration: 0.2 },   // C6 (alert!)
+      { freq: 1174.66, time: 0.35, duration: 0.15 },  // D6
+      { freq: 1396.91, time: 0.45, duration: 0.2 },   // F6
+      { freq: 1567.98, time: 0.6, duration: 0.25 },   // G6
+    ];
+
+    notes.forEach(({ freq, time, duration }) => {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      oscillator.frequency.setValueAtTime(freq, currentTime + time);
+      oscillator.type = freq > 800 ? 'square' : 'triangle'; // Higher notes as square for attention
+
+      // Sharp envelope for alert feel
+      gainNode.gain.setValueAtTime(0, currentTime + time);
+      gainNode.gain.linearRampToValueAtTime(0.2, currentTime + time + 0.005);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + time + duration);
+
+      oscillator.start(currentTime + time);
+      oscillator.stop(currentTime + time + duration);
+    });
+
+    // Add a more elaborate confirmation chord at the end
+    const chordOsc1 = ctx.createOscillator();
+    const chordOsc2 = ctx.createOscillator();
+    const chordOsc3 = ctx.createOscillator();
+    const chordGain = ctx.createGain();
+    
+    chordOsc1.connect(chordGain);
+    chordOsc2.connect(chordGain);
+    chordOsc3.connect(chordGain);
+    chordGain.connect(ctx.destination);
+    
+    chordOsc1.frequency.setValueAtTime(1318.51, currentTime + 0.85); // E6
+    chordOsc2.frequency.setValueAtTime(1567.98, currentTime + 0.85); // G6
+    chordOsc3.frequency.setValueAtTime(1760.00, currentTime + 0.85); // A6
+    chordOsc1.type = 'sine';
+    chordOsc2.type = 'sine';
+    chordOsc3.type = 'sine';
+    
+    chordGain.gain.setValueAtTime(0, currentTime + 0.85);
+    chordGain.gain.linearRampToValueAtTime(0.12, currentTime + 0.86);
+    chordGain.gain.exponentialRampToValueAtTime(0.01, currentTime + 1.1);
+    
+    chordOsc1.start(currentTime + 0.85);
+    chordOsc2.start(currentTime + 0.85);
+    chordOsc3.start(currentTime + 0.85);
+    chordOsc1.stop(currentTime + 1.1);
+    chordOsc2.stop(currentTime + 1.1);
+    chordOsc3.stop(currentTime + 1.1);
+
+    // Add a final sparkle effect
+    const sparkleOsc = ctx.createOscillator();
+    const sparkleGain = ctx.createGain();
+    sparkleOsc.connect(sparkleGain);
+    sparkleGain.connect(ctx.destination);
+    sparkleOsc.frequency.setValueAtTime(2093.00, currentTime + 1.0); // C7
+    sparkleOsc.type = 'sine';
+    sparkleGain.gain.setValueAtTime(0, currentTime + 1.0);
+    sparkleGain.gain.linearRampToValueAtTime(0.06, currentTime + 1.01);
+    sparkleGain.gain.exponentialRampToValueAtTime(0.01, currentTime + 1.2);
+    sparkleOsc.start(currentTime + 1.0);
+    sparkleOsc.stop(currentTime + 1.2);
+  }
 }
 
 // Export singleton instance

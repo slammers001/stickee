@@ -95,7 +95,7 @@ export const IssueReportDialog = ({ open, onOpenChange }: IssueReportDialogProps
         type: issueType,
       });
       
-      soundEffects.playSaveSound();
+      soundEffects.playIssueSubmitSound();
       
       // Reset form
       setTitle("");
@@ -124,7 +124,7 @@ export const IssueReportDialog = ({ open, onOpenChange }: IssueReportDialogProps
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col mx-4 sm:mx-0">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col mx-4 sm:mx-0">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
@@ -133,9 +133,9 @@ export const IssueReportDialog = ({ open, onOpenChange }: IssueReportDialogProps
         </DialogHeader>
         
         <div className="py-4 space-y-4 flex-1 overflow-y-auto">
-          <div>
+          <div className="order-1 ml-2 mr-4">
             <label className="text-sm font-medium mb-2 block">Issue Type</label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2 flex-wrap">
               {issueTypes.map((issue) => (
                 <Badge
                   key={issue.type}
@@ -155,21 +155,21 @@ export const IssueReportDialog = ({ open, onOpenChange }: IssueReportDialogProps
             </div>
           </div>
 
-          <div>
+          <div className="order-2 ml-2 mr-4">
             <label className="text-sm font-medium mb-2 block">Title</label>
             <Input
               placeholder="Brief description of the issue"
               value={title}
               onChange={handleTitleChange}
               maxLength={100}
-              className="w-full"
+              className="font-title text-lg dark:text-white dark:placeholder:text-gray-400 max-w-md"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               {title.length}/100 characters
             </p>
           </div>
 
-          <div>
+          <div className="order-3 ml-2 mr-4">
             <label className="text-sm font-medium mb-2 block">Description</label>
             <Textarea
               placeholder="Detailed description of the issue, steps to reproduce, etc."
@@ -178,11 +178,14 @@ export const IssueReportDialog = ({ open, onOpenChange }: IssueReportDialogProps
               onKeyDown={handleKeyDown}
               rows={5}
               maxLength={2000}
-              className="w-full resize-none"
+              className="min-h-[150px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400 w-full"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              {description.length}/2000 characters
+            <p className="text-xs text-muted-foreground mt-2">
+              Press Ctrl+Enter to save quickly • Maximum 2000 characters
             </p>
+            <div className="text-xs text-muted-foreground mt-1">
+              {description.length}/2000 characters
+            </div>
           </div>
         </div>
 
