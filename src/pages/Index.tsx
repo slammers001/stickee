@@ -317,7 +317,7 @@ export default function Index() {
       // Load reactions for the new note
       await loadReactions([newNote]);
       
-      toast.success('Note added successfully!');
+      // Note added silently - no notification
       
       // Track note creation event
       analytics.track(AnalyticsEvents.NOTE_CREATED, {
@@ -335,24 +335,6 @@ export default function Index() {
         color,
         timestamp: new Date().toISOString()
       });
-      
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'An unknown error occurred while adding the note';
-      
-      toast.error(`Failed to add note: ${errorMessage}`, {
-        duration: 5000,
-        style: {
-          background: '#ffebee',
-          color: '#c62828',
-          border: '1px solid #ffcdd2',
-          padding: '12px',
-          borderRadius: '4px',
-        },
-      });
-      
-      // Reload notes if there was an error
-      await loadNotes();
     }
   };
 
@@ -377,11 +359,10 @@ export default function Index() {
           )
         );
         setDetailDialogOpen(false);
-        toast.success('Note updated!');
+        // Note updated silently - no notification
       }
     } catch (error) {
       console.error('Error updating note:', error);
-      toast.error('Failed to update note');
     }
   };
 
@@ -406,7 +387,6 @@ export default function Index() {
       }
     } catch (error) {
       console.error('Error toggling pin:', error);
-      toast.error('Failed to update note');
     }
   };
 
@@ -416,10 +396,9 @@ export default function Index() {
       setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
       setFilteredNotes(prevNotes => prevNotes.filter(note => note.id !== id));
       setDetailDialogOpen(false);
-      toast.success('Note deleted!');
+      // Note deleted silently - no notification
     } catch (error) {
       console.error('Error deleting note:', error);
-      toast.error('Failed to delete note');
     }
   };
 
@@ -462,10 +441,9 @@ export default function Index() {
       // Update local state
       setNotes(newOrder);
       setFilteredNotes(newOrder);
-      toast.success('Note moved!');
+      // Note moved silently - no notification
     } catch (error) {
       console.error('Error reordering notes:', error);
-      toast.error('Failed to reorder notes');
     }
   };
 
@@ -485,7 +463,6 @@ export default function Index() {
 
   const handleQuickNote = async (content: string, color: string) => {
     if (!termsAgreed) {
-      toast.error("You must agree to the Terms of Service to create notes");
       return;
     }
     setStickyNoteWindowOpen(false);
@@ -506,17 +483,15 @@ export default function Index() {
         // Load reactions for the new note immediately
         await loadReactions([newNote]);
         
-        toast.success('Sticky note added!');
+        // Sticky note added silently - no notification
       } catch (error) {
         console.error('Error creating sticky note:', error);
-        toast.error('Failed to add sticky note');
       }
     }
   };
 
   const handleNoteClick = (note: Note) => {
     if (!termsAgreed) {
-      toast.error("You must agree to the Terms of Service to view notes");
       return;
     }
     
@@ -547,10 +522,9 @@ export default function Index() {
       setSelectedNotes(new Set());
       setShowMassDeleteDialog(false);
       
-      toast.success(`Deleted ${notesToDelete.length} note${notesToDelete.length > 1 ? 's' : ''} successfully!`);
+      // Notes deleted silently - no notification
     } catch (error) {
       console.error('Error mass deleting notes:', error);
-      toast.error('Failed to delete notes');
     }
   };
 
@@ -566,10 +540,9 @@ export default function Index() {
       // Perform the actual archive operation
       await archiveNote(noteId);
       
-      toast.success('Note archived successfully!');
+      // Note archived silently - no notification
     } catch (error) {
       console.error('Error archiving note:', error);
-      toast.error('Failed to archive note');
       // Re-add the note to the list if there was an error
       await loadNotes();
     }

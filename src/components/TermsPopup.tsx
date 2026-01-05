@@ -137,7 +137,7 @@ export function TermsPopup({ onAgree, showTerms = false, onShowTermsChange }: Te
                 <p className="text-sm text-muted-foreground mb-6">
                   <strong>Last Updated:</strong> December 10, 2025<br />
                   <strong>Application:</strong> Stickee v0.1.0-present version<br />
-                  <strong>Developer:</strong> <a href="https://github.com/slammers001" target="_blank" rel="noopener noreferrer" className="text-black underline hover:text-primary transition-colors">slammers001</a>
+                  <strong>Developer:</strong> <a href="https://github.com/slammers001" target="_blank" rel="noopener noreferrer" className="dark:text-white underline hover:text-pink transition-colors dark:hover:text-pink">slammers001</a>
                 </p>
 
                 <section className="mb-8">
@@ -157,7 +157,7 @@ export function TermsPopup({ onAgree, showTerms = false, onShowTermsChange }: Te
                 <section className="mb-8">
                   <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>3. License and Use</h3>
                   <p className="text-sm mb-3">
-                    <a href="https://github.com/slammers001" target="_blank" rel="noopener noreferrer" className="text-black underline hover:text-primary transition-colors">slammers001</a> grants you a limited, non-exclusive, non-transferable, revocable license to use Stickee for personal purposes only. You may not:
+                    <a href="https://github.com/slammers001" target="_blank" rel="noopener noreferrer" className="dark:text-white underline hover:text-pink transition-colors dark:hover:text-pink">slammers001</a> grants you a limited, non-exclusive, non-transferable, revocable license to use Stickee for personal purposes only. You may not:
                   </p>
                   <ul className="list-disc list-inside text-sm space-y-1">
                     <li>Copy, modify, or distribute the Application</li>
@@ -200,7 +200,7 @@ export function TermsPopup({ onAgree, showTerms = false, onShowTermsChange }: Te
                 <section className="mb-8">
                   <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>6. Intellectual Property</h3>
                   <p className="text-sm mb-3">
-                    All rights, title, and interest in Stickee, including all intellectual property rights, remain the exclusive property of <a href="https://github.com/slammers001" target="_blank" rel="noopener noreferrer" className="text-black underline hover:text-primary transition-colors">slammers001</a>. This includes but is not limited to:
+                    All rights, title, and interest in Stickee, including all intellectual property rights, remain the exclusive property of <a href="https://github.com/slammers001" target="_blank" rel="noopener noreferrer" className="dark:text-white underline hover:text-pink transition-colors dark:hover:text-pink">slammers001</a>. This includes but is not limited to:
                   </p>
                   <ul className="list-disc list-inside text-sm space-y-1">
                     <li>Application code and design</li>
@@ -227,7 +227,7 @@ export function TermsPopup({ onAgree, showTerms = false, onShowTermsChange }: Te
                 <section className="mb-8">
                   <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>8. Limitation of Liability</h3>
                   <p className="text-sm font-bold">
-                    TO THE MAXIMUM EXTENT PERMITTED BY LAW, <a href="https://github.com/slammers001" target="_blank" rel="noopener noreferrer" className="text-black underline hover:text-primary transition-colors">SLAMMERS001</a> SHALL NOT BE LIABLE FOR:
+                    TO THE MAXIMUM EXTENT PERMITTED BY LAW, <a href="https://github.com/slammers001" target="_blank" rel="noopener noreferrer" className="dark:text-white underline hover:text-pink transition-colors dark:hover:text-pink">SLAMMERS001</a> SHALL NOT BE LIABLE FOR:
                   </p>
                   <ul className="list-disc list-inside text-sm space-y-1">
                     <li>ANY DIRECT, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES</li>
@@ -243,7 +243,7 @@ export function TermsPopup({ onAgree, showTerms = false, onShowTermsChange }: Te
                     <div>
                       <h4 className="font-semibold text-sm" style={{ fontFamily: 'arbutus, serif' }}>9.1 Application Updates</h4>
                       <p className="text-sm">
-                        <a href="https://github.com/slammers001" target="_blank" rel="noopener noreferrer" className="text-black underline hover:text-primary transition-colors">Slammers001</a> may release updates, patches, or new versions of Stickee. These Terms will apply to all updates unless superseded by new terms.
+                        <a href="https://github.com/slammers001" target="_blank" rel="noopener noreferrer" className="dark:text-white underline hover:text-pink transition-colors dark:hover:text-pink">Slammers001</a> may release updates, patches, or new versions of Stickee. These Terms will apply to all updates unless superseded by new terms.
                       </p>
                     </div>
                     <div>
