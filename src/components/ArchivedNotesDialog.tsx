@@ -144,7 +144,7 @@ export function ArchivedNotesDialog({ open, onOpenChange }: ArchivedNotesDialogP
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 px-2">
               {archivedNotes.map((note) => (
                 <div key={note.id} className="relative group">
                   <StickyNote
