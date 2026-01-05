@@ -19,21 +19,21 @@ CREATE INDEX IF NOT EXISTS idx_issues_created_at ON issues(created_at DESC);
 -- Set up RLS (Row Level Security)
 ALTER TABLE issues ENABLE ROW LEVEL SECURITY;
 
--- Create policy for users to see their own issues
+-- Create policy for users to see their own issues (using public.users)
 CREATE POLICY "Users can view their own issues" ON issues
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (user_id IN (SELECT id FROM public.users WHERE id = user_id));
 
--- Create policy for users to insert their own issues
+-- Create policy for users to insert their own issues (using public.users)
 CREATE POLICY "Users can insert their own issues" ON issues
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (user_id IN (SELECT id FROM public.users WHERE id = user_id));
 
--- Create policy for users to update their own issues
+-- Create policy for users to update their own issues (using public.users)
 CREATE POLICY "Users can update their own issues" ON issues
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (user_id IN (SELECT id FROM public.users WHERE id = user_id));
 
--- Create policy for users to delete their own issues
+-- Create policy for users to delete their own issues (using public.users)
 CREATE POLICY "Users can delete their own issues" ON issues
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING (user_id IN (SELECT id FROM public.users WHERE id = user_id));
 
 -- Function to automatically update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

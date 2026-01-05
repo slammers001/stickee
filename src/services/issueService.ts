@@ -83,56 +83,27 @@ export const createIssue = async (issueData: {
   try {
     const userId = await getUserId();
     
-    console.log('=== DEBUG: Issue Creation ===');
-    console.log('User ID type:', typeof userId);
-    console.log('User ID value:', userId);
-    console.log('User ID length:', userId?.length);
-    console.log('Is user ID a string?', typeof userId === 'string');
-    console.log('Is user ID empty?', !userId);
+    console.log('Creating issue for user:', userId);
     
     if (!userId || typeof userId !== 'string') {
-      console.error('INVALID USER ID DETECTED:', { userId, type: typeof userId });
       throw new Error(`Invalid or missing user id. Got: ${userId} (type: ${typeof userId})`);
     }
-    
-    // Check if user exists in public.users with detailed logging
-    console.log('Checking if user exists in public.users...');
-    const { data: user, error: userCheckError } = await supabase
+
+    // Ensure user exists in public.users
+    const { error: userCheckError } = await supabase
       .from('users')
-      .select('id, created_at, app_version')
-      .eq('id', userId)
-      .single();
-    
-    console.log('User check result:', { user, userCheckError });
+      .upsert({
+        id: userId,
+        created_at: new Date().toISOString(),
+        app_version: '1.0.0'
+      }, {
+        onConflict: 'id'
+      });
     
     if (userCheckError) {
-      console.error('Error checking user existence:', userCheckError);
-      if (userCheckError.code === 'PGRST116') {
-        console.log('User does not exist in public.users, creating user...');
-        // Try to create the user
-        const { error: createUserError } = await supabase
-          .from('users')
-          .insert({
-            id: userId,
-            created_at: new Date().toISOString(),
-            app_version: '1.0.0'
-          });
-        
-        if (createUserError) {
-          console.error('Error creating user:', createUserError);
-          throw new Error(`User ${userId} does not exist and failed to create: ${createUserError.message}`);
-        }
-        console.log('User created successfully in public.users');
-      } else {
-        throw new Error(`Database error checking user: ${userCheckError.message}`);
-      }
+      console.error('Error ensuring user exists:', userCheckError);
+      throw new Error(`Failed to ensure user exists: ${userCheckError.message}`);
     }
-
-    if (!user && !userCheckError) {
-      throw new Error(`User ${userId} does not exist in public.users.`);
-    }
-
-    console.log('Creating issue for user:', userId);
     
     const issueToCreate = {
       title: issueData.title.trim(),
@@ -144,7 +115,6 @@ export const createIssue = async (issueData: {
 
     console.log('Issue data to create:', issueToCreate);
 
-    // Try the most basic insert approach
     const { data, error } = await supabase
       .from('issues')
       .insert(issueToCreate)

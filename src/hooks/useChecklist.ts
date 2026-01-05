@@ -28,7 +28,7 @@ export const useChecklist = () => {
     }
     
     try {
-      const user = getCurrentUser();
+      const user = await getCurrentUser();
       if (!user?.id) {
         console.warn('No user ID available');
         setItems([]);
@@ -75,7 +75,7 @@ export const useChecklist = () => {
       return;
     }
     
-    const user = getCurrentUser();
+    const user = await getCurrentUser();
     if (!text.trim() || !user?.id) {
       console.warn('Invalid input or no user ID');
       return;
