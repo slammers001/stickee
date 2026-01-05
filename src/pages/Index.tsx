@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { CheckSquare, Trash2, Pin, Settings, Plus, AlertCircle } from "lucide-react";
+import { CheckSquare, Trash2, Pin, Settings, Plus, AlertCircle, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import {
   updateNotePinStatus as updateNotePinStatusService,
   reorderNotes as reorderNotesService
 } from "@/services/notesService";
+import { archiveNote } from "@/services/archiveService";
 import { ensureUserExists, updateUserVersion } from "@/services/userService";
 import { getReactionsForNote } from "@/services/emojiReactionService";
 import type { ReactionSummary } from "@/types/emojiReaction";
@@ -35,6 +36,7 @@ const NoteDetailDialog = lazy(() => import("@/components/NoteDetailDialog").then
 const SettingsDialog = lazy(() => import("@/components/SettingsDialog").then(module => ({ default: module.SettingsDialog })));
 const Checklist = lazy(() => import("@/components/Checklist").then(module => ({ default: module.Checklist })));
 const StickyNoteWindow = lazy(() => import("@/components/StickyNoteWindow").then(module => ({ default: module.StickyNoteWindow })));
+const ArchivedNotesDialog = lazy(() => import("@/components/ArchivedNotesDialog").then(module => ({ default: module.ArchivedNotesDialog })));
 
 // Using the Note interface from types/note.ts
 
@@ -64,6 +66,7 @@ export default function Index() {
   const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [noteReactions, setNoteReactions] = useState<Record<string, ReactionSummary[]>>({});
   const [showMassDeleteDialog, setShowMassDeleteDialog] = useState(false);
+  const [archivedNotesDialogOpen, setArchivedNotesDialogOpen] = useState(false);
   
   // Checklist state and handlers
   const {
@@ -527,6 +530,18 @@ export default function Index() {
     }
   };
 
+  const handleArchive = async (noteId: string) => {
+    try {
+      await archiveNote(noteId);
+      setNotes(prevNotes => prevNotes.filter(note => note.id !== noteId));
+      setFilteredNotes(prevNotes => prevNotes.filter(note => note.id !== noteId));
+      toast.success('Note archived successfully!');
+    } catch (error) {
+      console.error('Error archiving note:', error);
+      toast.error('Failed to archive note');
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -609,6 +624,19 @@ export default function Index() {
                     )}
                   </Button>
                 </>
+              )}
+
+              {/* Archive Button - Desktop only, shown when no notes are selected */}
+              {selectedNotes.size === 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setArchivedNotesDialogOpen(true)}
+                  className="hidden md:flex"
+                >
+                  <Archive className="h-4 w-4 mr-2" />
+                  Archived Notes
+                </Button>
               )}
               
               {/* Mass Delete Button - appears when notes are selected */}
@@ -713,6 +741,7 @@ export default function Index() {
                 onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
                 onClick={() => handleNoteClick(note)}
                 onTogglePin={() => togglePin(note.id)}
+                onArchive={() => handleArchive(note.id)}
                 onToggleSelect={() => handleToggleSelect(note.id)}
                 isSelected={selectedNotes.has(note.id)}
                 showSelectionCheckbox={selectedNotes.size > 0}
@@ -747,6 +776,7 @@ export default function Index() {
                   onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
                   onClick={() => handleNoteClick(note)}
                   onTogglePin={() => togglePin(note.id)}
+                  onArchive={() => handleArchive(note.id)}
                   onToggleSelect={() => handleToggleSelect(note.id)}
                   isSelected={selectedNotes.has(note.id)}
                   showSelectionCheckbox={selectedNotes.size > 0}
@@ -783,6 +813,7 @@ export default function Index() {
                   reactions={noteReactions[note.id] || []}
                   onClick={() => handleNoteClick(note)}
                   onTogglePin={() => togglePin(note.id)}
+                  onArchive={() => handleArchive(note.id)}
                   onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
                   onToggleSelect={() => handleToggleSelect(note.id)}
                   isSelected={selectedNotes.has(note.id)}
@@ -948,6 +979,14 @@ export default function Index() {
         open={issueDialogOpen}
         onOpenChange={setIssueDialogOpen}
       />
+
+      {/* Archived Notes Dialog */}
+      <Suspense fallback={<div>Loading...</div>}>
+        <ArchivedNotesDialog
+          open={archivedNotesDialogOpen}
+          onOpenChange={setArchivedNotesDialogOpen}
+        />
+      </Suspense>
 
       {/* Version Display */}
       <div className="fixed bottom-4 left-4 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded shadow-sm" style={{ fontFamily: 'var(--font-family-handwriting)' }}>
