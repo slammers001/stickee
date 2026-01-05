@@ -34,7 +34,7 @@ interface SettingsDialogProps {
 export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const { theme, setTheme } = useTheme();
   const [fontMode, setFontMode] = useState<FontMode>("basic");
-  const [fontFamily, setFontFamily] = useState<FontFamily>("indie-flower");
+  const [fontFamily, setFontFamily] = useState<FontFamily>("onest");
   const [titleFont, setTitleFont] = useState<TitleFontFamily>("arbutus");
   const [favoriteFonts, setFavoriteFonts] = useState<FontFamily[]>([]);
   const [activeTab, setActiveTab] = useState<ActiveTab>("ui");
@@ -44,12 +44,11 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
 
   // Organized font arrays for lazy loading
   const basicFonts: FontFamily[] = [
-    "serif", "sans-serif", "monospace", "abeezee", "aclonica", "advent-pro", 
-    "anonymous-pro", "tenali-ramakrishna", "truculenta", "ubuntu-sans-mono", 
-    "unbounded", "nova-mono", "orbitron", "bahianita", "syne-mono", "vt323", 
-    "xanh-mono", "cutive-mono", "arbutus-slab", "nixie-one", "noticia-text", 
-    "arvo", "oi", "oldenburg", "orelega-one", "nova-oval", "atma", "butcherman", 
-    "cherry-bomb-one"
+    "serif", "sans-serif", "monospace", "onest", "abeezee", "aclonica", "advent-pro", 
+    "anonymous-pro", "tenali-ramakrishna", "truculenta", "ubuntu-sans-mono", "unbounded", 
+    "nova-mono", "orbitron", "bahianita", "syne-mono", "vt323", "xanh-mono", "cutive-mono", 
+    "arbutus-slab", "nixie-one", "noticia-text", "arvo", "oi", "oldenburg", "orelega-one", 
+    "nova-oval", "atma", "butcherman", "cherry-bomb-one"
   ];
 
   const handwritingFonts: FontFamily[] = [
@@ -62,7 +61,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     "waiting-for-the-sunrise", "beth-ellen", "homemade-apple", "zeyada", 
     "cedarville-cursive", "coming-soon", "covered-by-your-grace", 
     "crafty-girls", "comforter", "oregano", "protest-revolution", 
-    "protest-riot", "rancho", "sarina", "single-day", "onest"
+    "protest-riot", "rancho", "sarina", "single-day"
   ];
 
   // Get visible fonts based on mode and lazy loading
@@ -228,7 +227,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         }
       } else {
         // Create default settings if none exist
-        const defaultFont = localStorage.getItem("stickee-font-family") as FontFamily || "indie-flower";
+        const defaultFont = localStorage.getItem("stickee-font-family") as FontFamily || "onest";
         const defaultTitleFont = localStorage.getItem("stickee-title-font") as TitleFontFamily || "arbutus";
         const defaultFavorites = JSON.parse(localStorage.getItem("stickee-favorite-fonts") || "[]");
         
@@ -1012,6 +1011,11 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
                             style={{ fontFamily: getFontDisplayValue(font) }}
                           >
                             {getFontDisplayName(font)}
+                            {font === "onest" && (
+                              <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                NEW
+                              </span>
+                            )}
                           </Label>
                         </div>
                         <Button

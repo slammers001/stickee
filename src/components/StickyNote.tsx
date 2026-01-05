@@ -168,7 +168,7 @@ export const StickyNote = memo(({
           )}
           <LinkableText 
             text={displayContent}
-            className="text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting line-clamp-13"
+            className={`text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting line-clamp-13 ${!title ? 'mt-2' : ''}`}
           />
         </div>
         
