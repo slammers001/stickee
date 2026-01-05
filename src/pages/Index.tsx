@@ -286,8 +286,9 @@ export default function Index() {
       soundEffects.playNewNoteSound();
       
       // Create a temporary note for immediate UI feedback
+      const tempId = `temp-${Date.now()}-${Math.random()}`;
       const tempNote: Note = {
-        id: `temp-${Date.now()}`,
+        id: tempId,
         title: title || undefined,
         content,
         color,
@@ -315,10 +316,10 @@ export default function Index() {
       
       // Replace the temporary note with the real one
       setNotes(prevNotes => 
-        prevNotes.map(note => note.id === tempNote.id ? newNote : note)
+        prevNotes.map(note => note.id === tempId ? newNote : note)
       );
       setFilteredNotes(prevNotes => 
-        prevNotes.map(note => note.id === tempNote.id ? newNote : note)
+        prevNotes.map(note => note.id === tempId ? newNote : note)
       );
       
       // Load reactions for the new note

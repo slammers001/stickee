@@ -15,7 +15,7 @@ import type { ReactionSummary } from "@/types/emojiReaction";
 interface ArchivedNotesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onNotesRefresh?: () => void;
+  onNotesRefresh?: () => Promise<void>;
 }
 
 export function ArchivedNotesDialog({ open, onOpenChange, onNotesRefresh }: ArchivedNotesDialogProps) {
@@ -65,21 +65,26 @@ export function ArchivedNotesDialog({ open, onOpenChange, onNotesRefresh }: Arch
   }, [open]);
 
   const handleUnarchive = async (noteId: string) => {
+    // Play restore sound immediately (don't await)
+    soundEffects.playRestoreSound();
+    
+    // Remove from UI immediately for instant feedback
+    setArchivedNotes(prev => prev.filter(note => note.id !== noteId));
+    
     try {
-      // Play restore sound immediately
-      soundEffects.playRestoreSound();
-      
-      // Remove from UI immediately for instant feedback
-      setArchivedNotes(prev => prev.filter(note => note.id !== noteId));
-      
-      // Perform the actual unarchive operation
+      // Perform the actual unarchive operation in background
       await unarchiveNote(noteId);
-      
       toast.success('Note unarchived successfully!');
       
-      // Refresh the main notes list to show the unarchived note
+      // Refresh the main notes list after a short delay to show the restored note
       if (onNotesRefresh) {
-        onNotesRefresh();
+        setTimeout(async () => {
+          try {
+            await onNotesRefresh();
+          } catch (error) {
+            console.error('Error refreshing notes:', error);
+          }
+        }, 200);
       }
     } catch (error) {
       console.error('Error unarchiving note:', error);
@@ -91,16 +96,16 @@ export function ArchivedNotesDialog({ open, onOpenChange, onNotesRefresh }: Arch
 
   const handleDelete = async (noteId: string) => {
     console.log('Delete button clicked for note:', noteId);
+    
+    // Play delete sound immediately (don't await)
+    soundEffects.playDeleteSound();
+    
+    // Remove from UI immediately for instant feedback
+    setArchivedNotes(prev => prev.filter(note => note.id !== noteId));
+    
     try {
-      // Play delete sound immediately
-      soundEffects.playDeleteSound();
-      
-      // Remove from UI immediately for instant feedback
-      setArchivedNotes(prev => prev.filter(note => note.id !== noteId));
-      
-      // Perform the actual delete operation
+      // Perform the actual delete operation in background
       await deleteArchivedNote(noteId);
-      
       toast.success('Archived note deleted permanently!');
     } catch (error) {
       console.error('Error deleting archived note:', error);
