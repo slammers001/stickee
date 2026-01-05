@@ -424,6 +424,14 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
     localStorage.removeItem("stickee-terms-agreed");
     toast.error("You have disagreed to the Terms of Service. App functionality is restricted.");
     onOpenChange(false);
+    
+    // Trigger a storage change event to notify other components
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'stickee-terms-agreed',
+      oldValue: 'true',
+      newValue: null,
+      storageArea: localStorage
+    }));
   };
 
   const applyFontFamily = (font: FontFamily) => {
