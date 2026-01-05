@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Archive, RotateCcw, Trash2, Edit } from "lucide-react";
+import { Archive, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { getArchivedNotes, unarchiveNote, deleteArchivedNote } from "@/services/archiveService";
 import { getReactionsForNote } from "@/services/emojiReactionService";
@@ -162,15 +162,6 @@ export function ArchivedNotesDialog({ open, onOpenChange }: ArchivedNotesDialogP
                   
                   {/* Action buttons overlay */}
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEditNote(note)}
-                      className="bg-background/90 hover:bg-background"
-                      title="Edit note"
-                    >
-                      <Edit className="h-3 w-3" />
-                    </Button>
                     <Button
                       size="sm"
                       variant="outline"
