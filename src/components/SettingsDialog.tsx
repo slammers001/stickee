@@ -19,7 +19,7 @@ type FontFamily = "serif" | "sans-serif" | "monospace" |
   "solitreo" | "sue-ellen-francisco" | "sunshiney" | "swanky-and-moo-moo" | "the-girl-next-door" | 
   "tillana" | "unkempt" | "waiting-for-the-sunrise" | "beth-ellen" | "homemade-apple" | 
   "zeyada" | "cedarville-cursive" | "coming-soon" | "covered-by-your-grace" | "crafty-girls" | 
-  "comforter" | "indie-flower" | "give-you-glory" | "oregano" | "protest-revolution" | "protest-riot" | "rancho" | "sarina" | "single-day";
+  "comforter" | "indie-flower" | "give-you-glory" | "oregano" | "protest-revolution" | "protest-riot" | "rancho" | "sarina" | "single-day" | "onest";
 
 type TitleFontFamily = "arbutus" | "agbalumo" | "walter-turncoat" | "yatra-one";
 
@@ -62,7 +62,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     "waiting-for-the-sunrise", "beth-ellen", "homemade-apple", "zeyada", 
     "cedarville-cursive", "coming-soon", "covered-by-your-grace", 
     "crafty-girls", "comforter", "oregano", "protest-revolution", 
-    "protest-riot", "rancho", "sarina", "single-day"
+    "protest-riot", "rancho", "sarina", "single-day", "onest"
   ];
 
   // Get visible fonts based on mode and lazy loading
@@ -552,6 +552,9 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
       case "single-day":
         fontValue = '"Single Day", cursive';
         break;
+      case "onest":
+        fontValue = 'Onest, sans-serif';
+        break;
       case "abeezee":
         fontValue = 'ABeeZee, sans-serif';
         break;
@@ -875,7 +878,8 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
       "protest-riot": "Protest Riot",
       "rancho": "Rancho",
       "sarina": "Sarina",
-      "single-day": "Single Day"
+      "single-day": "Single Day",
+      "onest": "Onest"
     };
     return displayNames[font] || font;
   };
