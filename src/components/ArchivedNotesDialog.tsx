@@ -151,6 +151,26 @@ export function ArchivedNotesDialog({ open, onOpenChange, onNotesRefresh }: Arch
     }
   };
 
+  const handleDeleteFromEdit = async (id: string) => {
+    try {
+      // Play delete sound immediately (don't await)
+      soundEffects.playDeleteSound();
+      
+      // Remove from UI immediately for instant feedback
+      setArchivedNotes(prev => prev.filter(note => note.id !== id));
+      
+      // Perform the actual delete operation in background
+      await deleteArchivedNote(id);
+      
+      toast.success('Archived note deleted permanently!');
+      setEditDialogOpen(false);
+      setSelectedNote(null);
+    } catch (error) {
+      console.error('Error deleting archived note:', error);
+      toast.error('Failed to delete archived note');
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-7xl max-h-[90vh] flex flex-col mx-2 sm:mx-4 p-4">
@@ -241,7 +261,7 @@ export function ArchivedNotesDialog({ open, onOpenChange, onNotesRefresh }: Arch
           onOpenChange={setEditDialogOpen}
           note={selectedNote}
           onSave={handleUpdateNote}
-          onDelete={() => {}} // Don't allow deletion from edit dialog for archived notes
+          onDelete={handleDeleteFromEdit}
         />
       )}
     </Dialog>
