@@ -297,6 +297,7 @@ export default function Index() {
         lastUpdated: Date.now(),
         created_at: new Date().toISOString(),
         user_id: '', // Will be filled by the actual response
+        isTemp: true // Mark as temporary
       };
       
       // Add to UI immediately
@@ -316,10 +317,14 @@ export default function Index() {
       
       // Replace the temporary note with the real one
       setNotes(prevNotes => 
-        prevNotes.map(note => note.id === tempId ? newNote : note)
+        prevNotes.map(note => 
+          note.id === tempId ? { ...newNote, isTemp: false } : note
+        )
       );
       setFilteredNotes(prevNotes => 
-        prevNotes.map(note => note.id === tempId ? newNote : note)
+        prevNotes.map(note => 
+          note.id === tempId ? { ...newNote, isTemp: false } : note
+        )
       );
       
       // Load reactions for the new note
