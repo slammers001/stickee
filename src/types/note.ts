@@ -14,6 +14,8 @@ export interface Note {
   user_id?: string; // Made optional
   created_at?: string; // For Supabase compatibility
   reactions?: ReactionSummary[]; // Optional array of reaction summaries
+  archived?: boolean; // Whether the note is archived
+  archived_at?: string; // When the note was archived
 }
 
 export type StickyNoteStatus = NoteStatus;

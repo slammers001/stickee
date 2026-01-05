@@ -224,29 +224,30 @@ export default function Index() {
     }));
   };
 
+  // Load notes function
+  const loadNotes = async () => {
+    try {
+      setLoading(true);
+      // Ensure user exists and update version
+      await ensureUserExists();
+      await updateUserVersion();
+      
+      const loadedNotes = await fetchNotes();
+      setNotes(loadedNotes);
+      setFilteredNotes(loadedNotes);
+      
+      // Load reactions after notes are loaded
+      await loadReactions(loadedNotes);
+    } catch (error) {
+      console.error('Error loading notes:', error);
+      toast.error('Failed to load notes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Load notes on component mount
   useEffect(() => {
-    const loadNotes = async () => {
-      try {
-        setLoading(true);
-        // Ensure user exists and update version
-        await ensureUserExists();
-        await updateUserVersion();
-        
-        const loadedNotes = await fetchNotes();
-        setNotes(loadedNotes);
-        setFilteredNotes(loadedNotes);
-        
-        // Load reactions after notes are loaded
-        await loadReactions(loadedNotes);
-      } catch (error) {
-        console.error('Error loading notes:', error);
-        toast.error('Failed to load notes');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadNotes();
   }, []);
 
@@ -985,6 +986,7 @@ export default function Index() {
         <ArchivedNotesDialog
           open={archivedNotesDialogOpen}
           onOpenChange={setArchivedNotesDialogOpen}
+          onNotesRefresh={loadNotes}
         />
       </Suspense>
 

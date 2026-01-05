@@ -14,9 +14,10 @@ import type { ReactionSummary } from "@/types/emojiReaction";
 interface ArchivedNotesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onNotesRefresh?: () => void;
 }
 
-export function ArchivedNotesDialog({ open, onOpenChange }: ArchivedNotesDialogProps) {
+export function ArchivedNotesDialog({ open, onOpenChange, onNotesRefresh }: ArchivedNotesDialogProps) {
   const [archivedNotes, setArchivedNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
   const [noteReactions, setNoteReactions] = useState<Record<string, ReactionSummary[]>>({});
@@ -67,6 +68,11 @@ export function ArchivedNotesDialog({ open, onOpenChange }: ArchivedNotesDialogP
       await unarchiveNote(noteId);
       setArchivedNotes(prev => prev.filter(note => note.id !== noteId));
       toast.success('Note unarchived successfully!');
+      
+      // Refresh the main notes list to show the unarchived note
+      if (onNotesRefresh) {
+        onNotesRefresh();
+      }
     } catch (error) {
       console.error('Error unarchiving note:', error);
       toast.error('Failed to unarchive note');
@@ -74,6 +80,7 @@ export function ArchivedNotesDialog({ open, onOpenChange }: ArchivedNotesDialogP
   };
 
   const handleDelete = async (noteId: string) => {
+    console.log('Delete button clicked for note:', noteId);
     try {
       await deleteArchivedNote(noteId);
       setArchivedNotes(prev => prev.filter(note => note.id !== noteId));
@@ -165,7 +172,10 @@ export function ArchivedNotesDialog({ open, onOpenChange }: ArchivedNotesDialogP
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleUnarchive(note.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleUnarchive(note.id);
+                      }}
                       className="bg-background/90 hover:bg-background"
                       title="Unarchive note"
                     >
@@ -174,7 +184,10 @@ export function ArchivedNotesDialog({ open, onOpenChange }: ArchivedNotesDialogP
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleDelete(note.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(note.id);
+                      }}
                       className="bg-background/90 hover:bg-background"
                       title="Delete permanently"
                     >

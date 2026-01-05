@@ -1,8 +1,10 @@
 import { getCurrentUser } from './userService';
 import { getNotes } from './notesService';
+import { getArchivedNotes } from './archiveService';
 import { checklistService } from './checklistService';
 import { getReactionsForNote } from './emojiReactionService';
 import { createNote as createNoteService } from './notesService';
+import { archiveNote } from './archiveService';
 
 export interface ExportData {
   user: {
@@ -19,6 +21,8 @@ export interface ExportData {
     pinned: boolean;
     created_at: string;
     updated_at: number;
+    archived?: boolean;
+    archived_at?: string;
   }>;
   checklistItems: Array<{
     id: string;
@@ -35,17 +39,23 @@ export interface ExportData {
 
 export const exportUserData = async (): Promise<ExportData> => {
   try {
-    const user = getCurrentUser();
+    const user = await getCurrentUser();
     
-    // Get all notes
+    // Get all regular notes
     const notes = await getNotes();
+    
+    // Get all archived notes
+    const archivedNotes = await getArchivedNotes();
+    
+    // Combine all notes
+    const allNotes = [...notes, ...archivedNotes];
     
     // Get checklist items
     const checklistItems = await checklistService.getItems(user.id);
     
     // Get reactions for all notes
     const reactions: ExportData['reactions'] = [];
-    for (const note of notes) {
+    for (const note of allNotes) {
       try {
         const noteReactions = await getReactionsForNote(note.id);
         reactions.push(...noteReactions.map(reaction => ({
@@ -64,7 +74,7 @@ export const exportUserData = async (): Promise<ExportData> => {
         displayName: user.displayName,
         exportDate: new Date().toISOString()
       },
-      notes: notes.map(note => ({
+      notes: allNotes.map(note => ({
         id: note.id,
         title: note.title,
         content: note.content,
@@ -72,7 +82,9 @@ export const exportUserData = async (): Promise<ExportData> => {
         status: note.status,
         pinned: note.pinned,
         created_at: note.created_at || new Date().toISOString(),
-        updated_at: note.lastUpdated
+        updated_at: note.lastUpdated,
+        archived: note.archived || false,
+        archived_at: note.archived_at || undefined
       })),
       checklistItems: checklistItems.map(item => ({
         id: item.id,
@@ -116,12 +128,12 @@ export const importUserData = async (file: File): Promise<void> => {
       throw new Error('Invalid export file format');
     }
     
-    const user = getCurrentUser();
+    const user = await getCurrentUser();
     
     // Import notes
     for (const note of data.notes) {
       try {
-        await createNoteService({
+        const createdNote = await createNoteService({
           title: note.title,
           content: note.content,
           color: note.color,
@@ -129,6 +141,11 @@ export const importUserData = async (file: File): Promise<void> => {
           pinned: note.pinned,
           lastUpdated: note.updated_at
         });
+        
+        // If the note was archived, archive it after creation
+        if (note.archived && createdNote) {
+          await archiveNote(createdNote.id);
+        }
       } catch (error) {
         console.warn(`Failed to import note ${note.id}:`, error);
       }
