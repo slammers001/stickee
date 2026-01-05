@@ -14,6 +14,7 @@ import {
 import { archiveNote } from "@/services/archiveService";
 import { ensureUserExists, updateUserVersion } from "@/services/userService";
 import { getReactionsForNote } from "@/services/emojiReactionService";
+import { soundEffects } from "@/utils/soundEffects";
 import type { ReactionSummary } from "@/types/emojiReaction";
 import { TermsPopup } from "@/components/TermsPopup";
 import { IssueReportButton } from "@/components/IssueReportButton";
@@ -281,6 +282,28 @@ export default function Index() {
 
   const addNote = async (title: string, content: string, status: StickyNoteStatus, color: string) => {
     try {
+      // Play new note sound immediately
+      soundEffects.playNewNoteSound();
+      
+      // Create a temporary note for immediate UI feedback
+      const tempNote: Note = {
+        id: `temp-${Date.now()}`,
+        title: title || undefined,
+        content,
+        color,
+        status,
+        pinned: false,
+        lastUpdated: Date.now(),
+        created_at: new Date().toISOString(),
+        user_id: '', // Will be filled by the actual response
+      };
+      
+      // Add to UI immediately
+      setNotes(prevNotes => [tempNote, ...prevNotes]);
+      setFilteredNotes(prevNotes => [tempNote, ...prevNotes]);
+      setDialogOpen(false);
+      
+      // Create the actual note in the background
       const newNote = await createNoteService({
         title: title || undefined,
         content,
@@ -290,13 +313,17 @@ export default function Index() {
         lastUpdated: Date.now()
       });
       
-      setNotes(prevNotes => [newNote, ...prevNotes]);
-      setFilteredNotes(prevNotes => [newNote, ...prevNotes]);
+      // Replace the temporary note with the real one
+      setNotes(prevNotes => 
+        prevNotes.map(note => note.id === tempNote.id ? newNote : note)
+      );
+      setFilteredNotes(prevNotes => 
+        prevNotes.map(note => note.id === tempNote.id ? newNote : note)
+      );
       
-      // Load reactions for the new note immediately
+      // Load reactions for the new note
       await loadReactions([newNote]);
       
-      setDialogOpen(false);
       toast.success('Note added successfully!');
       
       // Track note creation event
@@ -330,6 +357,9 @@ export default function Index() {
           borderRadius: '4px',
         },
       });
+      
+      // Reload notes if there was an error
+      await loadNotes();
     }
   };
 
@@ -533,13 +563,22 @@ export default function Index() {
 
   const handleArchive = async (noteId: string) => {
     try {
-      await archiveNote(noteId);
+      // Play archive sound immediately
+      soundEffects.playArchiveSound();
+      
+      // Remove from UI immediately for instant feedback
       setNotes(prevNotes => prevNotes.filter(note => note.id !== noteId));
       setFilteredNotes(prevNotes => prevNotes.filter(note => note.id !== noteId));
+      
+      // Perform the actual archive operation
+      await archiveNote(noteId);
+      
       toast.success('Note archived successfully!');
     } catch (error) {
       console.error('Error archiving note:', error);
       toast.error('Failed to archive note');
+      // Re-add the note to the list if there was an error
+      await loadNotes();
     }
   };
 

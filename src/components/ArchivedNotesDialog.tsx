@@ -8,6 +8,7 @@ import { getReactionsForNote } from "@/services/emojiReactionService";
 import { StickyNote } from "@/components/StickyNote";
 import { NoteDetailDialog } from "@/components/NoteDetailDialog";
 import { updateNote } from "@/services/notesService";
+import { soundEffects } from "@/utils/soundEffects";
 import type { Note } from "@/types/note";
 import type { ReactionSummary } from "@/types/emojiReaction";
 
@@ -65,8 +66,15 @@ export function ArchivedNotesDialog({ open, onOpenChange, onNotesRefresh }: Arch
 
   const handleUnarchive = async (noteId: string) => {
     try {
-      await unarchiveNote(noteId);
+      // Play restore sound immediately
+      soundEffects.playRestoreSound();
+      
+      // Remove from UI immediately for instant feedback
       setArchivedNotes(prev => prev.filter(note => note.id !== noteId));
+      
+      // Perform the actual unarchive operation
+      await unarchiveNote(noteId);
+      
       toast.success('Note unarchived successfully!');
       
       // Refresh the main notes list to show the unarchived note
@@ -76,18 +84,29 @@ export function ArchivedNotesDialog({ open, onOpenChange, onNotesRefresh }: Arch
     } catch (error) {
       console.error('Error unarchiving note:', error);
       toast.error('Failed to unarchive note');
+      // Re-add the note to the list if there was an error
+      await loadArchivedNotes();
     }
   };
 
   const handleDelete = async (noteId: string) => {
     console.log('Delete button clicked for note:', noteId);
     try {
-      await deleteArchivedNote(noteId);
+      // Play delete sound immediately
+      soundEffects.playDeleteSound();
+      
+      // Remove from UI immediately for instant feedback
       setArchivedNotes(prev => prev.filter(note => note.id !== noteId));
+      
+      // Perform the actual delete operation
+      await deleteArchivedNote(noteId);
+      
       toast.success('Archived note deleted permanently!');
     } catch (error) {
       console.error('Error deleting archived note:', error);
       toast.error('Failed to delete archived note');
+      // Re-add the note to the list if there was an error
+      await loadArchivedNotes();
     }
   };
 

@@ -247,6 +247,129 @@ class SoundEffects {
     sparkleOsc.start(currentTime + 1.0);
     sparkleOsc.stop(currentTime + 1.2);
   }
+
+  // Play archive sound (long dramatic swoosh/whoosh effect)
+  playArchiveSound() {
+    if (!this.audioContext) return;
+
+    const ctx = this.audioContext;
+    const currentTime = ctx.currentTime;
+
+    // Create a longer, more dramatic swoosh effect using white noise and frequency sweep
+    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 1.2, ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    
+    // Generate white noise
+    for (let i = 0; i < data.length; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+
+    const noiseSource = ctx.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
+
+    // Create filter for the dramatic swoosh effect
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(3000, currentTime);
+    filter.frequency.exponentialRampToValueAtTime(80, currentTime + 1.2);
+
+    // Create gain envelope with longer duration
+    const gainNode = ctx.createGain();
+    gainNode.gain.setValueAtTime(0, currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.25, currentTime + 0.1);
+    gainNode.gain.linearRampToValueAtTime(0.2, currentTime + 0.3);
+    gainNode.gain.linearRampToValueAtTime(0.15, currentTime + 0.6);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 1.2);
+
+    // Connect the nodes
+    noiseSource.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    // Add a dramatic low-frequency rumble
+    const rumbleOsc = ctx.createOscillator();
+    const rumbleGain = ctx.createGain();
+    rumbleOsc.connect(rumbleGain);
+    rumbleGain.connect(ctx.destination);
+    rumbleOsc.frequency.setValueAtTime(60, currentTime + 0.2); // Very low frequency
+    rumbleOsc.type = 'sine';
+    rumbleGain.gain.setValueAtTime(0, currentTime + 0.2);
+    rumbleGain.gain.linearRampToValueAtTime(0.1, currentTime + 0.3);
+    rumbleGain.gain.linearRampToValueAtTime(0.08, currentTime + 0.8);
+    rumbleGain.gain.exponentialRampToValueAtTime(0.01, currentTime + 1.1);
+
+    // Add a high-frequency sweep at the beginning
+    const sweepOsc = ctx.createOscillator();
+    const sweepGain = ctx.createGain();
+    sweepOsc.connect(sweepGain);
+    sweepGain.connect(ctx.destination);
+    sweepOsc.frequency.setValueAtTime(4000, currentTime);
+    sweepOsc.frequency.exponentialRampToValueAtTime(500, currentTime + 0.4);
+    sweepOsc.type = 'sawtooth';
+    sweepGain.gain.setValueAtTime(0, currentTime);
+    sweepGain.gain.linearRampToValueAtTime(0.15, currentTime + 0.05);
+    sweepGain.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.4);
+
+    // Start all sounds
+    noiseSource.start(currentTime);
+    noiseSource.stop(currentTime + 1.2);
+    rumbleOsc.start(currentTime + 0.2);
+    rumbleOsc.stop(currentTime + 1.1);
+    sweepOsc.start(currentTime);
+    sweepOsc.stop(currentTime + 0.4);
+  }
+
+  // Play restore sound (reverse swoosh with uplifting tone)
+  playRestoreSound() {
+    if (!this.audioContext) return;
+
+    const ctx = this.audioContext;
+    const currentTime = ctx.currentTime;
+
+    // Create an uplifting sequence for restore
+    const notes = [
+      { freq: 440.00, time: 0, duration: 0.1 },      // A4
+      { freq: 523.25, time: 0.08, duration: 0.1 },   // C5
+      { freq: 659.25, time: 0.16, duration: 0.15 },  // E5
+      { freq: 783.99, time: 0.25, duration: 0.2 },   // G5
+    ];
+
+    notes.forEach(({ freq, time, duration }) => {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      oscillator.frequency.setValueAtTime(freq, currentTime + time);
+      oscillator.type = 'triangle';
+
+      // Envelope for each note
+      gainNode.gain.setValueAtTime(0, currentTime + time);
+      gainNode.gain.linearRampToValueAtTime(0.15, currentTime + time + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + time + duration);
+
+      oscillator.start(currentTime + time);
+      oscillator.stop(currentTime + time + duration);
+    });
+
+    // Add a gentle sweep effect
+    const sweepOsc = ctx.createOscillator();
+    const sweepGain = ctx.createGain();
+    sweepOsc.connect(sweepGain);
+    sweepGain.connect(ctx.destination);
+    
+    sweepOsc.frequency.setValueAtTime(200, currentTime);
+    sweepOsc.frequency.exponentialRampToValueAtTime(800, currentTime + 0.4);
+    sweepOsc.type = 'sine';
+    
+    sweepGain.gain.setValueAtTime(0, currentTime);
+    sweepGain.gain.linearRampToValueAtTime(0.1, currentTime + 0.05);
+    sweepGain.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.4);
+    
+    sweepOsc.start(currentTime);
+    sweepOsc.stop(currentTime + 0.4);
+  }
 }
 
 // Export singleton instance
