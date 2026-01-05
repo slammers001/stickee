@@ -1,49 +1,23 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect } from "react";
 
 // Grid-only mode - list view deprecated
-type ViewMode = "grid";
-
 interface ViewModeContextType {
-  viewMode: ViewMode;
-  setViewMode: (mode: ViewMode) => void;
+  viewMode: "grid";
 }
 
 const ViewModeContext = createContext<ViewModeContextType | undefined>(undefined);
 
 export function ViewModeProvider({ children }: { children: React.ReactNode }) {
-  const [viewMode, setViewModeState] = useState<ViewMode>("grid");
-
-  const setViewMode = (mode: ViewMode) => {
-    setViewModeState(mode);
-    localStorage.setItem("stickee-default-view", mode);
-  };
+  // Always grid view - list view deprecated
+  const viewMode = "grid";
 
   useEffect(() => {
-    const savedView = localStorage.getItem("stickee-default-view") as ViewMode;
-    if (savedView && savedView === "grid") {
-      setViewModeState(savedView);
-    } else {
-      // Default to grid view for all users
-      setViewModeState("grid");
-      localStorage.setItem("stickee-default-view", "grid");
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "stickee-default-view" && e.newValue === "grid") {
-        setViewModeState(e.newValue as ViewMode);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
+    // Ensure localStorage is set to grid view for backward compatibility
+    localStorage.setItem("stickee-default-view", "grid");
   }, []);
 
   return (
-    <ViewModeContext.Provider value={{ viewMode, setViewMode }}>
+    <ViewModeContext.Provider value={{ viewMode }}>
       {children}
     </ViewModeContext.Provider>
   );

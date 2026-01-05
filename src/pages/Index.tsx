@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { CheckSquare, Trash2, Settings, Plus, AlertCircle, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -28,13 +28,11 @@ import { cn } from "@/lib/utils";
 import type { Note } from "@/types/note";
 import type { StickyNoteStatus } from "@/types/note";
 import { analytics, AnalyticsEvents } from "@/utils/analytics";
-
-// Lazy load non-critical components
-const NoteDetailDialog = lazy(() => import("@/components/NoteDetailDialog").then(module => ({ default: module.NoteDetailDialog })));
-const SettingsDialog = lazy(() => import("@/components/SettingsDialog").then(module => ({ default: module.SettingsDialog })));
-const Checklist = lazy(() => import("@/components/Checklist").then(module => ({ default: module.Checklist })));
-const StickyNoteWindow = lazy(() => import("@/components/StickyNoteWindow").then(module => ({ default: module.StickyNoteWindow })));
-const ArchivedNotesDialog = lazy(() => import("@/components/ArchivedNotesDialog").then(module => ({ default: module.ArchivedNotesDialog })));
+import { SettingsDialog } from "@/components/SettingsDialog";
+import { NoteDetailDialog } from "@/components/NoteDetailDialog";
+import { Checklist } from "@/components/Checklist";
+import { StickyNoteWindow } from "@/components/StickyNoteWindow";
+import { ArchivedNotesDialog } from "@/components/ArchivedNotesDialog";
 
 // Using the Note interface from types/note.ts
 
@@ -852,32 +850,26 @@ export default function Index() {
       )}
 
       {/* Settings Dialog */}
-      <Suspense fallback={<div>Loading...</div>}>
-        <SettingsDialog 
-          open={settingsOpen} 
-          onOpenChange={setSettingsOpen}
-        />
-      </Suspense>
+      <SettingsDialog 
+        open={settingsOpen} 
+        onOpenChange={setSettingsOpen}
+      />
       
-      <Suspense fallback={<div>Loading...</div>}>
-        <StickyNoteWindow
-          isOpen={stickyNoteWindowOpen}
-          onClose={handleQuickNote}
-        />
-      </Suspense>
+      <StickyNoteWindow
+        isOpen={stickyNoteWindowOpen}
+        onClose={handleQuickNote}
+      />
 
       {/* Checklist */}
-      <Suspense fallback={<div>Loading...</div>}>
-        <Checklist
-          items={checklistItems}
-          isOpen={isChecklistOpen}
-          onAdd={addChecklistItem}
-          onToggle={toggleChecklistItem}
-          onUpdate={updateChecklistItem}
-          onDelete={deleteChecklistItem}
-          onToggleOpen={toggleChecklist}
-        />
-      </Suspense>
+      <Checklist
+        items={checklistItems}
+        isOpen={isChecklistOpen}
+        onAdd={addChecklistItem}
+        onToggle={toggleChecklistItem}
+        onUpdate={updateChecklistItem}
+        onDelete={deleteChecklistItem}
+        onToggleOpen={toggleChecklist}
+      />
 
       {/* Mass Delete Dialog */}
       <MassDeleteDialog

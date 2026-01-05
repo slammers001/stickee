@@ -253,8 +253,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         setFontMode(savedFontMode);
       }
       
-      // View mode is deprecated - always use grid view
-      localStorage.setItem("stickee-default-view", "grid");
     };
     
     loadFontSettings();
