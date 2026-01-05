@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Stickee",
   "version": "1.3.0",
-  "identifier": "com.stickee.app",
+  "identifier": "xyz.simicodes.stickee",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:8080",
