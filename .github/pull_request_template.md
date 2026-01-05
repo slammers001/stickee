@@ -90,7 +90,11 @@ For example, if on v0.0.4 and you add a new feature, it becomes v0.1.0. If you d
 ### Dependencies
 - [ ] No new warnings or errors are introduced
 
-### Running
+### Notes
+*Any additional notes?*
+
+### Running for Desktop
+*If this is primarily for the web version, there's no need to test it out*
 - [ ] I ran npm run tauri:build and it worked with a downloadable .exe file
 - [ ] I ran the .exe file to make sure the app works the way I expected it to
 - [ ] If it didn't, I fixed the errors and rebuilt to make sure it works
