@@ -247,6 +247,117 @@ class SoundEffects {
     sparkleOsc.start(currentTime + 1.0);
     sparkleOsc.stop(currentTime + 1.2);
   }
+
+  // Play archive sound (gentle descending melody)
+  playArchiveSound() {
+    if (!this.audioContext) return;
+
+    const ctx = this.audioContext;
+    const currentTime = ctx.currentTime;
+
+    // Create a gentle, pleasant descending melody for archiving
+    const notes = [
+      { freq: 523.25, time: 0, duration: 0.15 },     // C5
+      { freq: 440.00, time: 0.12, duration: 0.15 },   // A4
+      { freq: 392.00, time: 0.24, duration: 0.2 },    // G4
+      { freq: 349.23, time: 0.36, duration: 0.2 },    // F4
+      { freq: 329.63, time: 0.48, duration: 0.25 },   // E4
+    ];
+
+    notes.forEach(({ freq, time, duration }) => {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      oscillator.frequency.setValueAtTime(freq, currentTime + time);
+      oscillator.type = 'sine';
+
+      // Louder envelope for each note
+      gainNode.gain.setValueAtTime(0, currentTime + time);
+      gainNode.gain.linearRampToValueAtTime(0.4, currentTime + time + 0.01); // Increased from 0.2
+      gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + time + duration);
+
+      oscillator.start(currentTime + time);
+      oscillator.stop(currentTime + time + duration);
+    });
+
+    // Add a soft chord at the end for completion
+    const chordOsc1 = ctx.createOscillator();
+    const chordOsc2 = ctx.createOscillator();
+    const chordGain = ctx.createGain();
+    
+    chordOsc1.connect(chordGain);
+    chordOsc2.connect(chordGain);
+    chordGain.connect(ctx.destination);
+    
+    chordOsc1.frequency.setValueAtTime(261.63, currentTime + 0.7); // C4
+    chordOsc2.frequency.setValueAtTime(329.63, currentTime + 0.7); // E4
+    chordOsc1.type = 'sine';
+    chordOsc2.type = 'sine';
+    
+    chordGain.gain.setValueAtTime(0, currentTime + 0.7);
+    chordGain.gain.linearRampToValueAtTime(0.16, currentTime + 0.71); // Increased from 0.08
+    chordGain.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.9);
+    
+    chordOsc1.start(currentTime + 0.7);
+    chordOsc2.start(currentTime + 0.7);
+    chordOsc1.stop(currentTime + 0.9);
+    chordOsc2.stop(currentTime + 0.9);
+  }
+
+  // Play restore sound (reverse swoosh with uplifting tone)
+  playRestoreSound() {
+    if (!this.audioContext) return;
+
+    const ctx = this.audioContext;
+    const currentTime = ctx.currentTime;
+
+    // Create an uplifting sequence for restore
+    const notes = [
+      { freq: 440.00, time: 0, duration: 0.1 },      // A4
+      { freq: 523.25, time: 0.08, duration: 0.1 },   // C5
+      { freq: 659.25, time: 0.16, duration: 0.15 },  // E5
+      { freq: 783.99, time: 0.25, duration: 0.2 },   // G5
+    ];
+
+    notes.forEach(({ freq, time, duration }) => {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      oscillator.frequency.setValueAtTime(freq, currentTime + time);
+      oscillator.type = 'triangle';
+
+      // Envelope for each note
+      gainNode.gain.setValueAtTime(0, currentTime + time);
+      gainNode.gain.linearRampToValueAtTime(0.15, currentTime + time + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + time + duration);
+
+      oscillator.start(currentTime + time);
+      oscillator.stop(currentTime + time + duration);
+    });
+
+    // Add a gentle sweep effect
+    const sweepOsc = ctx.createOscillator();
+    const sweepGain = ctx.createGain();
+    sweepOsc.connect(sweepGain);
+    sweepGain.connect(ctx.destination);
+    
+    sweepOsc.frequency.setValueAtTime(200, currentTime);
+    sweepOsc.frequency.exponentialRampToValueAtTime(800, currentTime + 0.4);
+    sweepOsc.type = 'sine';
+    
+    sweepGain.gain.setValueAtTime(0, currentTime);
+    sweepGain.gain.linearRampToValueAtTime(0.1, currentTime + 0.05);
+    sweepGain.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.4);
+    
+    sweepOsc.start(currentTime);
+    sweepOsc.stop(currentTime + 0.4);
+  }
 }
 
 // Export singleton instance

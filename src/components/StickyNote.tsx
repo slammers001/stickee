@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Pin, Smile, CheckSquare } from "lucide-react";
+import { Pin, Smile, CheckSquare, Archive } from "lucide-react";
 import { EmojiPicker } from "./EmojiPicker";
 import { ReactionSummary } from "@/types/emojiReaction";
 import { toggleReaction } from "@/services/emojiReactionService";
@@ -24,6 +24,7 @@ interface StickyNoteProps {
   reactions?: ReactionSummary[];
   onClick: () => void;
   onTogglePin: () => void;
+  onArchive?: () => void;
   onReactionUpdate?: (reactions: ReactionSummary[]) => void;
   onToggleSelect?: () => void;
   isSelected?: boolean;
@@ -60,6 +61,7 @@ export const StickyNote = memo(({
   reactions = [], 
   onClick, 
   onTogglePin,
+  onArchive,
   onReactionUpdate,
   onToggleSelect,
   isSelected = false,
@@ -225,6 +227,23 @@ export const StickyNote = memo(({
         >
           <Pin size={16} fill={pinned ? "currentColor" : "none"} />
         </button>
+
+        {/* Archive Button */}
+        {onArchive && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onArchive();
+            }}
+            className={cn(
+              "absolute top-3 right-12 w-6 h-6 rounded-full transition-all flex items-center justify-center",
+              "hover:bg-foreground/5 active:scale-90 text-foreground/40 hover:text-foreground/70"
+            )}
+            aria-label="Archive note"
+          >
+            <Archive size={16} />
+          </button>
+        )}
       </Card>
 
       {/* Emoji Picker */}

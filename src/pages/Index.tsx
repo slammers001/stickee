@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { CheckSquare, Trash2, Pin, Settings, Plus, AlertCircle } from "lucide-react";
+import { CheckSquare, Trash2, Pin, Settings, Plus, AlertCircle, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -11,8 +11,10 @@ import {
   updateNotePinStatus as updateNotePinStatusService,
   reorderNotes as reorderNotesService
 } from "@/services/notesService";
+import { archiveNote } from "@/services/archiveService";
 import { ensureUserExists, updateUserVersion } from "@/services/userService";
 import { getReactionsForNote } from "@/services/emojiReactionService";
+import { soundEffects } from "@/utils/soundEffects";
 import type { ReactionSummary } from "@/types/emojiReaction";
 import { TermsPopup } from "@/components/TermsPopup";
 import { IssueReportButton } from "@/components/IssueReportButton";
@@ -35,6 +37,7 @@ const NoteDetailDialog = lazy(() => import("@/components/NoteDetailDialog").then
 const SettingsDialog = lazy(() => import("@/components/SettingsDialog").then(module => ({ default: module.SettingsDialog })));
 const Checklist = lazy(() => import("@/components/Checklist").then(module => ({ default: module.Checklist })));
 const StickyNoteWindow = lazy(() => import("@/components/StickyNoteWindow").then(module => ({ default: module.StickyNoteWindow })));
+const ArchivedNotesDialog = lazy(() => import("@/components/ArchivedNotesDialog").then(module => ({ default: module.ArchivedNotesDialog })));
 
 // Using the Note interface from types/note.ts
 
@@ -64,6 +67,7 @@ export default function Index() {
   const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [noteReactions, setNoteReactions] = useState<Record<string, ReactionSummary[]>>({});
   const [showMassDeleteDialog, setShowMassDeleteDialog] = useState(false);
+  const [archivedNotesDialogOpen, setArchivedNotesDialogOpen] = useState(false);
   
   // Checklist state and handlers
   const {
@@ -221,29 +225,30 @@ export default function Index() {
     }));
   };
 
+  // Load notes function
+  const loadNotes = async () => {
+    try {
+      setLoading(true);
+      // Ensure user exists and update version
+      await ensureUserExists();
+      await updateUserVersion();
+      
+      const loadedNotes = await fetchNotes();
+      setNotes(loadedNotes);
+      setFilteredNotes(loadedNotes);
+      
+      // Load reactions after notes are loaded
+      await loadReactions(loadedNotes);
+    } catch (error) {
+      console.error('Error loading notes:', error);
+      toast.error('Failed to load notes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Load notes on component mount
   useEffect(() => {
-    const loadNotes = async () => {
-      try {
-        setLoading(true);
-        // Ensure user exists and update version
-        await ensureUserExists();
-        await updateUserVersion();
-        
-        const loadedNotes = await fetchNotes();
-        setNotes(loadedNotes);
-        setFilteredNotes(loadedNotes);
-        
-        // Load reactions after notes are loaded
-        await loadReactions(loadedNotes);
-      } catch (error) {
-        console.error('Error loading notes:', error);
-        toast.error('Failed to load notes');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadNotes();
   }, []);
 
@@ -277,6 +282,30 @@ export default function Index() {
 
   const addNote = async (title: string, content: string, status: StickyNoteStatus, color: string) => {
     try {
+      // Play new note sound immediately
+      soundEffects.playNewNoteSound();
+      
+      // Create a temporary note for immediate UI feedback
+      const tempId = `temp-${Date.now()}-${Math.random()}`;
+      const tempNote: Note = {
+        id: tempId,
+        title: title || undefined,
+        content,
+        color,
+        status,
+        pinned: false,
+        lastUpdated: Date.now(),
+        created_at: new Date().toISOString(),
+        user_id: '', // Will be filled by the actual response
+        isTemp: true // Mark as temporary
+      };
+      
+      // Add to UI immediately
+      setNotes(prevNotes => [tempNote, ...prevNotes]);
+      setFilteredNotes(prevNotes => [tempNote, ...prevNotes]);
+      setDialogOpen(false);
+      
+      // Create the actual note in the background
       const newNote = await createNoteService({
         title: title || undefined,
         content,
@@ -286,13 +315,21 @@ export default function Index() {
         lastUpdated: Date.now()
       });
       
-      setNotes(prevNotes => [newNote, ...prevNotes]);
-      setFilteredNotes(prevNotes => [newNote, ...prevNotes]);
+      // Replace the temporary note with the real one
+      setNotes(prevNotes => 
+        prevNotes.map(note => 
+          note.id === tempId ? { ...newNote, isTemp: false } : note
+        )
+      );
+      setFilteredNotes(prevNotes => 
+        prevNotes.map(note => 
+          note.id === tempId ? { ...newNote, isTemp: false } : note
+        )
+      );
       
-      // Load reactions for the new note immediately
+      // Load reactions for the new note
       await loadReactions([newNote]);
       
-      setDialogOpen(false);
       toast.success('Note added successfully!');
       
       // Track note creation event
@@ -326,6 +363,9 @@ export default function Index() {
           borderRadius: '4px',
         },
       });
+      
+      // Reload notes if there was an error
+      await loadNotes();
     }
   };
 
@@ -527,6 +567,27 @@ export default function Index() {
     }
   };
 
+  const handleArchive = async (noteId: string) => {
+    try {
+      // Play archive sound immediately
+      soundEffects.playArchiveSound();
+      
+      // Remove from UI immediately for instant feedback
+      setNotes(prevNotes => prevNotes.filter(note => note.id !== noteId));
+      setFilteredNotes(prevNotes => prevNotes.filter(note => note.id !== noteId));
+      
+      // Perform the actual archive operation
+      await archiveNote(noteId);
+      
+      toast.success('Note archived successfully!');
+    } catch (error) {
+      console.error('Error archiving note:', error);
+      toast.error('Failed to archive note');
+      // Re-add the note to the list if there was an error
+      await loadNotes();
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -609,6 +670,19 @@ export default function Index() {
                     )}
                   </Button>
                 </>
+              )}
+
+              {/* Archive Button - Desktop only, shown when no notes are selected */}
+              {selectedNotes.size === 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setArchivedNotesDialogOpen(true)}
+                  className="hidden md:flex"
+                >
+                  <Archive className="h-4 w-4 mr-2" />
+                  Archived Notes
+                </Button>
               )}
               
               {/* Mass Delete Button - appears when notes are selected */}
@@ -713,6 +787,7 @@ export default function Index() {
                 onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
                 onClick={() => handleNoteClick(note)}
                 onTogglePin={() => togglePin(note.id)}
+                onArchive={() => handleArchive(note.id)}
                 onToggleSelect={() => handleToggleSelect(note.id)}
                 isSelected={selectedNotes.has(note.id)}
                 showSelectionCheckbox={selectedNotes.size > 0}
@@ -747,6 +822,7 @@ export default function Index() {
                   onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
                   onClick={() => handleNoteClick(note)}
                   onTogglePin={() => togglePin(note.id)}
+                  onArchive={() => handleArchive(note.id)}
                   onToggleSelect={() => handleToggleSelect(note.id)}
                   isSelected={selectedNotes.has(note.id)}
                   showSelectionCheckbox={selectedNotes.size > 0}
@@ -783,6 +859,7 @@ export default function Index() {
                   reactions={noteReactions[note.id] || []}
                   onClick={() => handleNoteClick(note)}
                   onTogglePin={() => togglePin(note.id)}
+                  onArchive={() => handleArchive(note.id)}
                   onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
                   onToggleSelect={() => handleToggleSelect(note.id)}
                   isSelected={selectedNotes.has(note.id)}
@@ -949,9 +1026,18 @@ export default function Index() {
         onOpenChange={setIssueDialogOpen}
       />
 
+      {/* Archived Notes Dialog */}
+      <Suspense fallback={<div>Loading...</div>}>
+        <ArchivedNotesDialog
+          open={archivedNotesDialogOpen}
+          onOpenChange={setArchivedNotesDialogOpen}
+          onNotesRefresh={loadNotes}
+        />
+      </Suspense>
+
       {/* Version Display */}
       <div className="fixed bottom-4 left-4 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded shadow-sm" style={{ fontFamily: 'var(--font-family-handwriting)' }}>
-        Version 1.2.0
+        Version 1.3.0
       </div>
     </div>
   );

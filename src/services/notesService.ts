@@ -20,11 +20,13 @@ const mapSupabaseNote = (note: any): Note => {
     pinned: Boolean(note.pinned),
     last_updated: timestamp, // For Supabase compatibility
     created_at: note.created_at || timestamp, // For Supabase compatibility
-    user_id: note.user_id // Include user_id in the returned object
+    user_id: note.user_id, // Include user_id in the returned object
+    archived: Boolean(note.archived), // Include archived status
+    archived_at: note.archived_at // Include archived timestamp
   };
 };
 
-// Get all notes for the current user
+// Get all notes for the current user (excluding archived notes)
 export const getNotes = async (): Promise<Note[]> => {
   try {
     const userId = await getUserId();
@@ -32,6 +34,7 @@ export const getNotes = async (): Promise<Note[]> => {
       .from('notes')
       .select('*')
       .eq('user_id', userId) // Only get notes for current user
+      .eq('archived', false) // Exclude archived notes
       .order('pinned', { ascending: false })
       .order('updated_at', { ascending: false }); // Newest first
 
