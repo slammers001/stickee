@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Heart, Settings, Download } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "next-themes";
-import { useViewMode } from "@/contexts/ViewModeContext";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -26,7 +25,6 @@ type TitleFontFamily = "arbutus" | "agbalumo" | "walter-turncoat" | "yatra-one";
 
 type FontMode = "basic" | "handwriting";
 type ActiveTab = "ui" | "fonts" | "bookmarks" | "titles" | "terms" | "data";
-type ViewMode = "grid" | "list";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -35,7 +33,6 @@ interface SettingsDialogProps {
 
 export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const { theme, setTheme } = useTheme();
-  const { viewMode, setViewMode } = useViewMode();
   const [fontMode, setFontMode] = useState<FontMode>("basic");
   const [fontFamily, setFontFamily] = useState<FontFamily>("indie-flower");
   const [titleFont, setTitleFont] = useState<TitleFontFamily>("arbutus");
@@ -198,7 +195,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         const savedFont = localStorage.getItem("stickee-font-family") as FontFamily;
         const savedTitleFont = localStorage.getItem("stickee-title-font") as TitleFontFamily;
         const savedFontMode = localStorage.getItem("stickee-font-mode") as FontMode;
-        const savedView = localStorage.getItem("stickee-default-view") as ViewMode;
         
         if (savedFontMode) setFontMode(savedFontMode);
         if (savedFont) {
@@ -209,7 +205,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
           setTitleFont(savedTitleFont);
           applyTitleFont(savedTitleFont);
         }
-        if (savedView) setViewMode(savedView);
         return;
       }
       
@@ -258,11 +253,8 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         setFontMode(savedFontMode);
       }
       
-      // Load view settings from localStorage (keep this local)
-      const savedView = localStorage.getItem("stickee-default-view") as ViewMode;
-      if (savedView) {
-        setViewMode(savedView);
-      }
+      // View mode is deprecated - always use grid view
+      localStorage.setItem("stickee-default-view", "grid");
     };
     
     loadFontSettings();
@@ -974,24 +966,6 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
                     <RadioGroupItem value="system" id="system" />
                     <Label htmlFor="system">
                       System
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Default View</h3>
-                <RadioGroup value={viewMode} onValueChange={setViewMode}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="grid" id="grid" />
-                    <Label htmlFor="grid">
-                      Notes (Grid view)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="list" id="list" />
-                    <Label htmlFor="list">
-                      List (Compact view)
                     </Label>
                   </div>
                 </RadioGroup>

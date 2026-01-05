@@ -1,7 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { CheckSquare, Trash2, Pin, Settings, Plus, AlertCircle, Archive } from "lucide-react";
+import { CheckSquare, Trash2, Settings, Plus, AlertCircle, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { 
   getNotes as fetchNotes, 
@@ -19,7 +18,6 @@ import type { ReactionSummary } from "@/types/emojiReaction";
 import { TermsPopup } from "@/components/TermsPopup";
 import { IssueReportButton } from "@/components/IssueReportButton";
 import { IssueReportDialog } from "@/components/IssueReportDialog";
-import { LinkableText } from "@/components/LinkableText";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { SearchBar } from "@/components/SearchBar";
 import { StickyNote } from "@/components/StickyNote";
@@ -27,7 +25,6 @@ import { AddNoteDialog } from "@/components/AddNoteDialog";
 import { MassDeleteDialog } from "@/components/MassDeleteDialog";
 import { useChecklist } from "@/hooks/useChecklist";
 import { cn } from "@/lib/utils";
-import { useViewMode } from "@/contexts/ViewModeContext";
 import type { Note } from "@/types/note";
 import type { StickyNoteStatus } from "@/types/note";
 import { analytics, AnalyticsEvents } from "@/utils/analytics";
@@ -41,15 +38,7 @@ const ArchivedNotesDialog = lazy(() => import("@/components/ArchivedNotesDialog"
 
 // Using the Note interface from types/note.ts
 
-const statusColors: Record<StickyNoteStatus, string> = {
-  "To-Do": "bg-red-100 text-red-800 border-red-200",
-  "Doing": "bg-blue-100 text-blue-800 border-blue-200",
-  "Done": "bg-green-100 text-green-800 border-green-200",
-  "Backlog": "bg-gray-100 text-gray-800 border-gray-200",
-};
-
 export default function Index() {
-  const { viewMode, setViewMode } = useViewMode();
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
@@ -771,7 +760,7 @@ export default function Index() {
               }
             </p>
           </div>
-        ) : viewMode === "grid" ? (
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
             {/* Pinned notes - not draggable */}
             {pinnedNotes.map((note) => (
@@ -829,128 +818,6 @@ export default function Index() {
                 />
               </div>
             ))}
-          </div>
-        ) : (
-          <div className="max-w-4xl mx-auto space-y-4">
-            {/* Pinned notes - not draggable */}
-            {pinnedNotes.map((note) => {
-              const colorMap: Record<string, string> = {
-                yellow: "border-l-[hsl(var(--note-yellow))]",
-                pink: "border-l-[hsl(var(--note-pink))]",
-                blue: "border-l-[hsl(var(--note-blue))]",
-                green: "border-l-[hsl(var(--note-green))]",
-                purple: "border-l-[hsl(var(--note-purple))]",
-                orange: "border-l-[hsl(var(--note-orange))]",
-                teal: "border-l-[hsl(var(--note-teal))]",
-                lavender: "border-l-[hsl(var(--note-lavender))]",
-                peach: "border-l-[hsl(var(--note-peach))]",
-                mint: "border-l-[hsl(var(--note-mint))]",
-              };
-              
-              return (
-                <StickyNote
-                  key={note.id}
-                  id={note.id}
-                  title={note.title}
-                  content={note.content}
-                  color={note.color}
-                  status={note.status}
-                  pinned={note.pinned}
-                  reactions={noteReactions[note.id] || []}
-                  onClick={() => handleNoteClick(note)}
-                  onTogglePin={() => togglePin(note.id)}
-                  onArchive={() => handleArchive(note.id)}
-                  onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
-                  onToggleSelect={() => handleToggleSelect(note.id)}
-                  isSelected={selectedNotes.has(note.id)}
-                  showSelectionCheckbox={selectedNotes.size > 0}
-                />
-              );
-            })}
-            {/* Unpinned notes - draggable */}
-            {unpinnedNotes.map((note, index) => {
-              const colorMap: Record<string, string> = {
-                yellow: "border-l-[hsl(var(--note-yellow))]",
-                pink: "border-l-[hsl(var(--note-pink))]",
-                blue: "border-l-[hsl(var(--note-blue))]",
-                green: "border-l-[hsl(var(--note-green))]",
-                purple: "border-l-[hsl(var(--note-purple))]",
-                orange: "border-l-[hsl(var(--note-orange))]",
-                teal: "border-l-[hsl(var(--note-teal))]",
-                lavender: "border-l-[hsl(var(--note-lavender))]",
-                peach: "border-l-[hsl(var(--note-peach))]",
-                mint: "border-l-[hsl(var(--note-mint))]",
-              };
-              
-              return (
-                <div key={note.id} className="relative min-h-[120px]">
-                  {/* Drop indicator line */}
-                  {dragOverIndex === index && (
-                    <div className="absolute -top-2 left-0 right-0 h-2 bg-primary rounded-full transition-all duration-200 z-20 shadow-lg" />
-                  )}
-                  <div
-                    onMouseDown={(e) => handleMouseDown(e, index, note.id)}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={() => handleMouseUp(index)}
-                    onMouseOver={() => handleMouseOver(index)}
-                    onMouseLeave={handleMouseLeave}
-                    className={cn(
-                      "p-4 bg-card border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-move relative z-10 min-h-[120px]",
-                      colorMap[note.color],
-                      draggedItem?.index === index ? "opacity-50 scale-95" : "hover:scale-[1.01]",
-                      selectedNotes.has(note.id) && "ring-2 ring-primary ring-offset-2"
-                    )}
-                    onClick={() => handleNoteClick(note)}
-                  >
-                    {/* Selection Checkbox for List View */}
-                    {selectedNotes.size > 0 && (
-                      <div 
-                        className="absolute top-2 right-2 z-30"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleSelect(note.id);
-                        }}
-                      >
-                        <div className={cn(
-                          "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer",
-                          selectedNotes.has(note.id)
-                            ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90" 
-                            : "border-border hover:border-primary/50 bg-background"
-                        )}>
-                          {selectedNotes.has(note.id) && <CheckSquare className="w-3 h-3" />}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Pin indicator */}
-                    {note.pinned && (
-                      <div className="absolute top-2 left-2 z-20">
-                        <Pin className="w-4 h-4 text-primary" />
-                      </div>
-                    )}
-                    
-                    {/* Note content */}
-                    <div className="pr-8">
-                      {note.title && (
-                        <h3 className="font-semibold text-lg mb-2 font-handwriting text-foreground">
-                          {note.title}
-                        </h3>
-                      )}
-                      <div className="text-sm text-foreground/90 whitespace-pre-wrap break-words">
-                        <LinkableText text={note.content} />
-                      </div>
-                    </div>
-                    
-                    {/* Status badge */}
-                    <div className="absolute bottom-2 right-2 z-20">
-                      <Badge className={statusColors[note.status]}>
-                        {note.status}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         )}
       </main>

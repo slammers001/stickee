@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-type ViewMode = "grid" | "list";
+// Grid-only mode - list view deprecated
+type ViewMode = "grid";
 
 interface ViewModeContextType {
   viewMode: ViewMode;
@@ -19,14 +20,18 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const savedView = localStorage.getItem("stickee-default-view") as ViewMode;
-    if (savedView) {
+    if (savedView && savedView === "grid") {
       setViewModeState(savedView);
+    } else {
+      // Default to grid view for all users
+      setViewModeState("grid");
+      localStorage.setItem("stickee-default-view", "grid");
     }
   }, []);
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "stickee-default-view" && e.newValue) {
+      if (e.key === "stickee-default-view" && e.newValue === "grid") {
         setViewModeState(e.newValue as ViewMode);
       }
     };
