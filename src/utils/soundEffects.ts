@@ -274,9 +274,9 @@ class SoundEffects {
       oscillator.frequency.setValueAtTime(freq, currentTime + time);
       oscillator.type = 'sine';
 
-      // Gentle envelope for each note
+      // Louder envelope for each note
       gainNode.gain.setValueAtTime(0, currentTime + time);
-      gainNode.gain.linearRampToValueAtTime(0.2, currentTime + time + 0.01);
+      gainNode.gain.linearRampToValueAtTime(0.4, currentTime + time + 0.01); // Increased from 0.2
       gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + time + duration);
 
       oscillator.start(currentTime + time);
@@ -298,7 +298,7 @@ class SoundEffects {
     chordOsc2.type = 'sine';
     
     chordGain.gain.setValueAtTime(0, currentTime + 0.7);
-    chordGain.gain.linearRampToValueAtTime(0.08, currentTime + 0.71);
+    chordGain.gain.linearRampToValueAtTime(0.16, currentTime + 0.71); // Increased from 0.08
     chordGain.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.9);
     
     chordOsc1.start(currentTime + 0.7);
