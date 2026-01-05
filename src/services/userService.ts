@@ -11,8 +11,43 @@ export const getUserId = async (): Promise<string> => {
   let userId = localStorage.getItem(USER_ID_KEY);
   if (!userId) {
     console.log('No user ID found, creating new one');
-    userId = 'guest_' + Date.now();
+    // Generate a proper UUID instead of timestamp-based string
+    userId = crypto.randomUUID();
     localStorage.setItem(USER_ID_KEY, userId);
+  } else if (userId.startsWith('guest_')) {
+    // Migrate old guest_ format IDs to proper UUIDs
+    console.log('Migrating old guest ID to UUID:', userId);
+    const newUserId = crypto.randomUUID();
+    
+    // Try to migrate the user in the database
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ id: newUserId })
+        .eq('id', userId);
+      
+      if (error && !error.message.includes('duplicate key')) {
+        console.error('Error migrating user ID:', error);
+        // If migration fails, still use the new UUID for new operations
+        // but keep the old one for reference
+      }
+      
+      // Also try to migrate notes
+      const { error: notesError } = await supabase
+        .from('notes')
+        .update({ user_id: newUserId })
+        .eq('user_id', userId);
+      
+      if (notesError) {
+        console.error('Error migrating notes user_id:', notesError);
+      }
+    } catch (error) {
+      console.error('Error during user migration:', error);
+    }
+    
+    // Update localStorage with new UUID
+    localStorage.setItem(USER_ID_KEY, newUserId);
+    userId = newUserId;
   }
   
   console.log('Using user ID from public.users system:', userId);
