@@ -248,75 +248,63 @@ class SoundEffects {
     sparkleOsc.stop(currentTime + 1.2);
   }
 
-  // Play archive sound (long dramatic swoosh/whoosh effect)
+  // Play archive sound (gentle descending melody)
   playArchiveSound() {
     if (!this.audioContext) return;
 
     const ctx = this.audioContext;
     const currentTime = ctx.currentTime;
 
-    // Create a longer, more dramatic swoosh effect using white noise and frequency sweep
-    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 1.2, ctx.sampleRate);
-    const data = noiseBuffer.getChannelData(0);
+    // Create a gentle, pleasant descending melody for archiving
+    const notes = [
+      { freq: 523.25, time: 0, duration: 0.15 },     // C5
+      { freq: 440.00, time: 0.12, duration: 0.15 },   // A4
+      { freq: 392.00, time: 0.24, duration: 0.2 },    // G4
+      { freq: 349.23, time: 0.36, duration: 0.2 },    // F4
+      { freq: 329.63, time: 0.48, duration: 0.25 },   // E4
+    ];
+
+    notes.forEach(({ freq, time, duration }) => {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      oscillator.frequency.setValueAtTime(freq, currentTime + time);
+      oscillator.type = 'sine';
+
+      // Gentle envelope for each note
+      gainNode.gain.setValueAtTime(0, currentTime + time);
+      gainNode.gain.linearRampToValueAtTime(0.2, currentTime + time + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + time + duration);
+
+      oscillator.start(currentTime + time);
+      oscillator.stop(currentTime + time + duration);
+    });
+
+    // Add a soft chord at the end for completion
+    const chordOsc1 = ctx.createOscillator();
+    const chordOsc2 = ctx.createOscillator();
+    const chordGain = ctx.createGain();
     
-    // Generate white noise
-    for (let i = 0; i < data.length; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
-
-    const noiseSource = ctx.createBufferSource();
-    noiseSource.buffer = noiseBuffer;
-
-    // Create filter for the dramatic swoosh effect
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(3000, currentTime);
-    filter.frequency.exponentialRampToValueAtTime(80, currentTime + 1.2);
-
-    // Create gain envelope with longer duration
-    const gainNode = ctx.createGain();
-    gainNode.gain.setValueAtTime(0, currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.25, currentTime + 0.1);
-    gainNode.gain.linearRampToValueAtTime(0.2, currentTime + 0.3);
-    gainNode.gain.linearRampToValueAtTime(0.15, currentTime + 0.6);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 1.2);
-
-    // Connect the nodes
-    noiseSource.connect(filter);
-    filter.connect(gainNode);
-    gainNode.connect(ctx.destination);
-
-    // Add a dramatic low-frequency rumble
-    const rumbleOsc = ctx.createOscillator();
-    const rumbleGain = ctx.createGain();
-    rumbleOsc.connect(rumbleGain);
-    rumbleGain.connect(ctx.destination);
-    rumbleOsc.frequency.setValueAtTime(60, currentTime + 0.2); // Very low frequency
-    rumbleOsc.type = 'sine';
-    rumbleGain.gain.setValueAtTime(0, currentTime + 0.2);
-    rumbleGain.gain.linearRampToValueAtTime(0.1, currentTime + 0.3);
-    rumbleGain.gain.linearRampToValueAtTime(0.08, currentTime + 0.8);
-    rumbleGain.gain.exponentialRampToValueAtTime(0.01, currentTime + 1.1);
-
-    // Add a high-frequency sweep at the beginning
-    const sweepOsc = ctx.createOscillator();
-    const sweepGain = ctx.createGain();
-    sweepOsc.connect(sweepGain);
-    sweepGain.connect(ctx.destination);
-    sweepOsc.frequency.setValueAtTime(4000, currentTime);
-    sweepOsc.frequency.exponentialRampToValueAtTime(500, currentTime + 0.4);
-    sweepOsc.type = 'sawtooth';
-    sweepGain.gain.setValueAtTime(0, currentTime);
-    sweepGain.gain.linearRampToValueAtTime(0.15, currentTime + 0.05);
-    sweepGain.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.4);
-
-    // Start all sounds
-    noiseSource.start(currentTime);
-    noiseSource.stop(currentTime + 1.2);
-    rumbleOsc.start(currentTime + 0.2);
-    rumbleOsc.stop(currentTime + 1.1);
-    sweepOsc.start(currentTime);
-    sweepOsc.stop(currentTime + 0.4);
+    chordOsc1.connect(chordGain);
+    chordOsc2.connect(chordGain);
+    chordGain.connect(ctx.destination);
+    
+    chordOsc1.frequency.setValueAtTime(261.63, currentTime + 0.7); // C4
+    chordOsc2.frequency.setValueAtTime(329.63, currentTime + 0.7); // E4
+    chordOsc1.type = 'sine';
+    chordOsc2.type = 'sine';
+    
+    chordGain.gain.setValueAtTime(0, currentTime + 0.7);
+    chordGain.gain.linearRampToValueAtTime(0.08, currentTime + 0.71);
+    chordGain.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.9);
+    
+    chordOsc1.start(currentTime + 0.7);
+    chordOsc2.start(currentTime + 0.7);
+    chordOsc1.stop(currentTime + 0.9);
+    chordOsc2.stop(currentTime + 0.9);
   }
 
   // Play restore sound (reverse swoosh with uplifting tone)
