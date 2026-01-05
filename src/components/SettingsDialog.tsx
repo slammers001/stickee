@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { getFontSettings, saveFontSettings, updateCurrentFont, updateTitleFont, updateFavoriteFonts } from "@/services/fontSettingsService";
-import { ensureUserExists } from "@/services/userService";
+import { ensureUserExists, updateUserVersion } from "@/services/userService";
 import { exportUserData, downloadExportFile, importUserData, validateImportFile } from "@/services/exportService";
+import { TermsOfService } from "@/components/TermsOfService";
 
 type FontFamily = "serif" | "sans-serif" | "monospace" | 
   "abeezee" | "aclonica" | "advent-pro" | "anonymous-pro" | "tenali-ramakrishna" | "truculenta" | "ubuntu-sans-mono" | "unbounded" | "nova-mono" | "orbitron" | "bahianita" | "syne-mono" | "vt323" | "xanh-mono" | "cutive-mono" | "arbutus-slab" | "nixie-one" | "noticia-text" | "arvo" | "oi" | "oldenburg" | "orelega-one" | "nova-oval" | "atma" | "butcherman" | "cherry-bomb-one" |
@@ -41,6 +42,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const [visibleFontCount, setVisibleFontCount] = useState(20); // Lazy loading state
   const [termsContent, setTermsContent] = useState("");
   const [importing, setImporting] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   // Organized font arrays for lazy loading
   const basicFonts: FontFamily[] = [
@@ -892,296 +894,271 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[80vh]">
-        <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
-          <DialogDescription>
-            Customize your Stickee experience
-          </DialogDescription>
-        </DialogHeader>
-        
-        {/* Tab Navigation */}
-        <div className="flex space-x-1 p-1 bg-muted rounded-lg">
-          <Button
-            variant={activeTab === "ui" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setActiveTab("ui")}
-            className="flex-1"
-          >
-            UI
-          </Button>
-          <Button
-            variant={activeTab === "fonts" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setActiveTab("fonts")}
-            className="flex-1"
-          >
-            Fonts
-          </Button>
-          <Button
-            variant={activeTab === "titles" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setActiveTab("titles")}
-            className="flex-1"
-          >
-            Titles
-          </Button>
-          <Button
-            variant={activeTab === "bookmarks" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setActiveTab("bookmarks")}
-            className="flex-1"
-          >
-            Bookmarks ({favoriteFonts.length}/10)
-          </Button>
-          <Button
-            variant={activeTab === "terms" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setActiveTab("terms")}
-            className="flex-1"
-          >
-            Terms
-          </Button>
-          <Button
-            variant={activeTab === "data" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setActiveTab("data")}
-            className="flex-1"
-          >
-            Data
-          </Button>
-        </div>
+    <>
+      <Dialog open={open && !showTermsModal} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Settings</DialogTitle>
+            <DialogDescription>
+              Customize your Stickee experience
+            </DialogDescription>
+          </DialogHeader>
+          
+          {/* Tab Navigation */}
+          <div className="flex space-x-1 p-1 bg-muted rounded-lg">
+            <Button
+              variant={activeTab === "ui" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("ui")}
+              className="flex-1"
+            >
+              UI
+            </Button>
+            <Button
+              variant={activeTab === "fonts" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("fonts")}
+              className="flex-1"
+            >
+              Fonts
+            </Button>
+            <Button
+              variant={activeTab === "titles" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("titles")}
+              className="flex-1"
+            >
+              Titles
+            </Button>
+            <Button
+              variant={activeTab === "bookmarks" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("bookmarks")}
+              className="flex-1"
+            >
+              Bookmarks ({favoriteFonts.length}/10)
+            </Button>
+            <Button
+              variant={activeTab === "terms" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("terms")}
+              className="flex-1"
+            >
+              Terms
+            </Button>
+            <Button
+              variant={activeTab === "data" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("data")}
+              className="flex-1"
+            >
+              Data
+            </Button>
+          </div>
 
-        <div className="grid gap-6 py-4 max-h-[500px] overflow-y-auto">
-          {activeTab === "ui" && (
-            <>
+          <div className="grid gap-6 py-4 max-h-[500px] overflow-y-auto">
+            {activeTab === "ui" && (
+              <>
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium">Theme</h3>
+                  <RadioGroup value={theme} onValueChange={setTheme}>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="light" id="light" />
+                      <Label htmlFor="light">
+                        Light
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="dark" id="dark" />
+                      <Label htmlFor="dark">
+                        Dark
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="system" id="system" />
+                      <Label htmlFor="system">
+                        System
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              </>
+            )}
+            
+            {activeTab === "fonts" && (
               <div className="space-y-4">
-                <h3 className="text-sm font-medium">Theme</h3>
-                <RadioGroup value={theme} onValueChange={setTheme}>
+                <div className="bg-muted p-3 rounded-lg">
+                  <p className="text-sm font-medium">Currently Using:</p>
+                  <p className="text-lg" style={{ fontFamily: getFontDisplayValue(fontFamily) }}>
+                    {getFontDisplayName(fontFamily)}
+                  </p>
+                </div>
+                <h3 className="text-sm font-medium">Font Family</h3>
+                <RadioGroup value={fontMode} onValueChange={handleFontModeChange}>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="light" id="light" />
-                    <Label htmlFor="light">
-                      Light
+                    <RadioGroupItem value="basic" id="basic" />
+                    <Label htmlFor="basic" className="text-lg">
+                      Basic Fonts
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="dark" id="dark" />
-                    <Label htmlFor="dark">
-                      Dark
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="system" id="system" />
-                    <Label htmlFor="system">
-                      System
+                    <RadioGroupItem value="handwriting" id="handwriting" />
+                    <Label htmlFor="handwriting" className="text-lg" style={{ fontFamily: '"Indie Flower", cursive' }}>
+                      Handwriting
                     </Label>
                   </div>
                 </RadioGroup>
-              </div>
-            </>
-          )}
-          
-          {activeTab === "fonts" && (
-            <div className="space-y-4">
-              <div className="bg-muted p-3 rounded-lg">
-                <p className="text-sm font-medium">Currently Using:</p>
-                <p className="text-lg" style={{ fontFamily: getFontDisplayValue(fontFamily) }}>
-                  {getFontDisplayName(fontFamily)}
-                </p>
-              </div>
-              <h3 className="text-sm font-medium">Font Family</h3>
-              <RadioGroup value={fontMode} onValueChange={handleFontModeChange}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="basic" id="basic" />
-                  <Label htmlFor="basic" className="text-lg">
-                    Basic Fonts
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="handwriting" id="handwriting" />
-                  <Label htmlFor="handwriting" className="text-lg" style={{ fontFamily: '"Indie Flower", cursive' }}>
-                    Handwriting
-                  </Label>
-                </div>
-              </RadioGroup>
-              
-              {fontMode === "basic" && (
-                <div className="ml-6 space-y-2 max-h-60 overflow-y-auto">
-                  <RadioGroup value={fontFamily} onValueChange={handleFontChange}>
-                    {getVisibleFonts().map((font) => (
-                      <div key={font} className="flex items-center justify-between space-x-2">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value={font} id={font} />
-                          <Label 
-                            htmlFor={font} 
-                            className={`${font === "serif" ? "font-serif" : ""} ${getFontLabelClasses(font)}`}
-                            style={{ fontFamily: getFontDisplayValue(font) }}
+                
+                {fontMode === "basic" && (
+                  <div className="ml-6 space-y-2 max-h-60 overflow-y-auto">
+                    <RadioGroup value={fontFamily} onValueChange={handleFontChange}>
+                      {getVisibleFonts().map((font) => (
+                        <div key={font} className="flex items-center justify-between space-x-2">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value={font} id={font} />
+                            <Label 
+                              htmlFor={font} 
+                              className={`${font === "serif" ? "font-serif" : ""} ${getFontLabelClasses(font)}`}
+                              style={{ fontFamily: getFontDisplayValue(font) }}
+                            >
+                              {getFontDisplayName(font)}
+                              {font === "onest" && (
+                                <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                  NEW
+                                </span>
+                              )}
+                            </Label>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleFavoriteFont(font)}
+                            className={isFavorite(font) ? "text-red-500" : ""}
                           >
-                            {getFontDisplayName(font)}
-                            {font === "onest" && (
-                              <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                NEW
-                              </span>
-                            )}
-                          </Label>
+                            <Heart className={`h-4 w-4 ${isFavorite(font) ? "fill-current" : ""}`} />
+                          </Button>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleFavoriteFont(font)}
-                          className={isFavorite(font) ? "text-red-500" : ""}
-                        >
-                          <Heart className={`h-4 w-4 ${isFavorite(font) ? "fill-current" : ""}`} />
-                        </Button>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                )}
+                
+                {fontMode === "handwriting" && (
+                  <div className="ml-6 space-y-2 max-h-60 overflow-y-auto">
+                    <RadioGroup value={fontFamily} onValueChange={handleFontChange}>
+                      {getVisibleFonts().map((font) => (
+                        <div key={font} className="flex items-center justify-between space-x-2">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value={font} id={font} />
+                            <Label 
+                              htmlFor={font} 
+                              className={getFontLabelClasses(font)}
+                              style={{ fontFamily: getFontDisplayValue(font) }}
+                            >
+                              {getFontDisplayName(font)}
+                            </Label>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleFavoriteFont(font)}
+                            className={isFavorite(font) ? "text-red-500" : ""}
+                          >
+                            <Heart className={`h-4 w-4 ${isFavorite(font) ? "fill-current" : ""}`} />
+                          </Button>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {activeTab === "bookmarks" && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">Favorite Fonts ({favoriteFonts.length}/10)</h3>
+                {favoriteFonts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No favorite fonts yet. Click heart icon on any font to add it to your bookmarks.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {favoriteFonts.map((font) => (
+                      <div key={font} className="flex items-center justify-between p-2 border rounded">
+                        <span style={{ fontFamily: getFontDisplayValue(font) }}>
+                          {getFontDisplayName(font)}
+                        </span>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleFontChange(font)}
+                          >
+                            Apply
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleFavoriteFont(font)}
+                            className="text-red-500"
+                          >
+                            <Heart className="h-4 w-4 fill-current" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
-                    {getVisibleFonts().length < sortFontsAlphabetically(basicFonts).length && (
-                      <div className="text-center py-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={loadMoreFonts}
-                          className="w-full"
-                        >
-                          Load More Fonts
-                        </Button>
-                      </div>
-                    )}
-                  </RadioGroup>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {activeTab === "titles" && (
+              <div className="space-y-4">
+                <div className="bg-muted p-3 rounded-lg">
+                  <p className="text-sm font-medium">Currently Using:</p>
+                  <p className="text-lg" style={{ 
+                    fontFamily: titleFont === "arbutus" ? 'Arbutus, serif' : 
+                              titleFont === "agbalumo" ? 'Agbalumo, display' :
+                              titleFont === "walter-turncoat" ? '"Walter Turncoat", cursive' :
+                              '"Yatra One", cursive'
+                  }}>
+                    {titleFont === "arbutus" ? "Arbutus" :
+                     titleFont === "agbalumo" ? "Agbalumo" :
+                     titleFont === "walter-turncoat" ? "Walter Turncoat" :
+                     "Yatra One"}
+                  </p>
                 </div>
-              )}
-              
-              {fontMode === "handwriting" && (
-                <div className="ml-6 space-y-2 max-h-60 overflow-y-auto">
-                  <RadioGroup value={fontFamily} onValueChange={handleFontChange}>
-                    {getVisibleFonts().map((font) => (
-                      <div key={font} className="flex items-center justify-between space-x-2">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value={font} id={font} />
-                          <Label 
-                            htmlFor={font} 
-                            className={getFontLabelClasses(font)}
-                            style={{ fontFamily: getFontDisplayValue(font) }}
-                          >
-                            {getFontDisplayName(font)}
-                          </Label>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleFavoriteFont(font)}
-                          className={isFavorite(font) ? "text-red-500" : ""}
-                        >
-                          <Heart className={`h-4 w-4 ${isFavorite(font) ? "fill-current" : ""}`} />
-                        </Button>
-                      </div>
-                    ))}
-                    {getVisibleFonts().length < sortFontsAlphabetically(handwritingFonts).length && (
-                      <div className="text-center py-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={loadMoreFonts}
-                          className="w-full"
-                        >
-                          Load More Fonts
-                        </Button>
-                      </div>
-                    )}
-                  </RadioGroup>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {activeTab === "bookmarks" && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium">Favorite Fonts ({favoriteFonts.length}/10)</h3>
-              {favoriteFonts.length === 0 ? (
+                <h3 className="text-sm font-medium">Title Fonts</h3>
                 <p className="text-sm text-muted-foreground">
-                  No favorite fonts yet. Click the heart icon on any font to add it to your bookmarks.
+                  Choose a font for note titles. These fonts are designed to make headings stand out.
                 </p>
-              ) : (
                 <div className="space-y-2">
-                  {favoriteFonts.map((font) => (
-                    <div key={font} className="flex items-center justify-between p-2 border rounded">
-                      <span style={{ fontFamily: getFontDisplayValue(font) }}>
-                        {getFontDisplayName(font)}
-                      </span>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleFontChange(font)}
-                        >
-                          Apply
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleFavoriteFont(font)}
-                          className="text-red-500"
-                        >
-                          <Heart className="h-4 w-4 fill-current" />
-                        </Button>
+                  <RadioGroup value={titleFont} onValueChange={handleTitleFontChange}>
+                    {sortTitleFontsAlphabetically(["arbutus", "agbalumo", "walter-turncoat", "yatra-one"]).map((font) => (
+                      <div key={font} className="flex items-center justify-between space-x-2">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value={font} id={`title-${font}`} />
+                          <Label htmlFor={`title-${font}`} className={getTitleFontLabelClasses(font)} style={{ 
+                            fontFamily: font === "arbutus" ? 'Arbutus, serif' : 
+                                      font === "agbalumo" ? 'Agbalumo, display' :
+                                      font === "walter-turncoat" ? '"Walter Turncoat", cursive' :
+                                      '"Yatra One", cursive'
+                          }}>
+                            {font === "arbutus" ? "Arbutus" :
+                             font === "agbalumo" ? "Agbalumo" :
+                             font === "walter-turncoat" ? "Walter Turncoat" :
+                             "Yatra One"}
+                          </Label>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </RadioGroup>
                 </div>
-              )}
-            </div>
-          )}
-          
-          {activeTab === "titles" && (
-            <div className="space-y-4">
-              <div className="bg-muted p-3 rounded-lg">
-                <p className="text-sm font-medium">Currently Using:</p>
-                <p className="text-lg" style={{ 
-                  fontFamily: titleFont === "arbutus" ? 'Arbutus, serif' : 
-                            titleFont === "agbalumo" ? 'Agbalumo, display' :
-                            titleFont === "walter-turncoat" ? '"Walter Turncoat", cursive' :
-                            '"Yatra One", cursive'
-                }}>
-                  {titleFont === "arbutus" ? "Arbutus" :
-                   titleFont === "agbalumo" ? "Agbalumo" :
-                   titleFont === "walter-turncoat" ? "Walter Turncoat" :
-                   "Yatra One"}
-                </p>
               </div>
-              <h3 className="text-sm font-medium">Title Fonts</h3>
-              <p className="text-sm text-muted-foreground">
-                Choose a font for note titles. These fonts are designed to make headings stand out.
-              </p>
-              <div className="space-y-2">
-                <RadioGroup value={titleFont} onValueChange={handleTitleFontChange}>
-                  {sortTitleFontsAlphabetically(["arbutus", "agbalumo", "walter-turncoat", "yatra-one"]).map((font) => (
-                    <div key={font} className="flex items-center justify-between space-x-2">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value={font} id={`title-${font}`} />
-                        <Label htmlFor={`title-${font}`} className={getTitleFontLabelClasses(font)} style={{ 
-                          fontFamily: font === "arbutus" ? 'Arbutus, serif' : 
-                                    font === "agbalumo" ? 'Agbalumo, display' :
-                                    font === "walter-turncoat" ? '"Walter Turncoat", cursive' :
-                                    '"Yatra One", cursive'
-                        }}>
-                          {font === "arbutus" ? "Arbutus" :
-                           font === "agbalumo" ? "Agbalumo" :
-                           font === "walter-turncoat" ? "Walter Turncoat" :
-                           "Yatra One"}
-                        </Label>
-                      </div>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === "terms" && (
-            <>
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Terms of Service</h3>
+            )}
+            
+            {activeTab === "terms" && (
+              <>
                 <div className="space-y-4">
                   <div className="text-center space-y-4 p-6 border rounded-lg bg-muted/50">
                     <h2 className="text-xl font-semibold text-foreground">Welcome to Stickee!</h2>
@@ -1207,129 +1184,136 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
                       >
                         Disagree to Terms of Service
                       </Button>
+                      
+                      <Button 
+                        onClick={() => setShowTermsModal(true)}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        View Terms
+                      </Button>
                     </div>
                     
                     <p className="text-xs text-muted-foreground text-center">
                       You have already agreed to the terms to use Stickee. You can review the terms anytime.
                     </p>
                   </div>
-                  
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold">Terms of Service</h4>
-                    <div className="prose prose-sm max-w-none dark:prose-invert max-h-96 overflow-y-auto p-4 border rounded-lg bg-muted/30">
-                      <ReactMarkdown>{termsContent}</ReactMarkdown>
+                </div>
+              </>
+            )}
+            
+            {activeTab === "data" && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">Data Management</h3>
+                <p className="text-sm text-muted-foreground">
+                  Export your data to keep a backup or import data from a previous export.
+                </p>
+                
+                <div className="space-y-4">
+                  <div className="border rounded-lg p-4 space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-2">Export All Data</h4>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Download all your notes, checklist items, and reactions as a JSON file.
+                      </p>
+                      <Button
+                        onClick={async () => {
+                          try {
+                            const data = await exportUserData();
+                            downloadExportFile(data);
+                            toast.success("Data exported successfully!");
+                          } catch (error) {
+                            console.error('Export failed:', error);
+                            toast.error("Failed to export data. Please try again.");
+                          }
+                        }}
+                        className="w-full"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Export Data to JSON
+                      </Button>
                     </div>
                   </div>
-                </div>
-              </div>
-            </>
-          )}
-          
-          {activeTab === "data" && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium">Data Management</h3>
-              <p className="text-sm text-muted-foreground">
-                Export your data to keep a backup or import data from a previous export.
-              </p>
-              
-              <div className="space-y-4">
-                <div className="border rounded-lg p-4 space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-2">Export All Data</h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Download all your notes, checklist items, and reactions as a JSON file.
-                    </p>
-                    <Button
-                      onClick={async () => {
-                        try {
-                          const data = await exportUserData();
-                          downloadExportFile(data);
-                          toast.success("Data exported successfully!");
-                        } catch (error) {
-                          console.error('Export failed:', error);
-                          toast.error("Failed to export data. Please try again.");
-                        }
-                      }}
-                      className="w-full"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Export Data to JSON
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="border rounded-lg p-4 space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-2">Import Data</h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Import notes and checklist items from a previously exported JSON file.
-                    </p>
-                    <div className="space-y-2">
-                      <div className="relative">
-                        <input
-                          type="file"
-                          accept=".json"
-                          onChange={handleImport}
-                          disabled={importing}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                          id="file-upload"
-                        />
-                        <label 
-                          htmlFor="file-upload"
-                          className={`block w-full p-3 border-2 border-dashed border-muted-foreground/25 rounded-lg text-center cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors ${
-                            importing ? 'opacity-50 cursor-not-allowed' : ''
-                          }`}
-                        >
-                          <div className="space-y-2">
-                            <Download className="h-6 w-6 mx-auto text-muted-foreground" />
-                            <div className="text-sm">
-                              <span className="font-medium text-primary">
-                                {importing ? 'Importing...' : 'Click to upload or drag and drop'}
-                              </span>
-                              <p className="text-muted-foreground">
-                                JSON files only
-                              </p>
+                  
+                  <div className="border rounded-lg p-4 space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-2">Import Data</h4>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Import notes and checklist items from a previously exported JSON file.
+                      </p>
+                      <div className="space-y-2">
+                        <div className="relative">
+                          <input
+                            type="file"
+                            accept=".json"
+                            onChange={handleImport}
+                            disabled={importing}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                            id="file-upload"
+                          />
+                          <label 
+                            htmlFor="file-upload"
+                            className={`block w-full p-3 border-2 border-dashed border-muted-foreground/25 rounded-lg text-center cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors ${
+                              importing ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
+                          >
+                            <div className="space-y-2">
+                              <Download className="h-6 w-6 mx-auto text-muted-foreground" />
+                              <div className="text-sm">
+                                <span className="font-medium text-primary">
+                                  {importing ? 'Importing...' : 'Click to upload or drag and drop'}
+                                </span>
+                                <p className="text-muted-foreground">
+                                  JSON files only
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </label>
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                  <p className="mb-2">
-                    <strong>What's included in your export/import:</strong>
-                  </p>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>All your notes (content, colors, status, pins)</li>
-                    <li>Your checklist items and completion status</li>
-                    <li>Emoji reactions on notes (export only)</li>
-                    <li>User information and timestamp</li>
-                  </ul>
-                  <p className="mt-2">
-                    <strong>Note:</strong> Importing will add new notes to your existing data.
-                  </p>
+                  
+                  <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                    <p className="mb-2">
+                      <strong>What's included in your export/import:</strong>
+                    </p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>All your notes (content, colors, status, pins)</li>
+                      <li>Your checklist items and completion status</li>
+                      <li>Emoji reactions on notes (export only)</li>
+                      <li>User information and timestamp</li>
+                    </ul>
+                    <p className="mt-2">
+                      <strong>Note:</strong> Importing will add new notes to your existing data.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-        <div className="pt-4 border-t">
-          <p className="text-xs text-muted-foreground text-center">
-            By using this app you agree to the{" "}
-            <button
-              onClick={() => {
-                setActiveTab("terms");
-              }}
-              className="text-xs underline hover:text-foreground transition-colors"
-            >
-              Terms of Service
-            </button>
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
+            )}
+          </div>
+          <div className="pt-4 border-t">
+            <p className="text-xs text-muted-foreground text-center">
+              By using this app you agree to{" "}
+              <button
+                onClick={() => {
+                  setActiveTab("terms");
+                }}
+                className="text-xs underline hover:text-foreground transition-colors"
+              >
+                Terms of Service
+              </button>
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* TermsOfService Modal - Outside Settings Dialog */}
+      <TermsOfService 
+        isOpen={showTermsModal} 
+        onClose={() => setShowTermsModal(false)} 
+      />
+    </>
   );
 };
 
