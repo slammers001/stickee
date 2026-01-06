@@ -32,10 +32,18 @@ interface SettingsDialogProps {
 
 export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const { theme, setTheme } = useTheme();
-  const [fontMode, setFontMode] = useState<FontMode>("basic");
-  const [fontFamily, setFontFamily] = useState<FontFamily>("onest");
-  const [titleFont, setTitleFont] = useState<TitleFontFamily>("arbutus");
-  const [favoriteFonts, setFavoriteFonts] = useState<FontFamily[]>([]);
+  const [fontMode, setFontMode] = useState<FontMode>(() => 
+    (localStorage.getItem("stickee-font-mode") as FontMode) || "basic"
+  );
+  const [fontFamily, setFontFamily] = useState<FontFamily>(() => 
+    (localStorage.getItem("stickee-font-family") as FontFamily) || "onest"
+  );
+  const [titleFont, setTitleFont] = useState<TitleFontFamily>(() => 
+    (localStorage.getItem("stickee-title-font") as TitleFontFamily) || "arbutus"
+  );
+  const [favoriteFonts, setFavoriteFonts] = useState<FontFamily[]>(() => 
+    JSON.parse(localStorage.getItem("stickee-favorite-fonts") || "[]")
+  );
   const [activeTab, setActiveTab] = useState<ActiveTab>("ui");
   const [visibleFontCount] = useState(20); // Lazy loading state
   const [importing, setImporting] = useState(false);
@@ -178,77 +186,35 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   useEffect(() => {
     preloadGoogleFonts();
     
-    // Load font settings from Supabase
-    const loadFontSettings = async () => {
-      const userExists = await ensureUserExists(); // Ensure user exists in Supabase
+    // Sync with Supabase but don't override current localStorage values
+    const syncWithSupabase = async () => {
+      const userExists = await ensureUserExists();
       
       if (!userExists) {
         console.error('Failed to create user in Supabase');
-        // Fallback to localStorage
-        const savedFont = localStorage.getItem("stickee-font-family") as FontFamily;
-        const savedTitleFont = localStorage.getItem("stickee-title-font") as TitleFontFamily;
-        const savedFontMode = localStorage.getItem("stickee-font-mode") as FontMode;
-        
-        if (savedFontMode) setFontMode(savedFontMode);
-        if (savedFont) {
-          setFontFamily(savedFont);
-          applyFontFamily(savedFont);
-        }
-        if (savedTitleFont) {
-          setTitleFont(savedTitleFont);
-          applyTitleFont(savedTitleFont);
-        }
         return;
       }
       
-      // First try to get existing settings
+      // Get current localStorage values
+      const currentFont = localStorage.getItem("stickee-font-family") as FontFamily || "onest";
+      const currentTitleFont = localStorage.getItem("stickee-title-font") as TitleFontFamily || "arbutus";
+      const currentFavorites = JSON.parse(localStorage.getItem("stickee-favorite-fonts") || "[]");
+      
+      // Check if settings exist in Supabase
       const settings = await getFontSettings();
       
-      if (settings) {
-        // Load from Supabase if settings exist
-        if (settings.current_font) {
-          setFontFamily(settings.current_font as FontFamily);
-          applyFontFamily(settings.current_font as FontFamily);
-          localStorage.setItem("stickee-font-family", settings.current_font);
-        }
-        if (settings.title_font) {
-          setTitleFont(settings.title_font as TitleFontFamily);
-          applyTitleFont(settings.title_font as TitleFontFamily);
-          localStorage.setItem("stickee-title-font", settings.title_font);
-        }
-        if (settings.favorite_fonts && settings.favorite_fonts.length > 0) {
-          setFavoriteFonts(settings.favorite_fonts as FontFamily[]);
-        }
-      } else {
-        // Create default settings if none exist
-        const defaultFont = localStorage.getItem("stickee-font-family") as FontFamily || "onest";
-        const defaultTitleFont = localStorage.getItem("stickee-title-font") as TitleFontFamily || "arbutus";
-        const defaultFavorites = JSON.parse(localStorage.getItem("stickee-favorite-fonts") || "[]");
-        
-        // Save defaults to Supabase
+      if (!settings) {
+        // No settings in Supabase, create with current localStorage values
         try {
-          await saveFontSettings(defaultFont, defaultTitleFont, defaultFavorites);
+          await saveFontSettings(currentFont, currentTitleFont, currentFavorites);
         } catch (error) {
-          console.error('Failed to create default font settings:', error);
+          console.error('Failed to sync font settings to Supabase:', error);
         }
-        
-        // Apply defaults
-        setFontFamily(defaultFont);
-        applyFontFamily(defaultFont);
-        setTitleFont(defaultTitleFont);
-        applyTitleFont(defaultTitleFont);
-        setFavoriteFonts(defaultFavorites);
       }
-      
-      // Load font mode from localStorage
-      const savedFontMode = localStorage.getItem("stickee-font-mode") as FontMode;
-      if (savedFontMode) {
-        setFontMode(savedFontMode);
-      }
-      
+      // If settings exist, we keep the current localStorage values as they're more recent
     };
     
-    loadFontSettings();
+    syncWithSupabase();
   }, []);
 
   // Handle terms disagreement

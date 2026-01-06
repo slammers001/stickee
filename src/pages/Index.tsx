@@ -88,18 +88,96 @@ export default function Index() {
     };
   }, []);
 
-  // Apply saved font preference on component mount
+  // Apply saved font preference immediately on page load
   useEffect(() => {
-    const savedFont = localStorage.getItem("stickee-font-family") as "handwriting" | "serif";
-    if (savedFont) {
+    const applyFontFamily = (font: string) => {
       const root = document.documentElement;
-      if (savedFont === "serif") {
-        root.style.setProperty('--font-family-base', 'Georgia, serif');
-        root.style.setProperty('--font-family-handwriting', 'Georgia, serif');
-      } else {
-        root.style.setProperty('--font-family-base', 'Indie Flower, cursive');
-        root.style.setProperty('--font-family-handwriting', 'Indie Flower, cursive');
+      let fontValue = '';
+      
+      switch (font) {
+        case "serif":
+          fontValue = 'Georgia, serif';
+          break;
+        case "sans-serif":
+          fontValue = 'Arial, sans-serif';
+          break;
+        case "monospace":
+          fontValue = 'Courier New, monospace';
+          break;
+        case "give-you-glory":
+          fontValue = '"Give You Glory", cursive';
+          break;
+        case "indie-flower":
+          fontValue = '"Indie Flower", cursive';
+          break;
+        case "onest":
+          fontValue = 'Onest, sans-serif';
+          break;
+        default:
+          // For Google Fonts, use the display name directly
+          fontValue = font.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          break;
       }
+      
+      // Load Google Font if needed
+      if (font !== "serif" && font !== "sans-serif" && font !== "monospace") {
+        const fontName = font.replace(/-/g, '+');
+        const existingLink = document.querySelector(`link[href*="${fontName}"]`);
+        
+        if (!existingLink) {
+          const link = document.createElement('link');
+          link.href = `https://fonts.googleapis.com/css2?family=${fontName}&display=swap`;
+          link.rel = 'stylesheet';
+          document.head.appendChild(link);
+        }
+      }
+      
+      root.style.setProperty('--font-family-base', fontValue);
+      root.style.setProperty('--font-family-handwriting', fontValue);
+    };
+
+    // Load and apply the most recently saved fonts
+    const savedFont = localStorage.getItem("stickee-font-family");
+    const savedTitleFont = localStorage.getItem("stickee-title-font");
+    
+    if (savedFont) {
+      applyFontFamily(savedFont);
+    }
+    
+    // Apply title font
+    if (savedTitleFont) {
+      const root = document.documentElement;
+      let titleFontValue = '';
+      
+      switch (savedTitleFont) {
+        case "arbutus":
+          titleFontValue = 'Arbutus, serif';
+          break;
+        case "agbalumo":
+          titleFontValue = 'Agbalumo, display';
+          break;
+        case "walter-turncoat":
+          titleFontValue = '"Walter Turncoat", cursive';
+          break;
+        case "yatra-one":
+          titleFontValue = '"Yatra One", cursive';
+          break;
+      }
+      
+      // Load Google Font if needed
+      if (savedTitleFont !== "arbutus") {
+        const fontName = savedTitleFont.replace(/-/g, '+');
+        const existingLink = document.querySelector(`link[href*="${fontName}"]`);
+        
+        if (!existingLink) {
+          const link = document.createElement('link');
+          link.href = `https://fonts.googleapis.com/css2?family=${fontName}&display=swap`;
+          link.rel = 'stylesheet';
+          document.head.appendChild(link);
+        }
+      }
+      
+      root.style.setProperty('--font-family-title', titleFontValue);
     }
   }, []);
 
