@@ -9,7 +9,7 @@ export const TermsOfService = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
       <div className="bg-background border-3 border-foreground rounded-lg max-w-4xl max-h-[90vh] flex flex-col neo-box-lg" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b-2 border-foreground flex-shrink-0">
-          <h2 className="font-display text-2xl" style={{ fontFamily: 'arbutus, serif' }}>Terms of Service for Stickee</h2>
+          <h2 className="font-display text-2xl" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>Terms of Service for Stickee</h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="w-5 h-5" />
           </Button>
@@ -25,21 +25,21 @@ export const TermsOfService = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
             </p>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>1. Acceptance of Terms</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>1. Acceptance of Terms</h3>
               <p className="text-sm">
                 By downloading, installing, or using Stickee ("the Application"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not install or use the Application.
               </p>
             </section>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>2. Description of Service</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>2. Description of Service</h3>
               <p className="text-sm">
                 Stickee is a desktop application for creating, organizing, and managing digital sticky notes and tasks. The Application is provided "as is" for personal and non-commercial use.
               </p>
             </section>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>3. License and Use</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>3. License and Use</h3>
               <p className="text-sm mb-3">
                 <a href="https://github.com/slammers001" target="_blank" rel="noopener noreferrer" className="dark:text-white underline hover:text-pink transition-colors dark:hover:text-pink">slammers001</a> grants you a limited, non-exclusive, non-transferable, revocable license to use Stickee for personal purposes only. You may not:
               </p>
@@ -52,23 +52,23 @@ export const TermsOfService = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
             </section>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>4. System Requirements and Compatibility</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>4. System Requirements and Compatibility</h3>
               <p className="text-sm">
                 Stickee v0.1.0 is currently available only for Windows operating systems. You are responsible for ensuring your system meets the minimum requirements for installation and operation.
               </p>
             </section>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>5. Data and Privacy</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>5. Data and Privacy</h3>
               <div className="space-y-3">
                 <div>
-                  <h4 className="font-semibold text-sm" style={{ fontFamily: 'arbutus, serif' }}>5.1 Local Storage</h4>
+                  <h4 className="font-semibold text-sm" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>5.1 Local Storage</h4>
                   <p className="text-sm">
                     Stickee stores all note data locally on your device. No data is transmitted to external servers unless explicitly configured by you for backup purposes.
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm" style={{ fontFamily: 'arbutus, serif' }}>5.2 Data Responsibility</h4>
+                  <h4 className="font-semibold text-sm" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>5.2 Data Responsibility</h4>
                   <p className="text-sm">
                     You are solely responsible for:
                   </p>
@@ -82,7 +82,7 @@ export const TermsOfService = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
             </section>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>6. Intellectual Property</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>6. Intellectual Property</h3>
               <p className="text-sm mb-3">
                 All rights, title, and interest in Stickee, including all intellectual property rights, remain the exclusive property of <a href="https://github.com/slammers001" target="_blank" rel="noopener noreferrer" className="dark:text-white underline hover:text-pink transition-colors dark:hover:text-pink">slammers001</a>. This includes but is not limited to:
               </p>
@@ -95,7 +95,7 @@ export const TermsOfService = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
             </section>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>7. Disclaimer of Warranties</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>7. Disclaimer of Warranties</h3>
               <p className="text-sm font-bold">
                 STICKEE IS PROVIDED "AS IS" WITHOUT ANY WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:
               </p>
@@ -109,7 +109,7 @@ export const TermsOfService = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
             </section>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>8. Limitation of Liability</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>8. Limitation of Liability</h3>
               <p className="text-sm font-bold">
                 TO THE MAXIMUM EXTENT PERMITTED BY LAW, <a href="https://github.com/slammers001" target="_blank" rel="noopener noreferrer" className="dark:text-white underline hover:text-pink transition-colors dark:hover:text-pink">SLAMMERS001</a> SHALL NOT BE LIABLE FOR:
               </p>
@@ -122,16 +122,16 @@ export const TermsOfService = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
             </section>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>9. Updates and Modifications</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>9. Updates and Modifications</h3>
               <div className="space-y-3">
                 <div>
-                  <h4 className="font-semibold text-sm" style={{ fontFamily: 'arbutus, serif' }}>9.1 Application Updates</h4>
+                  <h4 className="font-semibold text-sm" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>9.1 Application Updates</h4>
                   <p className="text-sm">
                     <a href="https://github.com/slammers001" target="_blank" rel="noopener noreferrer" className="dark:text-white underline hover:text-pink transition-colors dark:hover:text-pink">Slammers001</a> may release updates, patches, or new versions of Stickee. These Terms will apply to all updates unless superseded by new terms.
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm" style={{ fontFamily: 'arbutus, serif' }}>9.2 Terms Updates</h4>
+                  <h4 className="font-semibold text-sm" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>9.2 Terms Updates</h4>
                   <p className="text-sm">
                     These Terms may be updated periodically. Continued use of Stickee after changes constitutes acceptance of the modified Terms.
                   </p>
@@ -140,7 +140,7 @@ export const TermsOfService = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
             </section>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>10. Termination</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>10. Termination</h3>
               <p className="text-sm">
                 Your license to use Stickee terminates automatically if you:
               </p>
@@ -152,7 +152,7 @@ export const TermsOfService = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
             </section>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>11. Third-Party Components</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>11. Third-Party Components</h3>
               <p className="text-sm mb-3">
                 Stickee uses the following open-source technologies:
               </p>
@@ -171,7 +171,7 @@ export const TermsOfService = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
             </section>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>12. User Responsibilities</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>12. User Responsibilities</h3>
               <p className="text-sm">
                 You agree to:
               </p>
@@ -184,21 +184,21 @@ export const TermsOfService = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
             </section>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>13. Severability</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>13. Severability</h3>
               <p className="text-sm">
                 If any provision of these Terms is found invalid or unenforceable, the remaining provisions will remain in full effect.
               </p>
             </section>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'arbutus, serif' }}>14. Contact Information</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>14. Contact Information</h3>
               <p className="text-sm">
                 For questions about these Terms, email: <a href="mailto:hi@simicodes.xyz" className="text-black underline hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">hi@simicodes.xyz</a> or contact: <a href="https://github.com/slammers001" className="text-black underline hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">github.com/slammers001</a>
               </p>
             </section>
 
             <div className="border-t-2 border-foreground pt-6 mt-8">
-              <p className="text-sm font-bold mb-2" style={{ fontFamily: 'arbutus, serif' }}>Acknowledgement:</p>
+              <p className="text-sm font-bold mb-2" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>Acknowledgement:</p>
               <p className="text-sm">
                 By using Stickee, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
               </p>
