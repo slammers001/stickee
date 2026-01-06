@@ -41,7 +41,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     JSON.parse(localStorage.getItem("stickee-favorite-fonts") || "[]")
   );
   const [activeTab, setActiveTab] = useState<ActiveTab>("ui");
-  const [visibleFontCount, setVisibleFontCount] = useState(20); // Lazy loading state
   const [importing, setImporting] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
 
@@ -69,7 +68,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     "dawning-of-a-new-day", "satisfy"
   ];
 
-  // Get visible fonts based on mode and lazy loading
+  // Get visible fonts based on mode
   const getVisibleFonts = () => {
     let fonts: FontFamily[] = [];
     if (fontMode === "basic") {
@@ -85,7 +84,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       return nameA.localeCompare(nameB);
     });
     
-    return sortedFonts.slice(0, visibleFontCount);
+    return sortedFonts;
   };
 
   // Preload common Google Fonts
@@ -785,16 +784,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                         </div>
                       ))}
                     </RadioGroup>
-                    {getVisibleFonts().length < basicFonts.length && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setVisibleFontCount(prev => Math.min(prev + 20, basicFonts.length))}
-                        className="w-full mt-2"
-                      >
-                        Load More Fonts
-                      </Button>
-                    )}
                   </div>
                 )}
                 
@@ -829,16 +818,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                         </div>
                       ))}
                     </RadioGroup>
-                    {getVisibleFonts().length < handwritingFonts.length && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setVisibleFontCount(prev => Math.min(prev + 20, handwritingFonts.length))}
-                        className="w-full mt-2"
-                      >
-                        Load More Fonts
-                      </Button>
-                    )}
                   </div>
                 )}
               </div>
