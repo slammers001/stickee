@@ -144,7 +144,7 @@ export const updateTitleFont = async (titleFont: string): Promise<boolean> => {
 };
 
 export const updateFavoriteFonts = async (favoriteFonts: string[]): Promise<boolean> => {
-  const userId = getUserId();
+  const userId = await getUserId();
   
   try {
     const { error } = await supabase
