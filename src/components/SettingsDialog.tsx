@@ -41,7 +41,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     JSON.parse(localStorage.getItem("stickee-favorite-fonts") || "[]")
   );
   const [activeTab, setActiveTab] = useState<ActiveTab>("ui");
-  const [visibleFontCount] = useState(20); // Lazy loading state
+  const [visibleFontCount, setVisibleFontCount] = useState(20); // Lazy loading state
   const [importing, setImporting] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
 
@@ -785,6 +785,16 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                         </div>
                       ))}
                     </RadioGroup>
+                    {getVisibleFonts().length < basicFonts.length && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setVisibleFontCount(prev => Math.min(prev + 20, basicFonts.length))}
+                        className="w-full mt-2"
+                      >
+                        Load More Fonts
+                      </Button>
+                    )}
                   </div>
                 )}
                 
@@ -819,6 +829,16 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                         </div>
                       ))}
                     </RadioGroup>
+                    {getVisibleFonts().length < handwritingFonts.length && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setVisibleFontCount(prev => Math.min(prev + 20, handwritingFonts.length))}
+                        className="w-full mt-2"
+                      >
+                        Load More Fonts
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
