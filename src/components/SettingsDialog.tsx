@@ -17,7 +17,8 @@ type FontFamily = "serif" | "sans-serif" | "monospace" |
   "solitreo" | "sue-ellen-francisco" | "sunshiney" | "swanky-and-moo-moo" | "the-girl-next-door" | 
   "tillana" | "unkempt" | "waiting-for-the-sunrise" | "beth-ellen" | "homemade-apple" | 
   "zeyada" | "cedarville-cursive" | "coming-soon" | "covered-by-your-grace" | "crafty-girls" | "comforter" | "indie-flower" | "give-you-glory" | "oregano" | "protest-revolution" | "protest-riot" | "rancho" | "sarina" | "single-day" | "onest" |
-  "anonymous-pro" | "annie-use-your-telescope" | "nothing-you-could-do" | "oooh-baby" | "over-the-rainbow" | "schoolbell" | "sedgwick-ave";
+  "anonymous-pro" | "annie-use-your-telescope" | "nothing-you-could-do" | "oooh-baby" | "over-the-rainbow" | "schoolbell" | "sedgwick-ave" |
+  "architects-daughter" | "dawning-of-a-new-day" | "satisfy" | "josefin-sans" | "lato" | "open-sans" | "raleway" | "montserrat" | "ubuntu" | "gloock";
 
 type FontMode = "basic" | "handwriting";
 
@@ -40,7 +41,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     JSON.parse(localStorage.getItem("stickee-favorite-fonts") || "[]")
   );
   const [activeTab, setActiveTab] = useState<ActiveTab>("ui");
-  const [visibleFontCount] = useState(20); // Lazy loading state
   const [importing, setImporting] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
 
@@ -50,7 +50,8 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     "anonymous-pro", "tenali-ramakrishna", "truculenta", "ubuntu-sans-mono", "unbounded", 
     "nova-mono", "orbitron", "bahianita", "syne-mono", "vt323", "xanh-mono", "cutive-mono", 
     "arbutus-slab", "nixie-one", "noticia-text", "arvo", "oi", "oldenburg", "orelega-one", 
-    "nova-oval", "atma", "butcherman", "cherry-bomb-one"
+    "nova-oval", "atma", "butcherman", "cherry-bomb-one", "josefin-sans", "lato", "open-sans", 
+    "raleway", "montserrat", "ubuntu", "gloock"
   ];
 
   const handwritingFonts: FontFamily[] = [
@@ -63,10 +64,11 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     "waiting-for-the-sunrise", "beth-ellen", "homemade-apple", "zeyada", 
     "cedarville-cursive", "coming-soon", "covered-by-your-grace", 
     "crafty-girls", "comforter", "oregano", "protest-revolution", 
-    "protest-riot", "rancho", "sarina", "single-day"
+    "protest-riot", "rancho", "sarina", "single-day", "architects-daughter", 
+    "dawning-of-a-new-day", "satisfy"
   ];
 
-  // Get visible fonts based on mode and lazy loading
+  // Get visible fonts based on mode
   const getVisibleFonts = () => {
     let fonts: FontFamily[] = [];
     if (fontMode === "basic") {
@@ -82,7 +84,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       return nameA.localeCompare(nameB);
     });
     
-    return sortedFonts.slice(0, visibleFontCount);
+    return sortedFonts;
   };
 
   // Preload common Google Fonts
@@ -153,7 +155,18 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       'Protest+Riot',
       'Rancho',
       'Sarina',
-      'Single+Day'
+      'Single+Day',
+      // Additional new fonts
+      'Architects+Daughter',
+      'Dawning+of+a+New+Day',
+      'Satisfy',
+      'Josefin+Sans',
+      'Lato',
+      'Open+Sans',
+      'Raleway',
+      'Montserrat',
+      'Ubuntu',
+      'Gloock'
     ];
     
     allFonts.forEach(fontName => {
@@ -617,7 +630,17 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       "rancho": "Rancho",
       "sarina": "Sarina",
       "single-day": "Single Day",
-      "onest": "Onest"
+      "onest": "Onest",
+      "architects-daughter": "Architects Daughter",
+      "dawning-of-a-new-day": "Dawning of a New Day",
+      "satisfy": "Satisfy",
+      "josefin-sans": "Josefin Sans",
+      "lato": "Lato",
+      "open-sans": "Open Sans",
+      "raleway": "Raleway",
+      "montserrat": "Montserrat",
+      "ubuntu": "Ubuntu",
+      "gloock": "Gloock"
     };
     return displayNames[font] || font;
   };
@@ -743,7 +766,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                               style={{ fontFamily: getFontDisplayValue(font) }}
                             >
                               {getFontDisplayName(font)}
-                              {font === "onest" && (
+                              {(font === "onest" || font === "josefin-sans" || font === "lato" || font === "open-sans" || font === "raleway" || font === "montserrat" || font === "ubuntu" || font === "gloock" || font === "architects-daughter" || font === "dawning-of-a-new-day" || font === "satisfy") && (
                                 <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                                   NEW
                                 </span>
@@ -777,6 +800,11 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                               style={{ fontFamily: getFontDisplayValue(font) }}
                             >
                               {getFontDisplayName(font)}
+                              {(font === "architects-daughter" || font === "dawning-of-a-new-day" || font === "satisfy") && (
+                                <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                  NEW
+                                </span>
+                              )}
                             </Label>
                           </div>
                           <Button
