@@ -6,7 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { getFontSettings, saveFontSettings, updateCurrentFont, updateTitleFont, updateFavoriteFonts } from "@/services/fontSettingsService";
+import { getFontSettings, saveFontSettings, updateCurrentFont, updateFavoriteFonts } from "@/services/fontSettingsService";
 import { ensureUserExists } from "@/services/userService";
 import { exportUserData, downloadExportFile, importUserData, validateImportFile } from "@/services/exportService";
 import { TermsOfService } from "@/components/TermsOfService";
@@ -19,11 +19,9 @@ type FontFamily = "serif" | "sans-serif" | "monospace" |
   "zeyada" | "cedarville-cursive" | "coming-soon" | "covered-by-your-grace" | "crafty-girls" | "comforter" | "indie-flower" | "give-you-glory" | "oregano" | "protest-revolution" | "protest-riot" | "rancho" | "sarina" | "single-day" | "onest" |
   "anonymous-pro" | "annie-use-your-telescope" | "nothing-you-could-do" | "oooh-baby" | "over-the-rainbow" | "schoolbell" | "sedgwick-ave";
 
-type TitleFontFamily = "arbutus" | "agbalumo" | "walter-turncoat" | "yatra-one";
-
 type FontMode = "basic" | "handwriting";
 
-type ActiveTab = "ui" | "fonts" | "bookmarks" | "titles" | "terms" | "data";
+type ActiveTab = "ui" | "fonts" | "bookmarks" | "terms" | "data";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -37,9 +35,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   );
   const [fontFamily, setFontFamily] = useState<FontFamily>(() => 
     (localStorage.getItem("stickee-font-family") as FontFamily) || "onest"
-  );
-  const [titleFont, setTitleFont] = useState<TitleFontFamily>(() => 
-    (localStorage.getItem("stickee-title-font") as TitleFontFamily) || "arbutus"
   );
   const [favoriteFonts, setFavoriteFonts] = useState<FontFamily[]>(() => 
     JSON.parse(localStorage.getItem("stickee-favorite-fonts") || "[]")
@@ -158,12 +153,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       'Protest+Riot',
       'Rancho',
       'Sarina',
-      'Single+Day',
-      // Title fonts
-      'Arbutus',
-      'Agbalumo',
-      'Walter+Turncoat',
-      'Yatra+One'
+      'Single+Day'
     ];
     
     allFonts.forEach(fontName => {
@@ -197,7 +187,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       
       // Get current localStorage values
       const currentFont = localStorage.getItem("stickee-font-family") as FontFamily || "onest";
-      const currentTitleFont = localStorage.getItem("stickee-title-font") as TitleFontFamily || "arbutus";
       const currentFavorites = JSON.parse(localStorage.getItem("stickee-favorite-fonts") || "[]");
       
       // Check if settings exist in Supabase
@@ -206,12 +195,12 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       if (!settings) {
         // No settings in Supabase, create with current localStorage values
         try {
-          await saveFontSettings(currentFont, currentTitleFont, currentFavorites);
+          await saveFontSettings(currentFont, currentFavorites);
         } catch (error) {
           console.error('Failed to sync font settings to Supabase:', error);
         }
       }
-      // If settings exist, we keep the current localStorage values as they're more recent
+      // If settings exist, we keep current localStorage values as they're more recent
     };
     
     syncWithSupabase();
@@ -469,27 +458,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     root.style.setProperty('--font-family-handwriting', fontValue);
   };
 
-  const applyTitleFont = (font: TitleFontFamily) => {
-    const root = document.documentElement;
-    let fontValue = '';
-    
-    switch (font) {
-      case "arbutus":
-        fontValue = 'Arbutus, serif';
-        break;
-      case "agbalumo":
-        fontValue = 'Agbalumo, display';
-        break;
-      case "walter-turncoat":
-        fontValue = '"Walter Turncoat", cursive';
-        break;
-      case "yatra-one":
-        fontValue = '"Yatra One", cursive';
-        break;
-    }
-    
-    root.style.setProperty('--font-family-title', fontValue);
-  };
 
   const handleFontChange = async (value: FontFamily) => {
     setFontFamily(value);
@@ -504,18 +472,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     }
   };
 
-  const handleTitleFontChange = async (value: TitleFontFamily) => {
-    setTitleFont(value);
-    localStorage.setItem("stickee-title-font", value);
-    applyTitleFont(value);
-    
-    // Save to Supabase
-    try {
-      await updateTitleFont(value);
-    } catch (error) {
-      console.error('Failed to save title font to Supabase:', error);
-    }
-  };
 
   const handleFontModeChange = (mode: FontMode) => {
     setFontMode(mode);
@@ -570,25 +526,9 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     return `text-lg ${fontFamily === font ? "bg-primary text-primary-foreground px-2 py-1 rounded-md font-semibold" : ""}`;
   };
 
-  const getTitleFontLabelClasses = (font: string) => {
-    return `text-lg ${titleFont === font ? "bg-primary text-primary-foreground px-2 py-1 rounded-md font-semibold" : ""}`;
-  };
 
   // Helper functions to sort fonts alphabetically
 
-  const sortTitleFontsAlphabetically = (fonts: TitleFontFamily[]) => {
-    return [...fonts].sort((a, b) => {
-      const nameA = a === "arbutus" ? "Arbutus" : 
-                   a === "agbalumo" ? "Agbalumo" :
-                   a === "walter-turncoat" ? "Walter Turncoat" :
-                   "Yatra One";
-      const nameB = b === "arbutus" ? "Arbutus" : 
-                   b === "agbalumo" ? "Agbalumo" :
-                   b === "walter-turncoat" ? "Walter Turncoat" :
-                   "Yatra One";
-      return nameA.localeCompare(nameB);
-    });
-  };
 
   const getFontDisplayValue = (font: FontFamily): string => {
     switch (font) {
@@ -710,14 +650,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
               className="flex-1"
             >
               Fonts
-            </Button>
-            <Button
-              variant={activeTab === "titles" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveTab("titles")}
-              className="flex-1"
-            >
-              Titles
             </Button>
             <Button
               variant={activeTab === "bookmarks" ? "default" : "ghost"}
@@ -898,51 +830,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     ))}
                   </div>
                 )}
-              </div>
-            )}
-            
-            {activeTab === "titles" && (
-              <div className="space-y-4">
-                <div className="bg-muted p-3 rounded-lg">
-                  <p className="text-sm font-medium">Currently Using:</p>
-                  <p className="text-lg" style={{ 
-                    fontFamily: titleFont === "arbutus" ? 'Arbutus, serif' : 
-                              titleFont === "agbalumo" ? 'Agbalumo, display' :
-                              titleFont === "walter-turncoat" ? '"Walter Turncoat", cursive' :
-                              '"Yatra One", cursive'
-                  }}>
-                    {titleFont === "arbutus" ? "Arbutus" :
-                     titleFont === "agbalumo" ? "Agbalumo" :
-                     titleFont === "walter-turncoat" ? "Walter Turncoat" :
-                     "Yatra One"}
-                  </p>
-                </div>
-                <h3 className="text-sm font-medium">Title Fonts</h3>
-                <p className="text-sm text-muted-foreground">
-                  Choose a font for note titles. These fonts are designed to make headings stand out.
-                </p>
-                <div className="space-y-2">
-                  <RadioGroup value={titleFont} onValueChange={handleTitleFontChange}>
-                    {sortTitleFontsAlphabetically(["arbutus", "agbalumo", "walter-turncoat", "yatra-one"]).map((font) => (
-                      <div key={font} className="flex items-center justify-between space-x-2">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value={font} id={`title-${font}`} />
-                          <Label htmlFor={`title-${font}`} className={getTitleFontLabelClasses(font)} style={{ 
-                            fontFamily: font === "arbutus" ? 'Arbutus, serif' : 
-                                      font === "agbalumo" ? 'Agbalumo, display' :
-                                      font === "walter-turncoat" ? '"Walter Turncoat", cursive' :
-                                      '"Yatra One", cursive'
-                          }}>
-                            {font === "arbutus" ? "Arbutus" :
-                             font === "agbalumo" ? "Agbalumo" :
-                             font === "walter-turncoat" ? "Walter Turncoat" :
-                             "Yatra One"}
-                          </Label>
-                        </div>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
               </div>
             )}
             

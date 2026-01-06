@@ -34,7 +34,7 @@ export const getFontSettings = async (): Promise<FontSettings | null> => {
   }
 };
 
-export const saveFontSettings = async (currentFont: string, titleFont: string, favoriteFonts: string[]): Promise<boolean> => {
+export const saveFontSettings = async (currentFont: string, favoriteFonts: string[]): Promise<boolean> => {
   const userId = await getUserId();
   
   try {
@@ -59,7 +59,6 @@ export const saveFontSettings = async (currentFont: string, titleFont: string, f
         .from('font_settings')
         .update({
           current_font: currentFont,
-          title_font: titleFont,
           favorite_fonts: favoriteFonts,
           updated_at: new Date().toISOString()
         })
@@ -76,7 +75,6 @@ export const saveFontSettings = async (currentFont: string, titleFont: string, f
         .insert({
           user_id: userId,
           current_font: currentFont,
-          title_font: titleFont,
           favorite_fonts: favoriteFonts,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
