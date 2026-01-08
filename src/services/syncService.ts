@@ -335,6 +335,42 @@ class SyncService {
       console.error('Error cleaning up expired sessions:', error);
     }
   }
+
+  // Disconnect a sync session
+  async disconnectSession(sessionId: string): Promise<void> {
+    try {
+      const userId = await getUserId();
+      if (!userId) throw new Error('User ID not available');
+
+      // Update session status to disconnected
+      const { error } = await supabase
+        .from('sync_sessions')
+        .update({
+          status: 'disconnected',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', sessionId)
+        .or(`host_user_id.eq.${userId},joiner_user_id.eq.${userId}`);
+
+      if (error) throw error;
+
+      // Log the disconnection
+      await this.logSyncOperation('link_device', {
+        session_id: sessionId,
+        action: 'disconnect'
+      }, 'success');
+
+      toast.success('Device disconnected successfully');
+    } catch (error) {
+      console.error('Error disconnecting session:', error);
+      await this.logSyncOperation('link_device', {
+        session_id: sessionId,
+        action: 'disconnect',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }, 'failed');
+      throw error;
+    }
+  }
 }
 
 export const syncService = new SyncService();

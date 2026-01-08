@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { syncService, type Device, type SyncSession } from '@/services/syncService';
-import { Smartphone, Laptop, Tablet, Link, Clock, CheckCircle } from 'lucide-react';
+import { Smartphone, Laptop, Tablet, Link, Clock, CheckCircle, Unlink } from 'lucide-react';
 
 interface SyncModalProps {
   isOpen: boolean;
@@ -128,6 +128,18 @@ export function SyncModal({ isOpen, onClose }: SyncModalProps) {
       console.error('Error joining session:', error);
     } finally {
       setIsJoining(false);
+    }
+  };
+
+  const handleDisconnect = async (sessionId: string) => {
+    try {
+      await syncService.disconnectSession(sessionId);
+      loadSyncSessions();
+      loadUserDevices();
+      toast.success('Device disconnected successfully');
+    } catch (error) {
+      console.error('Error disconnecting session:', error);
+      toast.error('Failed to disconnect device');
     }
   };
 
@@ -315,7 +327,17 @@ export function SyncModal({ isOpen, onClose }: SyncModalProps) {
                           </div>
                         </div>
                       </div>
-                      <Badge variant="default">Connected</Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="default">Connected</Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDisconnect(session.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Unlink className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
