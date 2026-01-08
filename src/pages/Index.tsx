@@ -33,6 +33,7 @@ import { NoteDetailDialog } from "@/components/NoteDetailDialog";
 import { Checklist } from "@/components/Checklist";
 import { StickyNoteWindow } from "@/components/StickyNoteWindow";
 import { ArchivedNotesDialog } from "@/components/ArchivedNotesDialog";
+import { SyncModal } from "@/components/SyncModal";
 
 // Using the Note interface from types/note.ts
 
@@ -55,6 +56,7 @@ export default function Index() {
   const [noteReactions, setNoteReactions] = useState<Record<string, ReactionSummary[]>>({});
   const [showMassDeleteDialog, setShowMassDeleteDialog] = useState(false);
   const [archivedNotesDialogOpen, setArchivedNotesDialogOpen] = useState(false);
+  const [syncModalOpen, setSyncModalOpen] = useState(false);
   
   // Checklist state and handlers
   const {
@@ -760,10 +762,7 @@ export default function Index() {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => {
-                  // TODO: Open sharing modal when implemented
-                  toast.info("Sharing feature coming soon!");
-                }}
+                onClick={() => setSyncModalOpen(true)}
                 className="hidden md:flex"
               >
                 <Share className="h-5 w-5" />
@@ -955,6 +954,12 @@ export default function Index() {
           onNotesRefresh={loadNotes}
         />
       </Suspense>
+
+      {/* Sync Modal */}
+      <SyncModal
+        isOpen={syncModalOpen}
+        onClose={() => setSyncModalOpen(false)}
+      />
 
       {/* Version Display */}
       <div className="fixed bottom-4 left-4 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded shadow-sm" style={{ fontFamily: 'var(--font-family-handwriting)' }}>
