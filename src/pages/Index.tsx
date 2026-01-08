@@ -1,5 +1,5 @@
 import { useState, useEffect, Suspense } from "react";
-import { CheckSquare, Trash2, Settings, Plus, AlertCircle, Archive } from "lucide-react";
+import { CheckSquare, Trash2, Settings, Plus, AlertCircle, Archive, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { 
@@ -756,6 +756,17 @@ export default function Index() {
                 className="hidden md:flex"
               >
                 <Settings className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  // TODO: Open sharing modal when implemented
+                  toast.info("Sharing feature coming soon!");
+                }}
+                className="hidden md:flex"
+              >
+                <Share className="h-5 w-5" />
               </Button>
               <Button
                 onClick={(e) => {
