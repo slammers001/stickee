@@ -40,6 +40,21 @@ export const analytics = {
   // Check if PostHog is available
   isReady: () => {
     return typeof window !== 'undefined' && !!window.posthog;
+  },
+
+  // Get current user distinct ID
+  getDistinctId: () => {
+    if (typeof window !== 'undefined' && window.posthog) {
+      return window.posthog.get_distinct_id();
+    }
+    return null;
+  },
+
+  // Alias user ID (useful for cross-subdomain tracking)
+  alias: (aliasId: string, previousId?: string) => {
+    if (typeof window !== 'undefined' && window.posthog) {
+      window.posthog.alias(aliasId, previousId);
+    }
   }
 };
 
