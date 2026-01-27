@@ -1,6 +1,6 @@
 # Stickee: The Modern Desktop Sticky Note Application
 Stickee is a modern desktop application designed for managing and organizing digital sticky notes. Built with React, TypeScript, and Tauri, it combines the simplicity of traditional sticky notes with powerful digital features.
-To learn about Stickee, go to https://simicodes.xyz/stickee/info.
+To learn about Stickee, go to [https://stickee-info.simicodes.xyz](https://stickee-info.simicodes.xyz/).
 
 <!--![Stickee Architecture](./excalidraws/list_view.excalidraw.png)-->
 
