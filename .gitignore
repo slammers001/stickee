@@ -39,3 +39,6 @@ lerna-debug.log*
 ehthumbs.db
 Thumbs.db
 TERMS_OF_SERVICE.txt
+
+# Animated excalidraws
+excalidraw*
