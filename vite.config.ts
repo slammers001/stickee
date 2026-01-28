@@ -21,7 +21,7 @@ const lucideTreeShake = (): PluginOption => ({
   }
 });
 
-// @ts-ignore - lovable-tagger might not have types
+// @ts-expect-error - lovable-tagger might not have types
 export const componentTagger = (): PluginOption => ({
   name: 'component-tagger',
   // Add any necessary implementation here
