@@ -60,9 +60,6 @@ export const NoteDetailDialog = ({
   const [initialTitle, setInitialTitle] = useState(note?.title || "");
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [processingTimeout, setProcessingTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [lastTranscript, setLastTranscript] = useState('');
-  const [stableCount, setStableCount] = useState(0);
 
   const {
     transcript,
@@ -118,35 +115,30 @@ export const NoteDetailDialog = ({
         setIsListening(false);
       }
     );
+  }, [setCallbacks]);
 
-    return () => {
-      if (processingTimeout) {
-        clearTimeout(processingTimeout);
-      }
-    };
-  }, [setCallbacks, processingTimeout]);
-
-  // Auto-start voice recording when dialog opens
+  // Stop voice recording when dialog closes
   useEffect(() => {
-    if (open && isSupported) {
-      startListening();
-      setIsListening(true);
-    } else if (!open) {
+    if (!open && isListening) {
       stopListening();
       setIsListening(false);
+      resetTranscript();
     }
-  }, [open, isSupported]);
+  }, [open, isListening]);
+
+  // Reset transcript when dialog opens
+  useEffect(() => {
+    if (open) {
+      resetTranscript();
+    }
+  }, [open]);
 
   const handleVoiceResult = (transcript: string) => {
-    // Clear any existing timeout
-    if (processingTimeout) {
-      clearTimeout(processingTimeout);
-    }
-
     // Check for control commands first
     const normalizedText = transcript.toLowerCase().trim();
     
     if (normalizedText.includes('save') || normalizedText.includes('save changes')) {
+      // Don't add "save" to content, just save the note
       handleSaveAndClose();
       return;
     }
@@ -156,30 +148,18 @@ export const NoteDetailDialog = ({
       return;
     }
 
-    // Check if transcript has stabilized
-    if (transcript === lastTranscript) {
-      setStableCount(prev => prev + 1);
-    } else {
-      setStableCount(1);
-      setLastTranscript(transcript);
+    if (normalizedText.includes('delete') || normalizedText.includes('delete note')) {
+      handleDelete();
+      return;
     }
 
-    // Set a timeout to add content after speech stabilizes
-    const timeout = setTimeout(() => {
-      if (stableCount >= 2) {
-        // Add the transcript to content
-        setContent(prev => {
-          const newContent = prev + (prev ? '\n' : '') + transcript;
-          return newContent;
-        });
-        
-        resetTranscript();
-        setStableCount(0);
-        setLastTranscript('');
-      }
-    }, 800);
-
-    setProcessingTimeout(timeout);
+    // Add content immediately (no stabilization delay)
+    setContent(prev => {
+      const newContent = prev + (prev ? '\n' : '') + transcript;
+      return newContent;
+    });
+    
+    // Don't reset transcript here - let it naturally update
   };
 
   const toggleListening = () => {
@@ -362,7 +342,7 @@ export const NoteDetailDialog = ({
                   </div>
                   
                   <div className="text-xs text-muted-foreground">
-                    Say: "save" or "close"
+                    Say: "save", "close", or "delete"
                   </div>
                 </div>
 

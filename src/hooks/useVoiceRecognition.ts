@@ -56,40 +56,34 @@ export const useVoiceRecognition = () => {
     recognition.onresult = (event: any) => {
       // Use requestAnimationFrame to non-blocking processing
       requestAnimationFrame(() => {
-        let finalTranscript = '';
-        let interimTranscript = '';
-
-        // Limit processing to last few results for performance
-        const startIdx = Math.max(0, event.resultIndex - 2);
+        // Process only the latest result to avoid accumulation
+        const latestResult = event.results[event.results.length - 1];
         
-        for (let i = startIdx; i < event.results.length; i++) {
-          const result = event.results[i];
-          const transcript = result[0].transcript;
+        if (latestResult.isFinal) {
+          const transcript = latestResult[0].transcript;
           
-          if (result.isFinal) {
-            finalTranscript += transcript;
-          } else {
-            interimTranscript += transcript;
+          setState(prev => ({
+            ...prev,
+            transcript: transcript
+          }));
+          
+          if (onResultCallback.current) {
+            setTimeout(() => {
+              onResultCallback.current?.({
+                transcript: transcript,
+                confidence: latestResult[0].confidence,
+                isFinal: true
+              });
+            }, 0);
           }
-        }
-
-        const fullTranscript = finalTranscript || interimTranscript;
-        
-        setState(prev => ({
-          ...prev,
-          transcript: fullTranscript
-        }));
-
-        // Call the result callback if it exists (only for final results)
-        if (onResultCallback.current && finalTranscript) {
-          // Use setTimeout to defer callback and improve INP
-          setTimeout(() => {
-            onResultCallback.current?.({
-              transcript: finalTranscript,
-              confidence: event.results[event.results.length - 1][0].confidence,
-              isFinal: true
-            });
-          }, 0);
+        } else {
+          // Update with interim result for live display
+          const interimTranscript = latestResult[0].transcript;
+          
+          setState(prev => ({
+            ...prev,
+            transcript: interimTranscript
+          }));
         }
       });
     };
