@@ -757,6 +757,18 @@ export default function Index() {
               >
                 <Settings className="h-5 w-5" />
               </Button>
+              
+              {/* Voice Note Button - Desktop only */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDialogOpen(true)}
+                disabled={!termsAgreed}
+                className="hidden md:flex ml-2"
+              >
+                🎤 Voice Note
+              </Button>
+              
               <Button
                 onClick={(e) => {
                   if (!termsAgreed) {
@@ -808,6 +820,19 @@ export default function Index() {
                 : "Click the Stickee icon to create your first Stickee note!"
               }
             </p>
+            
+            {/* Mobile Voice Note Button */}
+            <div className="md:hidden">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDialogOpen(true)}
+                disabled={!termsAgreed}
+                className="w-full max-w-xs"
+              >
+                🎤 Voice Note
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
