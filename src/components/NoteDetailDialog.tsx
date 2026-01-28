@@ -10,11 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Trash2 } from "lucide-react";
+import { Trash2, Mic, MicOff } from "lucide-react";
 import { NoteStatus } from "./StickyNote";
 import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 import { cn } from "@/lib/utils";
 import { soundEffects } from "@/utils/soundEffects";
+import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
 
 interface NoteDetailDialogProps {
   open: boolean;
@@ -58,6 +59,17 @@ export const NoteDetailDialog = ({
   const [initialColor, setInitialColor] = useState(note?.color || "yellow");
   const [initialTitle, setInitialTitle] = useState(note?.title || "");
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+
+  const {
+    transcript,
+    isSupported,
+    error,
+    startListening,
+    stopListening,
+    resetTranscript,
+    setCallbacks
+  } = useVoiceRecognition();
 
   const hasUnsavedChanges = 
     title.trim() !== (initialTitle || "") ||
@@ -89,6 +101,75 @@ export const NoteDetailDialog = ({
 
   const handleCancelUnsaved = () => {
     setShowUnsavedDialog(false);
+  };
+
+  // Voice recognition setup
+  useEffect(() => {
+    setCallbacks(
+      (result) => {
+        if (result.isFinal) {
+          handleVoiceResult(result.transcript);
+        }
+      },
+      () => {
+        setIsListening(false);
+      }
+    );
+  }, [setCallbacks]);
+
+  // Stop voice recording when dialog closes
+  useEffect(() => {
+    if (!open && isListening) {
+      stopListening();
+      setIsListening(false);
+      resetTranscript();
+    }
+  }, [open, isListening]);
+
+  // Reset transcript when dialog opens
+  useEffect(() => {
+    if (open) {
+      resetTranscript();
+    }
+  }, [open]);
+
+  const handleVoiceResult = (transcript: string) => {
+    // Check for control commands first
+    const normalizedText = transcript.toLowerCase().trim();
+    
+    if (normalizedText.includes('save') || normalizedText.includes('save changes')) {
+      // Don't add "save" to content, just save the note
+      handleSaveAndClose();
+      return;
+    }
+    
+    if (normalizedText.includes('close') || normalizedText.includes('cancel')) {
+      handleOpenChange(false);
+      return;
+    }
+
+    if (normalizedText.includes('delete') || normalizedText.includes('delete note')) {
+      handleDelete();
+      return;
+    }
+
+    // Add content immediately (no stabilization delay)
+    setContent(prev => {
+      const newContent = prev + (prev ? '\n' : '') + transcript;
+      return newContent;
+    });
+    
+    // Don't reset transcript here - let it naturally update
+  };
+
+  const toggleListening = () => {
+    if (isListening) {
+      stopListening();
+      setIsListening(false);
+    } else {
+      startListening();
+      setIsListening(true);
+    }
   };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -216,6 +297,71 @@ export const NoteDetailDialog = ({
             <p className="text-xs text-muted-foreground mt-2">
               Press Ctrl+Enter to save quickly • Maximum 1500 characters
             </p>
+            
+            {/* Voice Controls */}
+            {isSupported && (
+              <div className="mt-3 p-3 bg-muted/30 rounded-lg border">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={isListening ? "destructive" : "outline"}
+                      size="sm"
+                      onClick={toggleListening}
+                      className="transition-all duration-200"
+                    >
+                      {isListening ? (
+                        <>
+                          <MicOff className="h-4 w-4 mr-2" />
+                          Stop Recording
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="h-4 w-4 mr-2" />
+                          Start Recording
+                        </>
+                      )}
+                    </Button>
+                    
+                    {isListening && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          {[...Array(3)].map((_, i) => (
+                            <div
+                              key={i}
+                              className="w-1 h-3 bg-red-500 rounded-full animate-pulse"
+                              style={{
+                                animationDelay: `${i * 0.1}s`,
+                                animationDuration: '1s'
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-red-500">Listening...</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="text-xs text-muted-foreground">
+                    Say: "save", "close", or "delete"
+                  </div>
+                </div>
+
+                {/* Live Transcript */}
+                {transcript && (
+                  <div className="mt-2 p-2 bg-background rounded text-sm">
+                    <div className="text-xs text-muted-foreground mb-1">Heard:</div>
+                    <div>{transcript}</div>
+                  </div>
+                )}
+
+                {/* Error Display */}
+                {error && (
+                  <div className="mt-2 text-xs text-red-500 bg-red-50 px-2 py-1 rounded">
+                    {error}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="text-xs text-muted-foreground mt-1">
               {content.length}/1500 characters
             </div>

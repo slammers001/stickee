@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,8 @@ import { NoteStatus } from "@/components/StickyNote";
 import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 import { cn } from "@/lib/utils";
 import { soundEffects } from "@/utils/soundEffects";
+import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
+import { Mic, MicOff } from "lucide-react";
 
 interface AddNoteDialogProps {
   open: boolean;
@@ -38,6 +40,17 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   const [status, setStatus] = useState<NoteStatus>("To-Do");
   const [color, setColor] = useState(colors[0]);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+
+  const {
+    transcript,
+    isSupported,
+    error,
+    startListening,
+    stopListening,
+    resetTranscript,
+    setCallbacks
+  } = useVoiceRecognition();
 
   const hasUnsavedChanges = title.trim() !== "" || content.trim() !== "";
 
@@ -114,7 +127,12 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   };
 
   const handleSave = () => {
+    console.log('handleSave called'); // Debug log
+    console.log('Content to save:', content); // Debug log
+    console.log('Content trimmed:', content.trim()); // Debug log
+    
     if (content.trim()) {
+      console.log('Saving note...'); // Debug log
       soundEffects.playNewNoteSound();
       onSave(title.trim(), content, status, color);
       // Reset form after successful save
@@ -123,6 +141,85 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
       setStatus("To-Do");
       setColor(colors[0]);
       onOpenChange(false);
+    } else {
+      console.log('No content to save - save cancelled'); // Debug log
+    }
+  };
+
+  // Voice recognition setup
+  useEffect(() => {
+    setCallbacks(
+      (result) => {
+        if (result.isFinal) {
+          handleVoiceResult(result.transcript);
+        }
+      },
+      () => {
+        setIsListening(false);
+      }
+    );
+  }, [setCallbacks]);
+
+  // Stop voice recording when dialog closes
+  useEffect(() => {
+    if (!open && isListening) {
+      stopListening();
+      setIsListening(false);
+      resetTranscript();
+    }
+  }, [open, isListening]);
+
+  // Reset transcript when dialog opens
+  useEffect(() => {
+    if (open) {
+      resetTranscript();
+    }
+  }, [open]);
+
+  const handleVoiceResult = (transcript: string) => {
+    console.log('Voice result received:', transcript); // Debug log
+    
+    // Check for control commands first
+    const normalizedText = transcript.toLowerCase().trim();
+    console.log('Normalized text:', normalizedText); // Debug log
+    
+    if (normalizedText === 'save' || normalizedText === 'save changes' || normalizedText.includes('save')) {
+      console.log('Save command detected'); // Debug log
+      // Don't add "save" to content, just save the note
+      handleSave();
+      return;
+    }
+    
+    if (normalizedText === 'close' || normalizedText === 'cancel' || normalizedText.includes('close')) {
+      console.log('Close command detected'); // Debug log
+      onOpenChange(false);
+      return;
+    }
+
+    if (normalizedText === 'delete' || normalizedText === 'delete note' || normalizedText.includes('delete')) {
+      console.log('Delete command detected'); // Debug log
+      // For new notes, delete just means close without saving
+      onOpenChange(false);
+      return;
+    }
+
+    // Add content immediately (no stabilization delay)
+    console.log('Adding content to note:', transcript); // Debug log
+    setContent(prev => {
+      const newContent = prev + (prev ? '\n' : '') + transcript;
+      return newContent;
+    });
+    
+    // Don't reset transcript here - let it naturally update
+  };
+
+  const toggleListening = () => {
+    if (isListening) {
+      stopListening();
+      setIsListening(false);
+    } else {
+      startListening();
+      setIsListening(true);
     }
   };
 
@@ -191,6 +288,71 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
             <p className="text-xs text-muted-foreground mt-2">
               Press Ctrl+Enter to save quickly • Maximum 1500 characters
             </p>
+            
+            {/* Voice Controls */}
+            {isSupported && (
+              <div className="mt-3 p-3 bg-muted/30 rounded-lg border">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={isListening ? "destructive" : "outline"}
+                      size="sm"
+                      onClick={toggleListening}
+                      className="transition-all duration-200"
+                    >
+                      {isListening ? (
+                        <>
+                          <MicOff className="h-4 w-4 mr-2" />
+                          Stop Recording
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="h-4 w-4 mr-2" />
+                          Start Recording
+                        </>
+                      )}
+                    </Button>
+                    
+                    {isListening && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          {[...Array(3)].map((_, i) => (
+                            <div
+                              key={i}
+                              className="w-1 h-3 bg-red-500 rounded-full animate-pulse"
+                              style={{
+                                animationDelay: `${i * 0.1}s`,
+                                animationDuration: '1s'
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-red-500">Listening...</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="text-xs text-muted-foreground">
+                    Say: "save", "close", or "delete"
+                  </div>
+                </div>
+
+                {/* Live Transcript */}
+                {transcript && (
+                  <div className="mt-2 p-2 bg-background rounded text-sm">
+                    <div className="text-xs text-muted-foreground mb-1">Heard:</div>
+                    <div>{transcript}</div>
+                  </div>
+                )}
+
+                {/* Error Display */}
+                {error && (
+                  <div className="mt-2 text-xs text-red-500 bg-red-50 px-2 py-1 rounded">
+                    {error}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="text-xs text-muted-foreground mt-1">
               {content.length}/1500 characters
             </div>

@@ -757,6 +757,7 @@ export default function Index() {
               >
                 <Settings className="h-5 w-5" />
               </Button>
+              
               <Button
                 onClick={(e) => {
                   if (!termsAgreed) {
