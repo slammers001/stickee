@@ -21,11 +21,6 @@ const lucideTreeShake = (): PluginOption => ({
   }
 });
 
-// @ts-ignore - lovable-tagger might not have types
-export const componentTagger = (): PluginOption => ({
-  name: 'component-tagger',
-  // Add any necessary implementation here
-});
 
 // Plugin to copy TERMS_OF_SERVICE.md to build output
 const copyTermsFile = (): PluginOption => ({
@@ -60,7 +55,6 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(), 
-      mode === "development" && componentTagger(),
       viteCompression({
         algorithm: 'gzip',
         ext: '.gz'
