@@ -20,8 +20,6 @@ To learn about Stickee, go to [https://stickee-info.simicodes.xyz](https://stick
 * **CRUD Operations:** Full Create, Read, Update, and Delete (CRUD) functionality for notes.
 * **Data Encryption:** Robust security with encryption of note content and titles in the Supabase database.
 
-
-
 ## Core Functionality
 
 ### Note Management
@@ -43,7 +41,7 @@ To learn about Stickee, go to [https://stickee-info.simicodes.xyz](https://stick
 * **Technology Stack:**
     * **Framework:** React, TypeScript
     * **Desktop Framework:** Tauri
-    * **Database:** Supabase
+    * **Database:** Supabase (your notes are encrypted in a secure style. Nobody is able to view your notes.)
     * **State Management:** React Query
     * **UI Components:** Radix UI
 * **Architecture:** Clean separation of concerns (UI, Business Logic, Data Services) with TypeScript for type safety and service layer abstraction.

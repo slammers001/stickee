@@ -21,6 +21,7 @@ const lucideTreeShake = (): PluginOption => ({
   }
 });
 
+
 // Plugin to copy TERMS_OF_SERVICE.md to build output
 const copyTermsFile = (): PluginOption => ({
   name: 'copy-terms-file',
