@@ -214,6 +214,11 @@ All colors MUST be HSL.
     background-color: hsl(var(--primary) / 0.9) !important;
   }
 
+  /* Override for StickeeList button to keep slight transparency */
+  .dark button:hover.bg-\[hsl\(var\(--note-pink\)\)\] {
+    background-color: hsl(var(--note-pink) / 0.9) !important;
+  }
+
   .no-select {
     -webkit-user-select: none;
     -moz-user-select: none;
