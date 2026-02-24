@@ -55,3 +55,7 @@ Stickee emphasizes both functionality and user experience with:
 *   Smooth animations
 *   Intuitive interactions
 *   A playful aesthetic
+
+
+[![Stargazers repo roster for @slammers001/stickee](http://reporoster.com/stars/slammers001/slammers001)](https://github.com/slammers001/slammers001/stargazers)
+
