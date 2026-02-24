@@ -209,6 +209,11 @@ All colors MUST be HSL.
     background-color: transparent !important;
   }
 
+  /* Override for primary buttons to keep slight transparency */
+  .dark button.bg-primary:hover {
+    background-color: hsl(var(--primary) / 0.9) !important;
+  }
+
   .no-select {
     -webkit-user-select: none;
     -moz-user-select: none;
