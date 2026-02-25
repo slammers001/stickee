@@ -93,22 +93,22 @@ export function Sidebar({ isOpen, isCollapsed, onToggle, onToggleCollapse }: Sid
             {/* Collapse Button (Desktop only) */}
             <button
               onClick={onToggleCollapse}
-              className="hidden md:flex p-2 rounded-md hover:bg-accent"
+              className="hidden md:flex group p-2 rounded-md hover:bg-[hsl(var(--note-pink))] dark:hover:bg-[hsl(var(--note-pink)/0.8)] transition-colors"
               title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {isCollapsed ? (
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 text-black dark:text-white transition-colors" />
               ) : (
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 text-black dark:text-white transition-colors" />
               )}
             </button>
             
             {/* Mobile Close Button */}
             <button
               onClick={onToggle}
-              className="md:hidden p-2 rounded-md hover:bg-accent"
+              className="md:hidden group p-2 rounded-md hover:bg-[hsl(var(--note-pink))] dark:hover:bg-[hsl(var(--note-pink)/0.8)] transition-colors"
             >
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5 text-black dark:text-white transition-colors" />
             </button>
           </div>
         </div>
@@ -123,14 +123,14 @@ export function Sidebar({ isOpen, isCollapsed, onToggle, onToggleCollapse }: Sid
                 <button
                   key={item.id}
                   className={cn(
-                    "w-full flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                    "hover:bg-accent hover:text-accent-foreground text-muted-foreground",
+                    "group w-full flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    "hover:bg-[hsl(var(--note-pink))] dark:hover:bg-[hsl(var(--note-pink)/0.8)]",
                     isCollapsed && "justify-center px-2"
                   )}
                   title={isCollapsed ? item.label : undefined}
                 >
-                  <Icon className="h-5 w-5 flex-shrink-0" />
-                  {!isCollapsed && <span>{item.label}</span>}
+                  <Icon className="h-5 w-5 flex-shrink-0 text-black dark:text-white transition-colors" />
+                  {!isCollapsed && <span className="text-black dark:text-white transition-colors">{item.label}</span>}
                 </button>
               );
             })}
@@ -146,7 +146,7 @@ export function Sidebar({ isOpen, isCollapsed, onToggle, onToggleCollapse }: Sid
                 href="https://github.com/slammers001" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="underline hover:text-foreground transition-colors"
+                className="underline hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
               >
                 slammers001
               </a>

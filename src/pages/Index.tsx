@@ -638,9 +638,9 @@ export default function Index() {
       {/* Mobile Menu Button */}
       <button
         onClick={toggleSidebar}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-card border rounded-md shadow-md"
+        className="md:hidden fixed top-4 left-4 z-50 group p-2 bg-card border rounded-md shadow-md hover:bg-[hsl(var(--note-pink))] dark:hover:bg-[hsl(var(--note-pink)/0.8)] transition-colors"
       >
-        <Menu className="h-5 w-5" />
+        <Menu className="h-5 w-5 text-black dark:text-white transition-colors" />
       </button>
 
       {/* Sidebar */}
