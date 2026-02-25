@@ -1,5 +1,5 @@
 import { useState, useEffect, Suspense } from "react";
-import { CheckSquare, Trash2, Settings, Plus, AlertCircle, Archive } from "lucide-react";
+import { CheckSquare, Trash2, Settings, Plus, AlertCircle, Archive, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { 
@@ -33,10 +33,13 @@ import { NoteDetailDialog } from "@/components/NoteDetailDialog";
 import { Checklist } from "@/components/Checklist";
 import { StickyNoteWindow } from "@/components/StickyNoteWindow";
 import { ArchivedNotesDialog } from "@/components/ArchivedNotesDialog";
+import { Sidebar } from "@/components/Sidebar";
+import { useSidebar } from "@/contexts/SidebarContext";
 
 // Using the Note interface from types/note.ts
 
 export default function Index() {
+  const { isOpen: sidebarOpen, toggleSidebar } = useSidebar();
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
@@ -632,8 +635,22 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Mobile Menu Button */}
+      <button
+        onClick={toggleSidebar}
+        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-card border rounded-md shadow-md"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+
+      {/* Sidebar */}
+      <Sidebar 
+        isOpen={sidebarOpen}
+        onToggle={toggleSidebar}
+      />
+
       {/* Header */}
-      <header className="border-b bg-card shadow-sm">
+      <header className="border-b bg-card shadow-sm md:ml-64">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 flex-shrink-0">
@@ -780,7 +797,7 @@ export default function Index() {
       </header>
 
       {/* Main Board */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 md:ml-64">
         {filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
             <img 
