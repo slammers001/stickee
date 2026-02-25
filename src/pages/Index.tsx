@@ -39,7 +39,7 @@ import { useSidebar } from "@/contexts/SidebarContext";
 // Using the Note interface from types/note.ts
 
 export default function Index() {
-  const { isOpen: sidebarOpen, toggleSidebar } = useSidebar();
+  const { isOpen: sidebarOpen, toggleSidebar, isCollapsed, toggleCollapse } = useSidebar();
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
@@ -646,11 +646,16 @@ export default function Index() {
       {/* Sidebar */}
       <Sidebar 
         isOpen={sidebarOpen}
+        isCollapsed={isCollapsed}
         onToggle={toggleSidebar}
+        onToggleCollapse={toggleCollapse}
       />
 
       {/* Header */}
-      <header className="border-b bg-card shadow-sm md:ml-64">
+      <header className={cn(
+        "border-b bg-card shadow-sm transition-all duration-300",
+        isCollapsed ? "md:ml-16" : "md:ml-64"
+      )}>
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 flex-shrink-0">
@@ -797,7 +802,10 @@ export default function Index() {
       </header>
 
       {/* Main Board */}
-      <main className="container mx-auto px-4 py-8 md:ml-64">
+      <main className={cn(
+        "container mx-auto px-4 py-8 transition-all duration-300",
+        isCollapsed ? "md:ml-16" : "md:ml-64"
+      )}>
         {filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
             <img 

@@ -7,12 +7,16 @@ import {
   Archive, 
   Settings, 
   Bug,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
+  isCollapsed: boolean;
   onToggle: () => void;
+  onToggleCollapse: () => void;
 }
 
 const sidebarItems = [
@@ -53,7 +57,7 @@ const sidebarItems = [
   },
 ];
 
-export function Sidebar({ isOpen, onToggle }: SidebarProps) {
+export function Sidebar({ isOpen, isCollapsed, onToggle, onToggleCollapse }: SidebarProps) {
   return (
     <>
       {/* Mobile Overlay */}
@@ -66,30 +70,47 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed left-0 top-0 h-full bg-card border-r shadow-lg z-50 transition-transform duration-300 ease-in-out",
-        "w-64", // Fixed width
+        "fixed left-0 top-0 h-full bg-card border-r shadow-lg z-50 transition-all duration-300 ease-in-out",
+        isCollapsed ? "w-16" : "w-64", // Dynamic width
         isOpen ? "translate-x-0" : "-translate-x-full",
         "md:translate-x-0" // Always visible on desktop
       )}>
         
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <div className="flex items-center space-x-2">
-            <img 
-              src="./stickee.png" 
-              alt="Stickee" 
-              className="h-8 w-8 object-contain"
-            />
-            <h1 className="text-xl font-bold font-handwriting">Stickee</h1>
-          </div>
+          {!isCollapsed && (
+            <div className="flex items-center space-x-2">
+              <img 
+                src="./stickee.png" 
+                alt="Stickee" 
+                className="h-8 w-8 object-contain"
+              />
+              <h1 className="text-xl font-bold font-handwriting">Stickee</h1>
+            </div>
+          )}
           
-          {/* Mobile Close Button */}
-          <button
-            onClick={onToggle}
-            className="md:hidden p-2 rounded-md hover:bg-accent"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center space-x-1">
+            {/* Collapse Button (Desktop only) */}
+            <button
+              onClick={onToggleCollapse}
+              className="hidden md:flex p-2 rounded-md hover:bg-accent"
+              title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {isCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </button>
+            
+            {/* Mobile Close Button */}
+            <button
+              onClick={onToggle}
+              className="md:hidden p-2 rounded-md hover:bg-accent"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation */}
@@ -101,10 +122,15 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
               return (
                 <button
                   key={item.id}
-                  className="w-full flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground text-muted-foreground"
+                  className={cn(
+                    "w-full flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    "hover:bg-accent hover:text-accent-foreground text-muted-foreground",
+                    isCollapsed && "justify-center px-2"
+                  )}
+                  title={isCollapsed ? item.label : undefined}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span>{item.label}</span>
+                  <Icon className="h-5 w-5 flex-shrink-0" />
+                  {!isCollapsed && <span>{item.label}</span>}
                 </button>
               );
             })}
@@ -112,19 +138,21 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t">
-          <div className="text-xs text-muted-foreground">
-            Made by{" "}
-            <a 
-              href="https://github.com/slammers001" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="underline hover:text-foreground transition-colors"
-            >
-              slammers001
-            </a>
+        {!isCollapsed && (
+          <div className="p-4 border-t">
+            <div className="text-xs text-muted-foreground">
+              Made by{" "}
+              <a 
+                href="https://github.com/slammers001" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="underline hover:text-foreground transition-colors"
+              >
+                slammers001
+              </a>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </>
   );
