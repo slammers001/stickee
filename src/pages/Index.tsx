@@ -1,4 +1,5 @@
 import { useState, useEffect, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import { CheckSquare, Trash2, Settings, Plus, AlertCircle, Archive, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -39,7 +40,8 @@ import { useSidebar } from "@/contexts/SidebarContext";
 // Using the Note interface from types/note.ts
 
 export default function Index() {
-  const { isOpen: sidebarOpen, toggleSidebar, isCollapsed, toggleCollapse } = useSidebar();
+  const { isOpen: sidebarOpen, toggleSidebar, isCollapsed, toggleCollapse, activeView, setActiveView } = useSidebar();
+  const navigate = useNavigate();
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
@@ -199,6 +201,15 @@ export default function Index() {
   const handleShowTermsDialog = (show: boolean) => {
     setShowTermsDialog(show);
   };
+
+  // Handle navigation based on activeView
+  useEffect(() => {
+    if (activeView === 'report') {
+      navigate('/report');
+    } else if (activeView !== 'notes') {
+      navigate('/');
+    }
+  }, [activeView, navigate]);
 
   // Keyboard shortcut for new note - optimized for INP
   useEffect(() => {
@@ -649,6 +660,8 @@ export default function Index() {
         isCollapsed={isCollapsed}
         onToggle={toggleSidebar}
         onToggleCollapse={toggleCollapse}
+        activeView={activeView}
+        onViewChange={setActiveView}
       />
 
       {/* Header */}

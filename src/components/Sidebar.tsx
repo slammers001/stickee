@@ -17,6 +17,8 @@ interface SidebarProps {
   isCollapsed: boolean;
   onToggle: () => void;
   onToggleCollapse: () => void;
+  activeView: string;
+  onViewChange: (view: string) => void;
 }
 
 const sidebarItems = [
@@ -57,7 +59,7 @@ const sidebarItems = [
   },
 ];
 
-export function Sidebar({ isOpen, isCollapsed, onToggle, onToggleCollapse }: SidebarProps) {
+export function Sidebar({ isOpen, isCollapsed, onToggle, onToggleCollapse, activeView, onViewChange }: SidebarProps) {
   return (
     <>
       {/* Mobile Overlay */}
@@ -122,10 +124,18 @@ export function Sidebar({ isOpen, isCollapsed, onToggle, onToggleCollapse }: Sid
               return (
                 <button
                   key={item.id}
+                  onClick={() => {
+                    onViewChange(item.id);
+                    // Close sidebar on mobile after selection
+                    if (window.innerWidth < 768) {
+                      onToggle();
+                    }
+                  }}
                   className={cn(
                     "group w-full flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                     "hover:bg-[hsl(var(--note-pink))] dark:hover:bg-[hsl(var(--note-pink)/0.8)]",
-                    isCollapsed && "justify-center px-2"
+                    isCollapsed && "justify-center px-2",
+                    activeView === item.id && "bg-[hsl(var(--note-pink))] dark:bg-[hsl(var(--note-pink)/0.8)]"
                   )}
                   title={isCollapsed ? item.label : undefined}
                 >
