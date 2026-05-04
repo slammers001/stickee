@@ -143,3 +143,4 @@ For questions about these Terms, contact: [github.com/slammers001](github.com/sl
 **Acknowledgement:** By using Stickee, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
 
 **Version:** Terms v2.0 for Stickee v0.1.0
+
