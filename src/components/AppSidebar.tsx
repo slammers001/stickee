@@ -1,6 +1,7 @@
 import {
   IconArrowLeft,
   IconArrowRight,
+  IconBolt,
   IconDiamond,
   IconLayoutBoard,
   IconTemplate,
@@ -8,7 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-export type SidebarTab = "board" | "templates";
+export type SidebarTab = "board" | "templates" | "automations";
 
 interface AppSidebarProps {
   activeTab: SidebarTab;
@@ -29,6 +30,12 @@ const NAV = [
     label: "Templates",
     icon: IconTemplate,
     description: "Ready-made note layouts",
+  },
+  {
+    id: "automations" as const,
+    label: "Automations",
+    icon: IconBolt,
+    description: "Trigger-and-action rules",
   },
 ];
 

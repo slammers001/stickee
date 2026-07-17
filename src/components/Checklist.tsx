@@ -1,9 +1,16 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Check, Trash2, Plus, List } from 'lucide-react';
+import { Check, Trash2, Plus, List, MoreVertical, Pencil, CopyPlus, ListX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ChecklistProps {
   items: {
@@ -11,10 +18,10 @@ interface ChecklistProps {
     text: string;
     completed: boolean;
   }[];
-  onAdd: (text: string) => void;
-  onToggle: (id: string) => void;
-  onUpdate: (id: string, text: string) => void;
-  onDelete: (id: string) => void;
+  onAdd: (text: string) => void | Promise<void>;
+  onToggle: (id: string) => void | Promise<void>;
+  onUpdate: (id: string, text: string) => void | Promise<void>;
+  onDelete: (id: string) => void | Promise<void>;
   isOpen: boolean;
   onToggleOpen: () => void;
 }
@@ -31,21 +38,28 @@ export function Checklist({
   const [newItemText, setNewItemText] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
-  
+
   // Check if terms are agreed
   const termsAgreed = localStorage.getItem("stickee-terms-agreed") === "true";
 
-  const handleAddItem = (e: React.FormEvent) => {
+  const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!termsAgreed) {
       toast.error("You must agree to the Terms of Service to use the checklist");
       return;
     }
     if (!newItemText.trim()) return;
-    onAdd(newItemText);
+    const text = newItemText.trim();
     setNewItemText('');
+    try {
+      await onAdd(text);
+    } catch (error) {
+      console.error('Failed to add checklist item:', error);
+      toast.error(error instanceof Error ? error.message : 'Could not save task to Supabase');
+      setNewItemText(text);
+    }
   };
-  
+
   const handleToggleOpen = () => {
     if (!termsAgreed) {
       toast.error("You must agree to the Terms of Service to use the checklist");
@@ -53,21 +67,67 @@ export function Checklist({
     }
     onToggleOpen();
   };
-  
-  const handleToggle = (id: string) => {
+
+  const handleToggle = async (id: string) => {
     if (!termsAgreed) {
       toast.error("You must agree to the Terms of Service to use the checklist");
       return;
     }
-    onToggle(id);
+    try {
+      await onToggle(id);
+    } catch (error) {
+      console.error('Failed to toggle checklist item:', error);
+      toast.error(error instanceof Error ? error.message : 'Could not update task in Supabase');
+    }
   };
-  
-  const handleDelete = (id: string) => {
+
+  const handleDelete = async (id: string) => {
     if (!termsAgreed) {
       toast.error("You must agree to the Terms of Service to use the checklist");
       return;
     }
-    onDelete(id);
+    try {
+      await onDelete(id);
+    } catch (error) {
+      console.error('Failed to delete checklist item:', error);
+      toast.error(error instanceof Error ? error.message : 'Could not delete task from Supabase');
+    }
+  };
+
+  const handleDuplicate = async (text: string) => {
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to use the checklist");
+      return;
+    }
+    try {
+      await onAdd(text);
+      toast.success('Task duplicated');
+    } catch (error) {
+      console.error('Failed to duplicate checklist item:', error);
+      toast.error(error instanceof Error ? error.message : 'Could not duplicate task in Supabase');
+    }
+  };
+
+  const handleClearCompleted = async () => {
+    if (!termsAgreed) {
+      toast.error("You must agree to the Terms of Service to use the checklist");
+      return;
+    }
+    const completedIds = items.filter((item) => item.completed).map((item) => item.id);
+    if (completedIds.length === 0) {
+      toast("No completed tasks to clear");
+      return;
+    }
+    try {
+      // Sequential deletes so each hits Supabase and we can stop on failure.
+      for (const id of completedIds) {
+        await onDelete(id);
+      }
+      toast.success(`Cleared ${completedIds.length} completed task${completedIds.length === 1 ? '' : 's'}`);
+    } catch (error) {
+      console.error('Failed to clear completed checklist items:', error);
+      toast.error(error instanceof Error ? error.message : 'Could not clear completed tasks in Supabase');
+    }
   };
 
   const handleStartEdit = (id: string, text: string) => {
@@ -75,11 +135,20 @@ export function Checklist({
     setEditingText(text);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingId || !editingText.trim()) return;
-    onUpdate(editingId, editingText);
+    const id = editingId;
+    const text = editingText.trim();
     setEditingId(null);
     setEditingText('');
+    try {
+      await onUpdate(id, text);
+    } catch (error) {
+      console.error('Failed to update checklist item:', error);
+      toast.error(error instanceof Error ? error.message : 'Could not update task in Supabase');
+      setEditingId(id);
+      setEditingText(text);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -131,30 +200,50 @@ export function Checklist({
         <div className="fixed right-4 bottom-20 z-50 w-80 bg-background rounded-lg shadow-lg border p-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold" style={{ fontFamily: 'var(--font-family-handwriting)' }}>StickeeList</h3>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={onToggleOpen}
-              className="rounded-full h-10 w-10 hover:bg-accent"
-            >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width="24" 
-                height="24" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-                className="h-5 w-5"
+            <div className="flex items-center gap-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full h-9 w-9 hover:bg-accent"
+                    title="StickeeList actions"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleClearCompleted}>
+                    <ListX className="h-4 w-4 mr-2" />
+                    Clear completed
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onToggleOpen}
+                className="rounded-full h-10 w-10 hover:bg-accent"
               >
-                <path d="M18 6 6 18"/>
-                <path d="m6 6 12 12"/>
-              </svg>
-            </Button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-5 w-5"
+                >
+                  <path d="M18 6 6 18"/>
+                  <path d="m6 6 12 12"/>
+                </svg>
+              </Button>
+            </div>
           </div>
-          
+
           <form onSubmit={handleAddItem} className="flex gap-2 mb-4">
             <Input
               type="text"
@@ -218,17 +307,36 @@ export function Checklist({
                       {item.text}
                     </span>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(item.id);
-                    }}
-                  >
-                    <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleStartEdit(item.id, item.text)}>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDuplicate(item.text)}>
+                        <CopyPlus className="h-4 w-4 mr-2" />
+                        Duplicate
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => handleDelete(item.id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               ))
             )}

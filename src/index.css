@@ -219,6 +219,16 @@ All colors MUST be HSL.
     background-color: rgb(255 255 255 / 0.9) !important;
   }
 
+  /* Automations tab buttons: lighten on hover in dark mode instead of the
+     global rule fading them to fully transparent. */
+  .dark .automation-button:hover {
+    background-color: hsl(var(--muted)) !important;
+  }
+
+  .dark .automation-button-primary:hover {
+    background-color: hsl(var(--primary) / 0.85) !important;
+  }
+
   .no-select {
     -webkit-user-select: none;
     -moz-user-select: none;
