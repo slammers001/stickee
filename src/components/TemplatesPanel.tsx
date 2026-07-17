@@ -1,10 +1,13 @@
 import {
+  IconBriefcase,
   IconBug,
   IconBulb,
   IconCalendarWeek,
   IconChecklist,
   IconHeart,
   IconPlus,
+  IconRepeat,
+  IconScale,
   IconTemplate,
   IconUsers,
 } from "@tabler/icons-react";
@@ -19,6 +22,9 @@ const TEMPLATE_ICONS = {
   weekly: IconCalendarWeek,
   gratitude: IconHeart,
   bug: IconBug,
+  project: IconBriefcase,
+  habit: IconRepeat,
+  decision: IconScale,
 } as const;
 
 export interface NoteTemplate {
@@ -81,6 +87,33 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
     status: "To-Do",
     content:
       "Summary:\n\nSteps to reproduce:\n1. \n2. \n3. \n\nExpected:\n\nActual:\n\nNotes:\n",
+  },
+  {
+    id: "project",
+    title: "Project Brief",
+    description: "Define a project before the work begins.",
+    color: "teal",
+    status: "Backlog",
+    content:
+      "Project:\n\nGoal:\n\nWho it's for:\n\nKey deliverables:\n- [ ] \n- [ ] \n\nDeadline:\n\nFirst step:\n- [ ] ",
+  },
+  {
+    id: "habit",
+    title: "Habit Tracker",
+    description: "Keep a small daily habit moving.",
+    color: "mint",
+    status: "Doing",
+    content:
+      "Habit:\n\nWhy it matters:\n\nThis week:\n- [ ] Mon\n- [ ] Tue\n- [ ] Wed\n- [ ] Thu\n- [ ] Fri\n- [ ] Sat\n- [ ] Sun\n\nNotes:\n",
+  },
+  {
+    id: "decision",
+    title: "Decision Log",
+    description: "Record a choice and the reasoning behind it.",
+    color: "lavender",
+    status: "Done",
+    content:
+      "Decision:\n\nOptions considered:\n1. \n2. \n3. \n\nWhat we chose:\n\nWhy:\n\nReview date:\n",
   },
 ];
 
