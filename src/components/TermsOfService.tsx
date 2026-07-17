@@ -1,7 +1,13 @@
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export const TermsOfService = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+interface TermsOfServiceProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAgree?: () => void;
+}
+
+export const TermsOfService = ({ isOpen, onClose, onAgree }: TermsOfServiceProps) => {
   if (!isOpen) return null;
 
   return (
@@ -10,7 +16,7 @@ export const TermsOfService = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b-2 border-foreground flex-shrink-0">
           <h2 className="font-display text-2xl" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>Terms of Service for Stickee</h2>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close terms of service">
             <X className="w-5 h-5" />
           </Button>
         </div>
@@ -208,6 +214,17 @@ export const TermsOfService = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
             </div>
           </div>
         </div>
+
+        {onAgree && (
+          <div className="flex flex-col-reverse gap-3 border-t-2 border-foreground p-4 sm:flex-row sm:justify-end">
+            <Button variant="outline" onClick={onClose}>
+              Back
+            </Button>
+            <Button onClick={onAgree}>
+              I Have Read and Agree
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
