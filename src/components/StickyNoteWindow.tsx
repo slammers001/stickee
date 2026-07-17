@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { getCssFontFamily, getGoogleFontStylesheetUrl } from "@/utils/fonts";
 // Utility functions can be added here if needed
 
 type NoteColor = 'yellow' | 'pink' | 'blue' | 'green' | 'purple' | 'orange' | 'teal' | 'lavender' | 'peach' | 'mint';
@@ -45,8 +46,9 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
         
         // Get the current theme and font preference
         const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const savedFont = localStorage.getItem("stickee-font-family") || "handwriting";
-        const fontFamily = savedFont === "serif" ? "Georgia, serif" : "'Indie Flower', cursive";
+        const savedFont = localStorage.getItem("stickee-font-family") || "indie-flower";
+        const fontFamily = getCssFontFamily(savedFont);
+        const googleFontUrl = getGoogleFontStylesheetUrl(savedFont);
         
         // Check for next-themes preference
         const theme = localStorage.getItem("theme") || (isDark ? "dark" : "light");
@@ -66,6 +68,7 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
           <head>
             <title>Quick Note - Stickee</title>
             <link rel="icon" type="image/png" href="${faviconPath}">
+            ${googleFontUrl ? `<link rel="stylesheet" href="${googleFontUrl}">` : ''}
             <style>
               :root {
                 /* Note color variables - matching main app */
