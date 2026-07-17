@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { Note, NoteStatus } from "@/types/note";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { GripVertical } from "lucide-react";
 import { LinkableText } from "./LinkableText";
 
@@ -13,17 +12,17 @@ const COLUMNS: { id: NoteStatus; label: string }[] = [
 ];
 
 const columnBorder: Record<NoteStatus, string> = {
-  "To-Do": "border-t-red-400",
-  "Doing": "border-t-blue-400",
-  "Done": "border-t-green-400",
-  "Backlog": "border-t-gray-400",
+  "To-Do": "border-red-400",
+  "Doing": "border-blue-400",
+  "Done": "border-green-400",
+  "Backlog": "border-gray-400",
 };
 
-const headerDot: Record<NoteStatus, string> = {
-  "To-Do": "bg-red-400",
-  "Doing": "bg-blue-400",
-  "Done": "bg-green-400",
-  "Backlog": "bg-gray-400",
+const headerBg: Record<NoteStatus, string> = {
+  "To-Do": "bg-red-100 dark:bg-red-950/30",
+  "Doing": "bg-blue-100 dark:bg-blue-950/30",
+  "Done": "bg-green-100 dark:bg-green-950/30",
+  "Backlog": "bg-gray-100 dark:bg-gray-800/30",
 };
 
 const noteColorMap: Record<string, string> = {
@@ -94,26 +93,26 @@ export function KanbanBoard({ notes, onStatusChange, onNoteClick }: KanbanBoardP
             <div
               key={column.id}
               className={cn(
-                "flex-1 min-w-[220px] max-w-[320px] flex flex-col rounded-xl border border-border bg-card/50",
-                "border-t-4",
+                "flex-1 min-w-[220px] max-w-[320px] flex flex-col",
+                "border-[3px] rounded-none",
                 columnBorder[column.id],
-                isOver && "ring-2 ring-primary/50 bg-accent/30"
+                "shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)] dark:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.4)]",
+                isOver && "shadow-[6px_6px_0px_0px_rgba(0,0,0,0.25)] translate-x-[-2px] translate-y-[-2px]"
               )}
               onDragOver={(e) => handleDragOver(e, column.id)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, column.id)}
             >
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-                <span className={cn("w-2.5 h-2.5 rounded-full shrink-0", headerDot[column.id])} />
-                <h3 className="font-semibold text-sm text-foreground">{column.label}</h3>
-                <Badge variant="secondary" className="ml-auto text-xs font-mono">
+              <div className={cn("flex items-center gap-2 px-4 py-3 border-b-[3px]", columnBorder[column.id], headerBg[column.id])}>
+                <h3 className="font-handwriting text-xl font-bold text-foreground">{column.label}</h3>
+                <span className="ml-auto text-xs font-bold text-foreground border-2 border-foreground px-1.5 py-0.5">
                   {columnNotes.length}
-                </Badge>
+                </span>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-3 space-y-3">
+              <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-card">
                 {columnNotes.length === 0 ? (
-                  <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
+                  <div className="flex items-center justify-center h-24 text-xs text-muted-foreground font-handwriting border-2 border-dashed border-foreground/20 p-2">
                     Drop notes here
                   </div>
                 ) : (
@@ -125,27 +124,29 @@ export function KanbanBoard({ notes, onStatusChange, onNoteClick }: KanbanBoardP
                       onDragEnd={handleDragEnd}
                       onClick={() => onNoteClick(note)}
                       className={cn(
-                        "group rounded-lg p-3 cursor-pointer transition-all",
-                        "border border-border/60 hover:border-border",
-                        "hover:shadow-md active:scale-[0.98]",
+                        "group p-3 cursor-pointer transition-all",
+                        "border-[3px] border-foreground/20 hover:border-foreground/60",
+                        "shadow-[3px_3px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)]",
+                        "active:translate-x-[2px] active:translate-y-[2px] active:shadow-none",
+                        "rounded-none",
                         noteColorMap[note.color] || "bg-card",
                         draggedNoteId === note.id && "opacity-40 scale-95"
                       )}
                     >
                       <div className="flex items-start gap-2">
                         <GripVertical
-                          size={14}
-                          className="mt-0.5 shrink-0 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                          size={16}
+                          className="mt-0.5 shrink-0 text-foreground/50"
                         />
                         <div className="min-w-0 flex-1">
                           {note.title && (
-                            <p className="text-sm font-semibold text-foreground truncate mb-1">
+                            <p className="text-base font-bold text-foreground truncate mb-1 font-handwriting">
                               {note.title}
                             </p>
                           )}
                           <LinkableText
                             text={note.content.length > 80 ? note.content.slice(0, 80) + "..." : note.content}
-                            className="text-xs text-muted-foreground leading-relaxed line-clamp-3"
+                            className="text-sm text-foreground/70 leading-relaxed line-clamp-3 font-handwriting"
                           />
                         </div>
                       </div>
