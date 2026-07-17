@@ -16,6 +16,7 @@ import { getReactionsForNote } from "@/services/emojiReactionService";
 import { soundEffects } from "@/utils/soundEffects";
 import type { ReactionSummary } from "@/types/emojiReaction";
 import { TermsPopup } from "@/components/TermsPopup";
+import { applyAppFont } from "@/utils/fonts";
 import { IssueReportButton } from "@/components/IssueReportButton";
 import { IssueReportDialog } from "@/components/IssueReportDialog";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
@@ -91,49 +92,7 @@ export default function Index() {
   // Apply saved font preference immediately on page load
   useEffect(() => {
     const applyFontFamily = (font: string) => {
-      const root = document.documentElement;
-      let fontValue = '';
-      
-      switch (font) {
-        case "serif":
-          fontValue = 'Georgia, serif';
-          break;
-        case "sans-serif":
-          fontValue = 'Arial, sans-serif';
-          break;
-        case "monospace":
-          fontValue = 'Courier New, monospace';
-          break;
-        case "give-you-glory":
-          fontValue = '"Give You Glory", cursive';
-          break;
-        case "indie-flower":
-          fontValue = '"Indie Flower", cursive';
-          break;
-        case "onest":
-          fontValue = 'Onest, sans-serif';
-          break;
-        default:
-          // For Google Fonts, use the display name directly
-          fontValue = font.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-          break;
-      }
-      
-      // Load Google Font if needed
-      if (font !== "serif" && font !== "sans-serif" && font !== "monospace") {
-        const fontName = font.replace(/-/g, '+');
-        const existingLink = document.querySelector(`link[href*="${fontName}"]`);
-        
-        if (!existingLink) {
-          const link = document.createElement('link');
-          link.href = `https://fonts.googleapis.com/css2?family=${fontName}&display=swap`;
-          link.rel = 'stylesheet';
-          document.head.appendChild(link);
-        }
-      }
-      
-      root.style.setProperty('--font-family-base', fontValue);
-      root.style.setProperty('--font-family-handwriting', fontValue);
+      applyAppFont(font);
     };
 
     // Load and apply the most recently saved fonts

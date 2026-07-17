@@ -42,3 +42,6 @@ TERMS_OF_SERVICE.txt
 
 # Animated excalidraws
 excalidraw*
+
+# npm is the canonical package manager
+bun.lockb
