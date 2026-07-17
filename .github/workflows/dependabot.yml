@@ -1,0 +1,48 @@
+name: Dependabot update
+
+on:
+  push:
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+jobs:
+  dependabot:
+    # Only ever run when Dependabot itself pushed (avoids running for all other users' pushes)
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies (npm)
+        run: npm ci || npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Auto-merge minor/patch
+        # Only auto-merge low-risk semver changes – remove this guard to auto-merge major too
+        if: ${{ steps.meta.outputs.update-type == 'version-update:semver-minor' || steps.meta.outputs.update-type == 'version-update:semver-patch' }}
+        run: |
+          echo "Auto-merging ${{ steps.meta.outputs.dependency-names }} (${{ steps.meta.outputs.update-type }})"
+          gh pr merge --auto --squash ${{ steps.meta.outputs.pr-number }} 2>/dev/null \
+            || gh pr merge --auto --squash --repo ${{ github.repository }} ${{ steps.meta.outputs.pr-number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,52 @@
+name: Windows build check
+
+# Runs after every push to make sure the Tauri app still compiles on Windows.
+# Uses only npm (no bun).
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Set up Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+          components: rustfmt,clippy
+
+      - name: Install frontend dependencies (npm)
+        run: npm ci
+
+      - name: Frontend build
+        run: npm run build
+
+      - name: Tauri build (Windows bundle)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # build the full installer; if you prefer a faster smoke-test only, add `args: --no-bundle`
+          tagName: v__VERSION__
+          releaseName: "Stickee v__VERSION__"
+          releaseBody: "See assets below."
+          releaseDraft: true
+          prerelease: false
+
+      # Uncomment to upload the Tauri artifact even when no release is created (PRs):
+      # - uses: actions/upload-artifact@v4
+      #   with:
+      #     name: windows-dist
+      #     path: |
+      #       src-tauri/target/release/bundle/
+      #       dist/
