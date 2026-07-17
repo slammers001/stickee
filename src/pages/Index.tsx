@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import {
   IconAlertCircle,
   IconArchive,
@@ -46,6 +46,8 @@ import { StickyNoteWindow } from "@/components/StickyNoteWindow";
 import { ArchivedNotesDialog } from "@/components/ArchivedNotesDialog";
 import { AppSidebar, type SidebarTab } from "@/components/AppSidebar";
 import { TemplatesPanel, type NoteTemplate } from "@/components/TemplatesPanel";
+import { AutomationsPanel } from "@/components/AutomationsPanel";
+import { useAutomations } from "@/hooks/useAutomations";
 
 // Using the Note interface from types/note.ts
 
@@ -86,7 +88,15 @@ export default function Index() {
     updateItem: updateChecklistItem,
     deleteItem: deleteChecklistItem,
     toggleChecklist,
+    reload: reloadChecklist,
   } = useChecklist();
+
+  // Keep a live ref of notes so the automation engine always evaluates the
+  // current board without re-subscribing on every note change.
+  const notesRef = useRef<Note[]>([]);
+  useEffect(() => {
+    notesRef.current = notes;
+  }, [notes]);
 
   // Check for terms agreement on mount and storage changes
   useEffect(() => {
@@ -296,6 +306,24 @@ export default function Index() {
     loadNotes();
   }, []);
 
+  // Automations: client-side engine + CRUD state for the Automations tab.
+  const getNotesForAutomations = useCallback(() => notesRef.current, []);
+  const {
+    automations,
+    loading: automationsLoading,
+    loadError: automationsLoadError,
+    createAutomation,
+    updateAutomation,
+    toggleAutomation,
+    deleteAutomation,
+    runAll: runAllAutomations,
+  } = useAutomations({
+    getNotes: getNotesForAutomations,
+    onNotesChanged: loadNotes,
+    onChecklistChanged: reloadChecklist,
+    enabled: termsAgreed,
+  });
+
   // Filter notes based on search query
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -307,7 +335,8 @@ export default function Index() {
     const filtered = notes.filter(note => 
       note.content.toLowerCase().includes(query) ||
       note.status.toLowerCase().includes(query) ||
-      (note.title && note.title.toLowerCase().includes(query))
+      (note.title && note.title.toLowerCase().includes(query)) ||
+      (note.tags ?? []).some((tag) => tag.toLowerCase().includes(query))
     );
     setFilteredNotes(filtered);
   }, [searchQuery, notes]);
@@ -324,7 +353,7 @@ export default function Index() {
     }
   };
 
-  const addNote = async (title: string, content: string, status: StickyNoteStatus, color: string) => {
+  const addNote = async (title: string, content: string, status: StickyNoteStatus, color: string, tags: string[] = []) => {
     try {
       // Play new note sound immediately
       soundEffects.playNewNoteSound();
@@ -341,6 +370,7 @@ export default function Index() {
         lastUpdated: Date.now(),
         created_at: new Date().toISOString(),
         user_id: '', // Will be filled by the actual response
+        tags,
         isTemp: true // Mark as temporary
       };
       
@@ -356,7 +386,8 @@ export default function Index() {
         color,
         status,
         pinned: false,
-        lastUpdated: Date.now()
+        lastUpdated: Date.now(),
+        tags
       });
       
       // Replace the temporary note with the real one
@@ -395,13 +426,14 @@ export default function Index() {
     }
   };
 
-  const updateNote = async (id: string, title: string, content: string, status: StickyNoteStatus, color: string) => {
+  const updateNote = async (id: string, title: string, content: string, status: StickyNoteStatus, color: string, tags: string[]) => {
     try {
       const updatedNote = await updateNoteService(id, { 
         title: title || undefined,
         content, 
         status, 
-        color
+        color,
+        tags
       });
       
       if (updatedNote) {
@@ -814,6 +846,18 @@ export default function Index() {
           onAddTemplate={handleAddTemplate}
           disabled={!termsAgreed}
         />
+      ) : activeTab === "automations" ? (
+        <AutomationsPanel
+          automations={automations}
+          loading={automationsLoading}
+          loadError={automationsLoadError}
+          disabled={!termsAgreed}
+          onCreate={createAutomation}
+          onUpdate={updateAutomation}
+          onToggle={toggleAutomation}
+          onDelete={deleteAutomation}
+          onRunAll={runAllAutomations}
+        />
       ) : (
       <main className="container mx-auto px-4 py-8">
         {filteredNotes.length === 0 ? (
@@ -856,6 +900,7 @@ export default function Index() {
                 content={note.content}
                 color={note.color}
                 status={note.status}
+                tags={note.tags}
                 pinned={note.pinned}
                 reactions={noteReactions[note.id] || []}
                 onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
@@ -888,6 +933,7 @@ export default function Index() {
                   content={note.content}
                   color={note.color}
                   status={note.status}
+                  tags={note.tags}
                   pinned={note.pinned}
                   reactions={noteReactions[note.id] || []}
                   onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}

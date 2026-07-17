@@ -16,11 +16,12 @@ import { cn } from "@/lib/utils";
 import { soundEffects } from "@/utils/soundEffects";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
 import { Mic, MicOff } from "lucide-react";
+import { TagInput } from "@/components/TagInput";
 
 interface AddNoteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (title: string, content: string, status: NoteStatus, color: string) => void;
+  onSave: (title: string, content: string, status: NoteStatus, color: string, tags: string[]) => void;
 }
 
 const colors = ["yellow", "pink", "blue", "green", "purple", "orange", "teal", "lavender", "peach", "mint"];
@@ -39,6 +40,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<NoteStatus>("To-Do");
   const [color, setColor] = useState(colors[0]);
+  const [tags, setTags] = useState<string[]>([]);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isListening, setIsListening] = useState(false);
 
@@ -66,18 +68,20 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
       setContent("");
       setStatus("To-Do");
       setColor(colors[0]);
+      setTags([]);
     }
   };
 
   const handleSaveAndClose = () => {
     if (content.trim()) {
       soundEffects.playNewNoteSound();
-      onSave(title.trim(), content, status, color);
+      onSave(title.trim(), content, status, color, tags);
       // Reset form after successful save
       setTitle("");
       setContent("");
       setStatus("To-Do");
       setColor(colors[0]);
+      setTags([]);
       setShowUnsavedDialog(false);
       onOpenChange(false);
     }
@@ -88,6 +92,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     setContent("");
     setStatus("To-Do");
     setColor(colors[0]);
+    setTags([]);
     setShowUnsavedDialog(false);
     onOpenChange(false);
   };
@@ -119,12 +124,13 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     if (content.trim()) {
       console.log('Saving note...'); // Debug log
       soundEffects.playNewNoteSound();
-      onSave(title.trim(), content, status, color);
+      onSave(title.trim(), content, status, color, tags);
       // Reset form after successful save
       setTitle("");
       setContent("");
       setStatus("To-Do");
       setColor(colors[0]);
+      setTags([]);
       onOpenChange(false);
     } else {
       console.log('No content to save - save cancelled'); // Debug log
@@ -362,6 +368,10 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               ))}
             </div>
           </div>
+          <div className="order-5">
+            <label className="text-sm font-medium mb-2 block">Tags</label>
+            <TagInput tags={tags} onChange={setTags} />
+          </div>
         </div>
         <DialogFooter className="flex gap-2">
           <Button variant="outline" onClick={() => {
@@ -369,6 +379,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
             setContent("");
             setStatus("To-Do");
             setColor(colors[0]);
+            setTags([]);
             onOpenChange(false);
           }}>
             Cancel

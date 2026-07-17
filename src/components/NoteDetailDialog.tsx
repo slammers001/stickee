@@ -16,20 +16,14 @@ import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 import { cn } from "@/lib/utils";
 import { soundEffects } from "@/utils/soundEffects";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
+import { TagInput } from "@/components/TagInput";
+import type { Note } from "@/types/note";
 
 interface NoteDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  note: {
-    id: string;
-    title?: string;
-    content: string;
-    color: string;
-    status: NoteStatus;
-    lastUpdated: number;
-    pinned: boolean;
-  } | null;
-  onSave: (id: string, title: string, content: string, status: NoteStatus, color: string) => void;
+  note: Note | null;
+  onSave: (id: string, title: string, content: string, status: NoteStatus, color: string, tags: string[]) => void;
   onDelete: (id: string) => void;
 }
 
@@ -55,9 +49,11 @@ export const NoteDetailDialog = ({
   const [content, setContent] = useState(note?.content || "");
   const [status, setStatus] = useState<NoteStatus>(note?.status || "To-Do");
   const [color, setColor] = useState(note?.color || "yellow");
+  const [tags, setTags] = useState<string[]>(note?.tags || []);
   const [initialStatus, setInitialStatus] = useState<NoteStatus>(note?.status || "To-Do");
   const [initialColor, setInitialColor] = useState(note?.color || "yellow");
   const [initialTitle, setInitialTitle] = useState(note?.title || "");
+  const [initialTags, setInitialTags] = useState<string[]>(note?.tags || []);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isListening, setIsListening] = useState(false);
 
@@ -75,7 +71,8 @@ export const NoteDetailDialog = ({
     title.trim() !== (initialTitle || "") ||
     content.trim() !== (note?.content || "") ||
     status !== initialStatus ||
-    color !== initialColor;
+    color !== initialColor ||
+    JSON.stringify(tags) !== JSON.stringify(initialTags);
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen && hasUnsavedChanges) {
@@ -88,7 +85,7 @@ export const NoteDetailDialog = ({
   const handleSaveAndClose = () => {
     if (note && content.trim()) {
       soundEffects.playSaveSound();
-      onSave(note.id, title.trim(), content, status, color);
+      onSave(note.id, title.trim(), content, status, color, tags);
       setShowUnsavedDialog(false);
       onOpenChange(false);
     }
@@ -197,13 +194,15 @@ export const NoteDetailDialog = ({
       setInitialStatus(note.status);
       setInitialColor(note.color);
       setInitialTitle(note.title || "");
+      setTags(note.tags || []);
+      setInitialTags(note.tags || []);
     }
   }, [note]);
 
   const handleSave = () => {
     if (note && content.trim()) {
       soundEffects.playSaveSound();
-      onSave(note.id, title.trim(), content, status, color);
+      onSave(note.id, title.trim(), content, status, color, tags);
       onOpenChange(false);
     }
   };
@@ -371,6 +370,10 @@ export const NoteDetailDialog = ({
               ))}
             </div>
           </div>
+          <div className="order-5">
+            <label className="text-sm font-medium mb-2 block">Tags</label>
+            <TagInput tags={tags} onChange={setTags} />
+          </div>
         </div>
         <DialogFooter className="flex gap-2">
           <Button
@@ -384,7 +387,7 @@ export const NoteDetailDialog = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!content.trim() && title === initialTitle && status === initialStatus && color === initialColor}>
+          <Button onClick={handleSave} disabled={!content.trim() && title === initialTitle && status === initialStatus && color === initialColor && JSON.stringify(tags) === JSON.stringify(initialTags)}>
             Save Changes
           </Button>
         </DialogFooter>

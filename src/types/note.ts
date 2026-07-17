@@ -16,6 +16,7 @@ export interface Note {
   reactions?: ReactionSummary[]; // Optional array of reaction summaries
   archived?: boolean; // Whether the note is archived
   archived_at?: string; // When the note was archived
+  tags?: string[]; // Optional labels used by search and automations
   isTemp?: boolean; // Whether the note is a temporary placeholder
 }
 

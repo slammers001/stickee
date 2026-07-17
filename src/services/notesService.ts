@@ -22,7 +22,8 @@ const mapSupabaseNote = (note: any): Note => {
     created_at: note.created_at || timestamp, // For Supabase compatibility
     user_id: note.user_id, // Include user_id in the returned object
     archived: Boolean(note.archived), // Include archived status
-    archived_at: note.archived_at // Include archived timestamp
+    archived_at: note.archived_at, // Include archived timestamp
+    tags: Array.isArray(note.tags) ? note.tags : [] // Optional labels
   };
 };
 
@@ -63,7 +64,10 @@ export const createNote = async (noteData: Omit<Note, 'id'>): Promise<Note> => {
       status: noteData.status,
       pinned: noteData.pinned,
       updated_at: new Date().toISOString(),
-      user_id: userId // Always include user_id from our local service
+      user_id: userId, // Always include user_id from our local service
+      // Only send tags when explicitly provided so note creation keeps working
+      // even if the `tags` column migration has not been applied yet.
+      ...(noteData.tags !== undefined ? { tags: noteData.tags } : {})
     };
 
     console.log('Saving note with data:', noteDataToSend);
@@ -115,6 +119,7 @@ export const updateNote = async (id: string, updates: Partial<Omit<Note, 'id'>>)
   if (updates.status !== undefined) updateData.status = updates.status;
   if (updates.pinned !== undefined) updateData.pinned = updates.pinned;
   if (updates.title !== undefined) updateData.title = encryptTitle(updates.title);
+  if (updates.tags !== undefined) updateData.tags = updates.tags;
 
   // Remove fields that shouldn't be sent to Supabase
   delete updateData.lastUpdated;
