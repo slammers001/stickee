@@ -29,6 +29,7 @@ interface StickyNoteProps {
   onToggleSelect?: () => void;
   isSelected?: boolean;
   showSelectionCheckbox?: boolean;
+  fontFamily?: string;
 }
 
 const colorMap: Record<string, string> = {
@@ -65,7 +66,8 @@ export const StickyNote = memo(({
   onReactionUpdate,
   onToggleSelect,
   isSelected = false,
-  showSelectionCheckbox = false
+  showSelectionCheckbox = false,
+  fontFamily
 }: Omit<StickyNoteProps, 'index' | 'lastUpdated'>) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiPickerPosition, setEmojiPickerPosition] = useState({ x: 0, y: 0 });
@@ -169,6 +171,7 @@ export const StickyNote = memo(({
           <LinkableText 
             text={displayContent}
             className={`text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting line-clamp-13 ${!title ? 'mt-2' : ''}`}
+            style={fontFamily ? { fontFamily } : undefined}
           />
         </div>
         

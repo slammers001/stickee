@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { IssueReportDialog } from "./IssueReportDialog";
-import { AlertCircle } from "lucide-react";
+import { IconAlertCircle } from "@tabler/icons-react";
 
 interface IssueReportButtonProps {
   className?: string;
@@ -24,7 +24,7 @@ export const IssueReportButton = ({
         onClick={() => setIsDialogOpen(true)}
         className={`flex items-center gap-2 ${className}`}
       >
-        <AlertCircle className="h-4 w-4" />
+        <IconAlertCircle stroke={2} className="h-4 w-4" />
         Found an Issue
       </Button>
       

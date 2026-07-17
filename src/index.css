@@ -209,6 +209,16 @@ All colors MUST be HSL.
     background-color: transparent !important;
   }
 
+  /* Template cards stay paper-like in dark mode; hover only lightens the button. */
+  .dark .template-use-button {
+    background-color: rgb(255 255 255 / 0.65) !important;
+    color: rgb(24 24 27) !important;
+  }
+
+  .dark .template-use-button:hover {
+    background-color: rgb(255 255 255 / 0.9) !important;
+  }
+
   .no-select {
     -webkit-user-select: none;
     -moz-user-select: none;

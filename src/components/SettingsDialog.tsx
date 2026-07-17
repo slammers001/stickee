@@ -28,9 +28,10 @@ type ActiveTab = "ui" | "fonts" | "bookmarks" | "terms" | "data";
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onFontChange?: (font: string) => void;
 }
 
-export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
+export const SettingsDialog = ({ open, onOpenChange, onFontChange }: SettingsDialogProps) => {
   const { theme, setTheme } = useTheme();
   const [fontMode, setFontMode] = useState<FontMode>(() => 
     (localStorage.getItem("stickee-font-mode") as FontMode) || "basic"
@@ -244,6 +245,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     setFontFamily(value);
     localStorage.setItem("stickee-font-family", value);
     applyFontFamily(value);
+    onFontChange?.(value);
     
     // Save to Supabase
     try {

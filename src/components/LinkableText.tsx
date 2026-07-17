@@ -4,9 +4,10 @@ import { URL_REGEX, normalizeUrl, openLinkInBrowser } from '@/utils/linkUtils';
 interface LinkableTextProps {
   text: string;
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export const LinkableText: React.FC<LinkableTextProps> = memo(({ text, className }) => {
+export const LinkableText: React.FC<LinkableTextProps> = memo(({ text, className, style }) => {
   if (!text) return null;
 
   const elements: React.ReactNode[] = [];
@@ -55,5 +56,5 @@ export const LinkableText: React.FC<LinkableTextProps> = memo(({ text, className
     );
   }
 
-  return <div className={className}>{elements}</div>;
+  return <div className={className} style={style}>{elements}</div>;
 });
