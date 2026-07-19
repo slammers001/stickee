@@ -7,8 +7,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { MarkdownEditor } from "@/components/MarkdownEditor";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Mic, MicOff } from "lucide-react";
 import { NoteStatus } from "./StickyNote";
@@ -172,26 +172,11 @@ export const NoteDetailDialog = ({
     }
   };
 
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    // Limit to 1500 characters
-    if (value.length <= 1500) {
-      setContent(value);
-    }
-  };
-
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Limit to 20 characters
     if (value.length <= 20) {
       setTitle(value);
-    }
-  };
-
-  const handleContentKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Handle Ctrl+Enter to save
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      handleSave();
     }
   };
 
@@ -287,16 +272,13 @@ export const NoteDetailDialog = ({
           </div>
           <div className="order-3 sm:order-2">
             <label className="text-sm font-medium mb-2 block">Content</label>
-            <Textarea
+            <MarkdownEditor
               value={content}
-              onChange={handleContentChange}
-              onKeyDown={handleContentKeyDown}
-              className="min-h-[300px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400 w-full"
-              placeholder="Type your note here..."
+              onChange={setContent}
+              maxLength={1500}
+              minHeightClassName="min-h-[300px]"
+              onSaveShortcut={handleSave}
             />
-            <p className="text-xs text-muted-foreground mt-2">
-              Press Ctrl+Enter to save quickly • Maximum 1500 characters
-            </p>
             
             {/* Voice Controls */}
             {isSupported && (

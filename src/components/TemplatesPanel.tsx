@@ -44,7 +44,7 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
     color: "blue",
     status: "To-Do",
     content:
-      "Attendees:\n- \n\nAgenda:\n1. \n\nNotes:\n- \n\nAction items:\n- [ ] ",
+      "**Attendees**\n- \n\n**Agenda**\n1. \n\n**Notes**\n- \n\n**Action Items**\n- [ ] ",
   },
   {
     id: "todo",
@@ -52,7 +52,7 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
     description: "A simple checklist-style sticky.",
     color: "green",
     status: "To-Do",
-    content: "Today:\n- [ ] \n- [ ] \n- [ ] \n\nLater:\n- [ ] ",
+    content: "**Today**\n- [ ] \n- [ ] \n- [ ] \n\n**Later**\n- [ ] ",
   },
   {
     id: "brain-dump",
@@ -60,7 +60,7 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
     description: "Empty your head onto a note.",
     color: "yellow",
     status: "Backlog",
-    content: "What's on my mind:\n\n\n\nIdeas:\n- \n\nWorries:\n- ",
+    content: "**What's on my mind**\n\n\n**Ideas**\n- \n\n**Worries**\n- ",
   },
   {
     id: "weekly",
@@ -69,7 +69,7 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
     color: "purple",
     status: "Doing",
     content:
-      "This week's focus:\n\nMon:\n- \nTue:\n- \nWed:\n- \nThu:\n- \nFri:\n- \n\nWins to celebrate:\n- ",
+      "**This week's focus**\n\n**Mon**\n- \n\n**Tue**\n- \n\n**Wed**\n- \n\n**Thu**\n- \n\n**Fri**\n- \n\n**Wins**\n- ",
   },
   {
     id: "gratitude",
@@ -77,7 +77,7 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
     description: "Three things you're grateful for.",
     color: "pink",
     status: "Done",
-    content: "Today I'm grateful for:\n1. \n2. \n3. \n\nWhy it mattered:\n",
+    content: "**Today I'm grateful for**\n1. \n2. \n3. \n\n**Why it mattered**\n",
   },
   {
     id: "bug",
@@ -86,7 +86,7 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
     color: "orange",
     status: "To-Do",
     content:
-      "Summary:\n\nSteps to reproduce:\n1. \n2. \n3. \n\nExpected:\n\nActual:\n\nNotes:\n",
+      "**Summary**\n\n**Steps to reproduce**\n1. \n2. \n3. \n\n**Expected**\n\n**Actual**\n\n**Notes**\n",
   },
   {
     id: "project",
@@ -95,7 +95,7 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
     color: "teal",
     status: "Backlog",
     content:
-      "Project:\n\nGoal:\n\nWho it's for:\n\nKey deliverables:\n- [ ] \n- [ ] \n\nDeadline:\n\nFirst step:\n- [ ] ",
+      "**Project**\n\n**Goal**\n\n**Who it's for**\n\n**Key deliverables**\n- [ ] \n- [ ] \n\n**Deadline**\n\n**First step**\n- [ ] ",
   },
   {
     id: "habit",
@@ -104,7 +104,7 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
     color: "mint",
     status: "Doing",
     content:
-      "Habit:\n\nWhy it matters:\n\nThis week:\n- [ ] Mon\n- [ ] Tue\n- [ ] Wed\n- [ ] Thu\n- [ ] Fri\n- [ ] Sat\n- [ ] Sun\n\nNotes:\n",
+      "**Habit**\n\n**Why it matters**\n\n**This week**\n- [ ] Mon\n- [ ] Tue\n- [ ] Wed\n- [ ] Thu\n- [ ] Fri\n- [ ] Sat\n- [ ] Sun\n\n**Notes**\n",
   },
   {
     id: "decision",
@@ -113,7 +113,7 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
     color: "lavender",
     status: "Done",
     content:
-      "Decision:\n\nOptions considered:\n1. \n2. \n3. \n\nWhat we chose:\n\nWhy:\n\nReview date:\n",
+      "**Decision**\n\n**Options considered**\n1. \n2. \n3. \n\n**What we chose**\n\n**Why**\n\n**Review date**\n",
   },
 ];
 

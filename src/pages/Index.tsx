@@ -3,6 +3,7 @@ import {
   IconAlertCircle,
   IconArchive,
   IconCheckbox,
+  IconDotsVertical,
   IconMenu2,
   IconPlus,
   IconSettings,
@@ -10,6 +11,11 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { toast } from "sonner";
 import { 
   getNotes as fetchNotes, 
@@ -75,7 +81,7 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState<SidebarTab>("notes");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
-    return window.innerWidth < 768;
+    return window.innerWidth < 1280;
   });
   
   // Checklist state and handlers
@@ -644,15 +650,15 @@ export default function Index() {
 
       <div className="flex-1 min-w-0 flex flex-col">
       {/* Header */}
-      <header className="border-b bg-card shadow-sm sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 flex-shrink-0">
+      <header className="border-b bg-card shadow-sm sticky top-0 z-20 w-full">
+        <div className="w-full px-2 sm:px-4 py-2 sm:py-3">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0 min-w-0">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="md:hidden border-2 border-foreground/15"
+                className="xl:hidden border-2 border-foreground/15 shrink-0"
                 onClick={() => setSidebarCollapsed((c) => !c)}
                 aria-label="Toggle sidebar"
               >
@@ -665,7 +671,7 @@ export default function Index() {
               <img 
                 src="./stickee.png" 
                 alt="Stickee" 
-                className="h-14 w-14 object-contain icon-crisp no-select"
+                className="h-8 sm:h-14 w-8 sm:w-14 object-contain icon-crisp no-select shrink-0"
                 onError={(e) => {
                   // Prevent infinite loop by setting a flag
                   const target = e.target as HTMLImageElement;
@@ -674,11 +680,11 @@ export default function Index() {
                   }
                 }}
               />
-              <div className="flex flex-col">
-                <h1 className="text-2xl sm:text-4xl font-bold text-foreground tracking-tight font-handwriting">
+              <div className="flex flex-col min-w-0">
+                <h1 className="text-lg sm:text-2xl xl:text-4xl font-bold text-foreground tracking-tight font-handwriting truncate">
                   Stickee
                 </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground">
+                <p className="hidden sm:block text-xs xl:text-sm text-muted-foreground truncate">
                   Made by{" "}
                   <a 
                     href="https://github.com/slammers001" 
@@ -691,23 +697,100 @@ export default function Index() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 sm:gap-4 ml-auto flex-shrink-0">
-              <SearchBar onSearch={termsAgreed ? handleSearch : () => {}} disabled={!termsAgreed} />
-              <div className="h-6 w-px bg-border hidden md:block"></div>
-              
-              {/* Mobile Issue Icon Button */}
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIssueDialogOpen(true)}
-                className="md:hidden flex-shrink-0"
-              >
-                <IconAlertCircle stroke={2} className="h-4 w-4" />
-              </Button>
-              
-              {/* Select All Button - Hidden on mobile and tablet */}
-              {filteredNotes.length > 0 && (
-                <>
+            <div className="flex items-center gap-0.5 sm:gap-2 xl:gap-4 ml-auto flex-shrink-0">
+              {/* Search — hidden on mobile, shown tablet+ */}
+              <div className="hidden md:block">
+                <SearchBar onSearch={termsAgreed ? handleSearch : () => {}} disabled={!termsAgreed} />
+              </div>
+
+              {/* Mass Delete inline on tablet+ */}
+              {selectedNotes.size > 0 && (
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => setShowMassDeleteDialog(true)}
+                  className="hidden sm:inline-flex bg-red-500 hover:bg-red-600 flex-shrink-0"
+                  aria-label={`Delete ${selectedNotes.size} notes`}
+                >
+                  <IconTrash stroke={2} className="h-4 w-4" />
+                </Button>
+              )}
+
+              {/* ===== UNIVERSAL ACTION POPOVER — below xl ===== */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="xl:hidden flex-shrink-0"
+                    aria-label="More actions"
+                  >
+                    <IconDotsVertical stroke={2} className="h-5 w-5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" sideOffset={6} className="w-52 p-1">
+                  <div className="flex flex-col gap-0.5">
+                    {filteredNotes.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (selectedNotes.size === filteredNotes.length) {
+                            setSelectedNotes(new Set());
+                          } else {
+                            setSelectedNotes(new Set(filteredNotes.map(note => note.id)));
+                          }
+                        }}
+                        className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                      >
+                        <IconCheckbox stroke={2} className="h-4 w-4 shrink-0" />
+                        {selectedNotes.size === filteredNotes.length ? "Deselect All" : `Select All (${filteredNotes.length})`}
+                      </button>
+                    )}
+                    {selectedNotes.size > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowMassDeleteDialog(true)}
+                        className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground text-destructive"
+                      >
+                        <IconTrash stroke={2} className="h-4 w-4 shrink-0" />
+                        Delete Selected ({selectedNotes.size})
+                      </button>
+                    )}
+                    <div className="-mx-1 my-1 h-px bg-muted" />
+                    <button
+                      type="button"
+                      onClick={() => setIssueDialogOpen(true)}
+                      className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <IconAlertCircle stroke={2} className="h-4 w-4 shrink-0" />
+                      Report Issue
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setArchivedNotesDialogOpen(true)}
+                      className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <IconArchive stroke={2} className="h-4 w-4 shrink-0" />
+                      Archived Notes
+                    </button>
+                    <div className="-mx-1 my-1 h-px bg-muted" />
+                    <button
+                      type="button"
+                      onClick={() => setSettingsOpen(true)}
+                      className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <IconSettings stroke={2} className="h-4 w-4 shrink-0" />
+                      Settings
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* ===== DESKTOP BUTTONS — xl+ only ===== */}
+              <div className="hidden xl:flex items-center gap-2">
+                <div className="h-6 w-px bg-border"></div>
+                
+                {filteredNotes.length > 0 && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -718,72 +801,55 @@ export default function Index() {
                         setSelectedNotes(new Set(filteredNotes.map(note => note.id)));
                       }
                     }}
-                    className="hidden md:flex"
                   >
-                    {selectedNotes.size === filteredNotes.length ? (
-                      <>
-                        <IconCheckbox stroke={2} className="h-4 w-4 mr-2" />
-                        Deselect All
-                      </>
-                    ) : (
-                      <>
-                        <IconCheckbox stroke={2} className="h-4 w-4 mr-2" />
-                        Select All ({filteredNotes.length})
-                      </>
-                    )}
+                    <IconCheckbox stroke={2} className="h-4 w-4 mr-2" />
+                    {selectedNotes.size === filteredNotes.length ? "Deselect All" : `Select All (${filteredNotes.length})`}
                   </Button>
-                </>
-              )}
+                )}
 
-              {/* Archive Button - Desktop only, shown when no notes are selected */}
-              {selectedNotes.size === 0 && (
+                {selectedNotes.size === 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setArchivedNotesDialogOpen(true)}
+                  >
+                    <IconArchive stroke={2} className="h-4 w-4 mr-2" />
+                    Archived Notes
+                  </Button>
+                )}
+
+                {selectedNotes.size > 0 && (
+                  <>
+                    <div className="h-6 w-px bg-border"></div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setShowMassDeleteDialog(true)}
+                      className="bg-red-500 hover:bg-red-600 flex-shrink-0"
+                    >
+                      <IconTrash stroke={2} className="h-4 w-4 mr-2" />
+                      Delete ({selectedNotes.size})
+                    </Button>
+                  </>
+                )}
+
+                <div className="h-6 w-px bg-border"></div>
+                
+                <IssueReportButton size="sm" />
+                
+                <div className="h-6 w-px bg-border"></div>
                 <Button
                   variant="outline"
-                  size="sm"
-                  onClick={() => setArchivedNotesDialogOpen(true)}
-                  className="hidden md:flex"
+                  size="icon"
+                  onClick={() => setSettingsOpen(true)}
                 >
-                  <IconArchive stroke={2} className="h-4 w-4 mr-2" />
-                  Archived Notes
+                  <IconSettings stroke={2} className="h-5 w-5" />
                 </Button>
-              )}
-              
-              {/* Mass Delete Button - appears when notes are selected */}
-              {selectedNotes.size > 0 && (
-                <>
-                  <div className="h-6 w-px bg-border"></div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setShowMassDeleteDialog(true)}
-                    className="bg-red-500 hover:bg-red-600 flex-shrink-0"
-                  >
-                    <IconTrash stroke={2} className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Delete ({selectedNotes.size})</span>
-                    <span className="sm:hidden">({selectedNotes.size})</span>
-                  </Button>
-                </>
-              )}
-              
-              <div className="h-6 w-px bg-border hidden md:block"></div>
-              
-              {/* Issue Report Button - Hidden on mobile */}
-              <IssueReportButton 
-                size="sm"
-                className="hidden md:flex flex-1 md:flex-none"
-              />
-              
-              <div className="h-6 w-px bg-border hidden md:block"></div>
+              </div>
+
+              {/* Add Note - icon on mobile, full on tablet+ */}
               <Button
-                variant="outline"
                 size="icon"
-                onClick={() => setSettingsOpen(true)}
-                className="hidden md:flex"
-              >
-                <IconSettings stroke={2} className="h-5 w-5" />
-              </Button>
-              
-              <Button
                 onClick={(e) => {
                   if (!termsAgreed) {
                     e.preventDefault();
@@ -817,7 +883,7 @@ export default function Index() {
           onNoteClick={handleNoteClick}
         />
       ) : (
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         {filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
             <img 
@@ -848,7 +914,7 @@ export default function Index() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 sm:gap-4 lg:gap-8 items-stretch">
             {/* Pinned notes - not draggable */}
             {pinnedNotes.map((note) => (
               <StickyNote
@@ -880,7 +946,7 @@ export default function Index() {
                 onMouseOver={() => handleMouseOver(index)}
                 onMouseLeave={handleMouseLeave}
                 className={cn(
-                  "transition-all duration-200 relative cursor-move",
+                  "transition-all duration-200 relative cursor-move h-full",
                   draggedItem?.index === index ? "opacity-50" : ""
                 )}
               >

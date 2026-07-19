@@ -7,8 +7,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { MarkdownEditor } from "@/components/MarkdownEditor";
 import { Badge } from "@/components/ui/badge";
 import { NoteStatus } from "@/components/StickyNote";
 import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
@@ -94,21 +94,6 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
 
   const handleCancelUnsaved = () => {
     setShowUnsavedDialog(false);
-  };
-
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    // Limit to 1500 characters
-    if (value.length <= 1500) {
-      setContent(value);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Handle Ctrl+Enter to save
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      handleSave();
-    }
   };
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -277,17 +262,14 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
           </div>
           <div className="order-3 sm:order-2">
             <label className="text-sm font-medium mb-2 block">Content</label>
-            <Textarea
-              placeholder="Type your note here..."
+            <MarkdownEditor
               value={content}
-              onChange={handleContentChange}
-              onKeyDown={handleKeyDown}
-              className="min-h-[150px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400 w-full"
+              onChange={setContent}
+              maxLength={1500}
+              minHeightClassName="min-h-[180px]"
               autoFocus
+              onSaveShortcut={handleSave}
             />
-            <p className="text-xs text-muted-foreground mt-2">
-              Press Ctrl+Enter to save quickly • Maximum 1500 characters
-            </p>
             
             {/* Voice Controls */}
             {isSupported && (

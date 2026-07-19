@@ -51,19 +51,19 @@ export function AppSidebar({
         <button
           type="button"
           aria-label="Close sidebar"
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          className="fixed inset-0 z-30 bg-black/40 xl:hidden"
           onClick={() => onCollapsedChange(true)}
         />
       )}
 
       <aside
         className={cn(
-          "fixed md:sticky top-0 left-0 z-40 h-screen flex flex-col",
-          "border-r border-border bg-card text-card-foreground",
-          "dark:bg-[hsl(var(--sidebar-background))] dark:border-[hsl(var(--sidebar-border))]",
+          "fixed xl:sticky top-0 left-0 z-40 h-screen flex flex-col",
+          "border-r border-border bg-card text-foreground",
+          "dark:bg-[hsl(var(--sidebar-background))] dark:text-[hsl(var(--sidebar-foreground))] dark:border-[hsl(var(--sidebar-border))]",
           "transition-[width,transform] duration-200 ease-out",
           collapsed
-            ? "w-[4.25rem] -translate-x-full md:translate-x-0"
+            ? "w-[4.25rem] -translate-x-full xl:translate-x-0"
             : "w-60 translate-x-0"
         )}
       >
@@ -76,7 +76,7 @@ export function AppSidebar({
           {collapsed ? (
             <button
               type="button"
-              className="group relative hidden h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:inline-flex"
+              className="group relative hidden h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring xl:inline-flex"
               onClick={() => onCollapsedChange(false)}
               aria-label="Expand sidebar"
               title="Expand sidebar"
@@ -113,7 +113,7 @@ export function AppSidebar({
               type="button"
               variant="outline"
               size="icon"
-              className="ml-auto hidden h-8 w-8 border-border bg-background hover:bg-muted md:inline-flex"
+              className="ml-auto hidden h-8 w-8 border-border bg-background hover:bg-muted xl:inline-flex"
               onClick={() => onCollapsedChange(true)}
               aria-label="Collapse sidebar"
               title="Collapse sidebar"
@@ -141,14 +141,14 @@ export function AppSidebar({
                 type="button"
                 onClick={() => {
                   onTabChange(item.id);
-                  if (window.innerWidth < 768) onCollapsedChange(true);
+                  if (window.innerWidth < 1280) onCollapsedChange(true);
                 }}
                 className={cn(
                   "w-full flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-colors",
                   "font-handwriting text-lg leading-none",
                   active
-                    ? "border-border bg-muted text-foreground shadow-sm dark:bg-[hsl(var(--sidebar-accent))] dark:border-[hsl(var(--sidebar-border))]"
-                    : "border-transparent bg-transparent text-foreground/80 hover:bg-muted/70 hover:text-foreground dark:hover:bg-[hsl(var(--sidebar-accent))]/70"
+                    ? "border-border bg-muted shadow-sm dark:bg-[hsl(var(--sidebar-accent))] dark:border-[hsl(var(--sidebar-border))]"
+                    : "border-transparent bg-transparent opacity-80 hover:bg-muted/70 hover:opacity-100 dark:hover:bg-[hsl(var(--sidebar-accent))]/70"
                 )}
                 title={item.label}
               >
@@ -158,7 +158,7 @@ export function AppSidebar({
                     active && "border-foreground/20 bg-background"
                   )}
                 >
-                  <NavIcon stroke={2} className="h-5 w-5 text-foreground" />
+                  <NavIcon stroke={2} className="h-5 w-5" />
                 </span>
                 {!collapsed && (
                   <span className="min-w-0">
