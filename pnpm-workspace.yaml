@@ -1,0 +1,7 @@
+allowBuilds:
+  '@swc/core': true
+  core-js: true
+  esbuild: true
+minimumReleaseAgeExclude:
+  - '@tabler/icons-react@3.45.0'
+  - '@tabler/icons@3.45.0'
