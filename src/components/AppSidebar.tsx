@@ -1,7 +1,6 @@
 import {
   IconArrowLeft,
   IconArrowRight,
-  IconBolt,
   IconDiamond,
   IconLayoutBoard,
   IconTemplate,
@@ -9,7 +8,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-export type SidebarTab = "board" | "templates" | "automations";
+export type SidebarTab = "board" | "templates";
 
 interface AppSidebarProps {
   activeTab: SidebarTab;
@@ -30,12 +29,6 @@ const NAV = [
     label: "Templates",
     icon: IconTemplate,
     description: "Ready-made note layouts",
-  },
-  {
-    id: "automations" as const,
-    label: "Automations",
-    icon: IconBolt,
-    description: "Trigger-and-action rules",
   },
 ];
 
@@ -144,7 +137,7 @@ export function AppSidebar({
                   if (window.innerWidth < 768) onCollapsedChange(true);
                 }}
                 className={cn(
-                  "w-full flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-colors",
+                  "w-full flex items-center gap-3 rounded-md border px-2.5 py-2.5 text-left transition-colors",
                   "font-handwriting text-lg leading-none",
                   active
                     ? "border-border bg-muted text-foreground shadow-sm dark:bg-[hsl(var(--sidebar-accent))] dark:border-[hsl(var(--sidebar-border))]"

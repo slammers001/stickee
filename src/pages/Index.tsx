@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import {
   IconAlertCircle,
   IconArchive,
@@ -46,8 +46,7 @@ import { StickyNoteWindow } from "@/components/StickyNoteWindow";
 import { ArchivedNotesDialog } from "@/components/ArchivedNotesDialog";
 import { AppSidebar, type SidebarTab } from "@/components/AppSidebar";
 import { TemplatesPanel, type NoteTemplate } from "@/components/TemplatesPanel";
-import { AutomationsPanel } from "@/components/AutomationsPanel";
-import { useAutomations } from "@/hooks/useAutomations";
+
 
 // Using the Note interface from types/note.ts
 
@@ -78,7 +77,8 @@ export default function Index() {
     if (typeof window === "undefined") return false;
     return window.innerWidth < 768;
   });
-  
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   // Checklist state and handlers
   const {
     items: checklistItems,
@@ -88,15 +88,7 @@ export default function Index() {
     updateItem: updateChecklistItem,
     deleteItem: deleteChecklistItem,
     toggleChecklist,
-    reload: reloadChecklist,
   } = useChecklist();
-
-  // Keep a live ref of notes so the automation engine always evaluates the
-  // current board without re-subscribing on every note change.
-  const notesRef = useRef<Note[]>([]);
-  useEffect(() => {
-    notesRef.current = notes;
-  }, [notes]);
 
   // Check for terms agreement on mount and storage changes
   useEffect(() => {
@@ -305,24 +297,6 @@ export default function Index() {
   useEffect(() => {
     loadNotes();
   }, []);
-
-  // Automations: client-side engine + CRUD state for the Automations tab.
-  const getNotesForAutomations = useCallback(() => notesRef.current, []);
-  const {
-    automations,
-    loading: automationsLoading,
-    loadError: automationsLoadError,
-    createAutomation,
-    updateAutomation,
-    toggleAutomation,
-    deleteAutomation,
-    runAll: runAllAutomations,
-  } = useAutomations({
-    getNotes: getNotesForAutomations,
-    onNotesChanged: loadNotes,
-    onChecklistChanged: reloadChecklist,
-    enabled: termsAgreed,
-  });
 
   // Filter notes based on search query
   useEffect(() => {
@@ -664,7 +638,7 @@ export default function Index() {
       <div className="flex-1 min-w-0 flex flex-col">
       {/* Header */}
       <header className="border-b bg-card shadow-sm sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-3 sm:px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 flex-shrink-0">
               <Button
@@ -710,23 +684,14 @@ export default function Index() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 sm:gap-4 ml-auto flex-shrink-0">
-              <SearchBar onSearch={termsAgreed ? handleSearch : () => {}} disabled={!termsAgreed} />
-              <div className="h-6 w-px bg-border hidden md:block"></div>
-              
-              {/* Mobile Issue Icon Button */}
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIssueDialogOpen(true)}
-                className="md:hidden flex-shrink-0"
-              >
-                <IconAlertCircle stroke={2} className="h-4 w-4" />
-              </Button>
-              
-              {/* Select All Button - Hidden on mobile and tablet */}
-              {filteredNotes.length > 0 && (
-                <>
+            <div className="flex items-center gap-1 sm:gap-3 ml-auto min-w-0">
+              {/* Desktop: all buttons inline (xl+) */}
+              <div className="hidden xl:flex items-center gap-1 sm:gap-4">
+                <SearchBar onSearch={termsAgreed ? handleSearch : () => {}} disabled={!termsAgreed} />
+                <div className="h-6 w-px bg-border hidden sm:block"></div>
+
+                {/* Select All */}
+                {filteredNotes.length > 0 && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -737,40 +702,37 @@ export default function Index() {
                         setSelectedNotes(new Set(filteredNotes.map(note => note.id)));
                       }
                     }}
-                    className="hidden md:flex"
+                    className="hidden sm:flex"
                   >
                     {selectedNotes.size === filteredNotes.length ? (
                       <>
-                        <IconCheckbox stroke={2} className="h-4 w-4 mr-2" />
-                        Deselect All
+                        <IconCheckbox stroke={2} className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Deselect All</span>
                       </>
                     ) : (
                       <>
-                        <IconCheckbox stroke={2} className="h-4 w-4 mr-2" />
-                        Select All ({filteredNotes.length})
+                        <IconCheckbox stroke={2} className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Select All ({filteredNotes.length})</span>
                       </>
                     )}
                   </Button>
-                </>
-              )}
+                )}
 
-              {/* Archive Button - Desktop only, shown when no notes are selected */}
-              {selectedNotes.size === 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setArchivedNotesDialogOpen(true)}
-                  className="hidden md:flex"
-                >
-                  <IconArchive stroke={2} className="h-4 w-4 mr-2" />
-                  Archived Notes
-                </Button>
-              )}
-              
-              {/* Mass Delete Button - appears when notes are selected */}
-              {selectedNotes.size > 0 && (
-                <>
-                  <div className="h-6 w-px bg-border"></div>
+                {/* Archive */}
+                {selectedNotes.size === 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setArchivedNotesDialogOpen(true)}
+                    className="flex"
+                  >
+                    <IconArchive stroke={2} className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Archived Notes</span>
+                  </Button>
+                )}
+
+                {/* Mass Delete */}
+                {selectedNotes.size > 0 && (
                   <Button
                     variant="destructive"
                     size="sm"
@@ -781,44 +743,171 @@ export default function Index() {
                     <span className="hidden sm:inline">Delete ({selectedNotes.size})</span>
                     <span className="sm:hidden">({selectedNotes.size})</span>
                   </Button>
-                </>
-              )}
-              
-              <div className="h-6 w-px bg-border hidden md:block"></div>
-              
-              {/* Documentation and issue links - Hidden on mobile */}
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="hidden md:flex flex-1 md:flex-none"
-              >
-                <a
-                  href="https://stickee.mintlify.app/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Open Stickee Docs in a new tab"
-                >
-                  <IconBook2 stroke={2} className="h-4 w-4 mr-2" />
-                  Docs
-                </a>
-              </Button>
+                )}
 
-              <IssueReportButton 
-                size="sm"
-                className="hidden md:flex flex-1 md:flex-none"
-              />
-              
-              <div className="h-6 w-px bg-border hidden md:block"></div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setSettingsOpen(true)}
-                className="hidden md:flex"
-              >
-                <IconSettings stroke={2} className="h-5 w-5" />
-              </Button>
-              
+                <div className="h-6 w-px bg-border"></div>
+
+                {/* Docs */}
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="flex flex-1 md:flex-none"
+                >
+                  <a
+                    href="https://stickee.mintlify.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Open Stickee Docs in a new tab"
+                  >
+                    <IconBook2 stroke={2} className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Docs</span>
+                  </a>
+                </Button>
+
+                {/* Issue Report */}
+                <IssueReportButton 
+                  size="sm"
+                  className="hidden sm:flex flex-1 md:flex-none"
+                />
+
+                <div className="h-6 w-px bg-border hidden sm:block"></div>
+
+                {/* Settings */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSettingsOpen(true)}
+                  className="flex"
+                >
+                  <IconSettings stroke={2} className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Settings</span>
+                </Button>
+              </div>
+
+              {/* Hamburger menu trigger (below xl) */}
+              <div className="relative xl:hidden">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setMobileMenuOpen((o) => !o)}
+                  className="flex-shrink-0"
+                  aria-label="Open menu"
+                >
+                  <IconMenu2 stroke={2} className="h-5 w-5" />
+                </Button>
+
+                {mobileMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setMobileMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-card border border-border rounded-lg shadow-lg z-50 p-3 space-y-2">
+                      <SearchBar onSearch={termsAgreed ? handleSearch : () => {}} disabled={!termsAgreed} />
+
+                      {filteredNotes.length > 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (selectedNotes.size === filteredNotes.length) {
+                              setSelectedNotes(new Set());
+                            } else {
+                              setSelectedNotes(new Set(filteredNotes.map(note => note.id)));
+                            }
+                            setMobileMenuOpen(false);
+                          }}
+                          className="w-full justify-start"
+                        >
+                          <IconCheckbox stroke={2} className="h-4 w-4 mr-2" />
+                          {selectedNotes.size === filteredNotes.length
+                            ? "Deselect All"
+                            : `Select All (${filteredNotes.length})`}
+                        </Button>
+                      )}
+
+                      {selectedNotes.size === 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setArchivedNotesDialogOpen(true);
+                            setMobileMenuOpen(false);
+                          }}
+                          className="w-full justify-start"
+                        >
+                          <IconArchive stroke={2} className="h-4 w-4 mr-2" />
+                          Archived Notes
+                        </Button>
+                      )}
+
+                      {selectedNotes.size > 0 && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            setShowMassDeleteDialog(true);
+                            setMobileMenuOpen(false);
+                          }}
+                          className="w-full justify-start bg-red-500 hover:bg-red-600"
+                        >
+                          <IconTrash stroke={2} className="h-4 w-4 mr-2" />
+                          Delete ({selectedNotes.size})
+                        </Button>
+                      )}
+
+                      <div className="h-px bg-border" />
+
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start"
+                      >
+                        <a
+                          href="https://stickee.mintlify.app/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Open Stickee Docs"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <IconBook2 stroke={2} className="h-4 w-4 mr-2" />
+                          Docs
+                        </a>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setIssueDialogOpen(true);
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full justify-start"
+                      >
+                        <IconAlertCircle stroke={2} className="h-4 w-4 mr-2" />
+                        Found an Issue
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSettingsOpen(true);
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full justify-start"
+                      >
+                        <IconSettings stroke={2} className="h-4 w-4 mr-2" />
+                        Settings
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Add Note - always visible */}
               <Button
                 onClick={(e) => {
                   if (!termsAgreed) {
@@ -846,20 +935,8 @@ export default function Index() {
           onAddTemplate={handleAddTemplate}
           disabled={!termsAgreed}
         />
-      ) : activeTab === "automations" ? (
-        <AutomationsPanel
-          automations={automations}
-          loading={automationsLoading}
-          loadError={automationsLoadError}
-          disabled={!termsAgreed}
-          onCreate={createAutomation}
-          onUpdate={updateAutomation}
-          onToggle={toggleAutomation}
-          onDelete={deleteAutomation}
-          onRunAll={runAllAutomations}
-        />
       ) : (
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
             <img 
@@ -890,7 +967,7 @@ export default function Index() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-8">
             {/* Pinned notes - not draggable */}
             {pinnedNotes.map((note) => (
               <StickyNote

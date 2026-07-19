@@ -18,9 +18,8 @@ export function SearchBar({ onSearch, placeholder = "Search notes...", disabled 
     onSearch(value);
   };
 
-  // Desktop only - full search bar
   return (
-    <div className="relative max-w-md hidden md:block">
+    <div className="relative w-full md:max-w-md">
       <IconSearch stroke={2} className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <Input
         type="text"

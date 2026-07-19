@@ -215,7 +215,6 @@ export const useChecklist = () => {
     toggleOpen: toggleChecklist,
     toggleChecklist, // Expose both for backward compatibility
     isLoading,
-    // Re-fetch from Supabase (used after automations mutate checklist_items).
     reload: loadItems,
   };
 };
