@@ -17,6 +17,7 @@ import {
   updateNote as updateNoteService, 
   deleteNote as deleteNoteService,
   updateNotePinStatus as updateNotePinStatusService,
+  updateNoteStatus as updateNoteStatusService,
   reorderNotes as reorderNotesService
 } from "@/services/notesService";
 import { archiveNote } from "@/services/archiveService";
@@ -44,6 +45,7 @@ import { Checklist } from "@/components/Checklist";
 import { StickyNoteWindow } from "@/components/StickyNoteWindow";
 import { ArchivedNotesDialog } from "@/components/ArchivedNotesDialog";
 import { AppSidebar, type SidebarTab } from "@/components/AppSidebar";
+import { KanbanBoard } from "@/components/KanbanBoard";
 import { TemplatesPanel, type NoteTemplate } from "@/components/TemplatesPanel";
 
 // Using the Note interface from types/note.ts
@@ -70,7 +72,7 @@ export default function Index() {
   const [noteReactions, setNoteReactions] = useState<Record<string, ReactionSummary[]>>({});
   const [showMassDeleteDialog, setShowMassDeleteDialog] = useState(false);
   const [archivedNotesDialogOpen, setArchivedNotesDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<SidebarTab>("board");
+  const [activeTab, setActiveTab] = useState<SidebarTab>("notes");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.innerWidth < 768;
@@ -604,6 +606,17 @@ export default function Index() {
     }
   };
 
+  const handleStatusChange = async (noteId: string, newStatus: StickyNoteStatus) => {
+    setNotes(prev => prev.map(n => n.id === noteId ? { ...n, status: newStatus } : n));
+    setFilteredNotes(prev => prev.map(n => n.id === noteId ? { ...n, status: newStatus } : n));
+    try {
+      await updateNoteStatusService(noteId, newStatus);
+    } catch (error) {
+      console.error('Error updating note status:', error);
+      loadNotes();
+    }
+  };
+
   const handleAddTemplate = async (template: NoteTemplate) => {
     if (!termsAgreed) {
       toast.error("You must agree to the Terms of Service to create notes");
@@ -796,6 +809,12 @@ export default function Index() {
         <TemplatesPanel
           onAddTemplate={handleAddTemplate}
           disabled={!termsAgreed}
+        />
+      ) : activeTab === "stickeeboard" ? (
+        <KanbanBoard
+          notes={filteredNotes}
+          onStatusChange={handleStatusChange}
+          onNoteClick={handleNoteClick}
         />
       ) : (
       <main className="container mx-auto px-4 py-8">
