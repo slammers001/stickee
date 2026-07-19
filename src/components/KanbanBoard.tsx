@@ -22,7 +22,7 @@ const headerBg: Record<NoteStatus, string> = {
   "To-Do": "bg-red-100 dark:bg-red-950/30",
   "Doing": "bg-blue-100 dark:bg-blue-950/30",
   "Done": "bg-green-100 dark:bg-green-950/30",
-  "Backlog": "bg-gray-100 dark:bg-gray-800/30",
+  "Backlog": "bg-gray-200 dark:bg-gray-700/30",
 };
 
 const noteColorMap: Record<string, string> = {
@@ -124,7 +124,7 @@ export function KanbanBoard({ notes, onStatusChange, onNoteClick }: KanbanBoardP
                       onDragEnd={handleDragEnd}
                       onClick={() => onNoteClick(note)}
                       className={cn(
-                        "group p-3 cursor-pointer transition-all",
+                        "group p-3 cursor-pointer transition-all select-none",
                         "border-[3px] border-foreground/20 hover:border-foreground/60",
                         "shadow-[3px_3px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)]",
                         "active:translate-x-[2px] active:translate-y-[2px] active:shadow-none",
