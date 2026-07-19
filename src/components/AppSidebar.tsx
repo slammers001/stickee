@@ -3,12 +3,13 @@ import {
   IconArrowRight,
   IconDiamond,
   IconLayoutBoard,
+  IconLayoutKanban,
   IconTemplate,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-export type SidebarTab = "board" | "templates";
+export type SidebarTab = "notes" | "stickeeboard" | "templates";
 
 interface AppSidebarProps {
   activeTab: SidebarTab;
@@ -19,10 +20,16 @@ interface AppSidebarProps {
 
 const NAV = [
   {
-    id: "board" as const,
-    label: "Board",
+    id: "notes" as const,
+    label: "Notes",
     icon: IconLayoutBoard,
-    description: "Your sticky notes",
+    description: "Your Stickee notes",
+  },
+  {
+    id: "stickeeboard" as const,
+    label: "Stickeeboard",
+    icon: IconLayoutKanban,
+    description: "Kanban board view",
   },
   {
     id: "templates" as const,
