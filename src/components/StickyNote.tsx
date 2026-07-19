@@ -7,7 +7,8 @@ import { EmojiPicker } from "./EmojiPicker";
 import { ReactionSummary } from "@/types/emojiReaction";
 import { toggleReaction } from "@/services/emojiReactionService";
 import { toast } from "sonner";
-import { MarkdownContent } from "./MarkdownContent";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { memo } from "react";
 
 export type NoteStatus = 'To-Do' | 'Doing' | 'Done' | 'Backlog';
@@ -163,12 +164,17 @@ export const StickyNote = memo(({
               {title.length > 20 ? `${title.substring(0, 20)}...` : title}
             </h3>
           )}
-          <MarkdownContent
-            content={content}
-            compact
-            className={`max-h-[16rem] overflow-hidden line-clamp-13 ${!title ? 'mt-2' : ''}`}
-            style={fontFamily ? { fontFamily } : undefined}
-          />
+          <div
+            className={`overflow-hidden max-h-[16rem] ${!title ? 'mt-2' : ''}`}
+          >
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              className="text-foreground text-lg leading-relaxed font-handwriting [&>*+*]:mt-2"
+              style={fontFamily ? { fontFamily } : undefined}
+            >
+              {content}
+            </ReactMarkdown>
+          </div>
         </div>
         
         {/* Reactions Section */}
