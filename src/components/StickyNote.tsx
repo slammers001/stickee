@@ -119,10 +119,10 @@ export const StickyNote = memo(({
     <>
       <Card
         className={cn(
-          "p-5 w-full aspect-square max-w-[280px] mx-auto flex flex-col justify-between sticky-note",
+          "p-3 sm:p-5 w-full h-[240px] sm:h-[280px] max-w-[200px] sm:max-w-[280px] mx-auto flex flex-col justify-between sticky-note overflow-hidden",
           "transition-all duration-200 hover:scale-105 cursor-pointer",
           "border-0 animate-in fade-in-0 zoom-in-95 relative select-none",
-          "before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-16 before:h-6",
+          "before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-10 sm:before:w-16 before:h-4 sm:before:h-6",
           "before:bg-background/40 before:shadow-sm before:-translate-y-2 before:rounded-sm",
           colorMap[color],
           isSelected && "ring-2 ring-primary ring-offset-2"
@@ -161,12 +161,12 @@ export const StickyNote = memo(({
         
         <div className="flex-1">
           {title && (
-            <h3 className="text-foreground text-xl font-bold mb-2 font-title leading-tight">
-              {title.length > 20 ? `${title.substring(0, 20)}...` : title}
+            <h3 className="text-foreground text-base sm:text-xl font-bold mb-1 sm:mb-2 font-title leading-tight">
+              {title.length > 12 ? `${title.substring(0, 12)}...` : title}
             </h3>
           )}
           <div
-            className={`overflow-hidden max-h-[16rem] text-foreground text-lg leading-relaxed font-handwriting [&>*+*]:mt-2 ${!title ? 'mt-2' : ''}`}
+            className={`overflow-hidden max-h-[8rem] sm:max-h-[16rem] text-foreground text-sm sm:text-lg leading-relaxed font-handwriting [&>*+*]:mt-2 ${!title ? 'mt-2' : ''}`}
             style={fontFamily ? { fontFamily } : undefined}
           >
             <ReactMarkdown
@@ -203,15 +203,15 @@ export const StickyNote = memo(({
           </div>
         )}
         
-        <div className="flex items-center justify-between mt-2">
-          <Badge variant="outline" className={cn("text-xs font-handwriting shrink-0 note-status dark:text-white", statusColors[status])}>
+        <div className="flex items-center justify-between mt-1 sm:mt-2">
+          <Badge variant="outline" className={cn("text-[10px] sm:text-xs font-handwriting shrink-0 note-status dark:text-white", statusColors[status])}>
             {status}
           </Badge>
           
           {/* Emoji Reaction Button */}
           <button
             onClick={handleEmojiClick}
-            className="p-1 rounded-full hover:bg-accent transition-colors"
+            className="p-0.5 sm:p-1 rounded-full hover:bg-accent transition-colors"
             title="Add reaction"
           >
             <Smile size={16} className="text-foreground/60 hover:text-foreground emoji-react-icon" />
