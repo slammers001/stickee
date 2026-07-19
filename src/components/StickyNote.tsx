@@ -7,7 +7,7 @@ import { EmojiPicker } from "./EmojiPicker";
 import { ReactionSummary } from "@/types/emojiReaction";
 import { toggleReaction } from "@/services/emojiReactionService";
 import { toast } from "sonner";
-import { LinkableText } from "./LinkableText";
+import { MarkdownContent } from "./MarkdownContent";
 import { memo } from "react";
 
 export type NoteStatus = 'To-Do' | 'Doing' | 'Done' | 'Backlog';
@@ -82,11 +82,6 @@ export const StickyNote = memo(({
   }, []);
   
   // Limit to 13 lines (primary constraint)
-  const displayContent = useMemo(() => {
-    const lines = content.split('\n');
-    return lines.length > 13 ? lines.slice(0, 13).join('\n') + '...' : content;
-  }, [content]);
-
   const handleEmojiClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
@@ -168,9 +163,10 @@ export const StickyNote = memo(({
               {title.length > 20 ? `${title.substring(0, 20)}...` : title}
             </h3>
           )}
-          <LinkableText 
-            text={displayContent}
-            className={`text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting line-clamp-13 ${!title ? 'mt-2' : ''}`}
+          <MarkdownContent
+            content={content}
+            compact
+            className={`max-h-[16rem] overflow-hidden line-clamp-13 ${!title ? 'mt-2' : ''}`}
             style={fontFamily ? { fontFamily } : undefined}
           />
         </div>
