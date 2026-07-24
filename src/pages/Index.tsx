@@ -624,7 +624,7 @@ export default function Index() {
     }
 
     // Return immediately, then add the template as a pre-filled board note.
-    setActiveTab("board");
+    setActiveTab("stickeeboard");
     await addNote(template.title, template.content, template.status, template.color);
     toast.success(`Added "${template.title}" template to your board`);
   };
@@ -989,7 +989,7 @@ export default function Index() {
 
       {/* Version Display */}
       <div className="fixed bottom-4 left-4 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded shadow-sm" style={{ fontFamily: 'var(--font-family-handwriting)' }}>
-        Version 2.0.0
+        Version 2.0.1
       </div>
       </div>
     </div>
