@@ -1,4 +1,5 @@
-# version: 2
+version: 2
+updates: []
 # updates:
   # Keep npm dependencies up to date
 #  - package-ecosystem: npm
