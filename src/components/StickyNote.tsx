@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Pin, Smile, CheckSquare, Archive } from "lucide-react";
+import { Pin, Smile, CheckSquare, Archive, Eye } from "lucide-react";
 import { EmojiPicker } from "./EmojiPicker";
 import { ReactionSummary } from "@/types/emojiReaction";
 import { toggleReaction } from "@/services/emojiReactionService";
@@ -21,8 +21,11 @@ interface StickyNoteProps {
   index?: number;
   lastUpdated?: number;
   pinned: boolean;
+  tags?: string[];
+  dueDate?: string;
   reactions?: ReactionSummary[];
   onClick: () => void;
+  onPreview?: () => void;
   onTogglePin: () => void;
   onArchive?: () => void;
   onReactionUpdate?: (reactions: ReactionSummary[]) => void;
@@ -58,9 +61,12 @@ export const StickyNote = memo(({
   content, 
   color, 
   status, 
-  pinned, 
-  reactions = [], 
-  onClick, 
+  pinned,
+  tags = [],
+  dueDate,
+  reactions = [],
+  onClick,
+  onPreview,
   onTogglePin,
   onArchive,
   onReactionUpdate,
@@ -71,6 +77,11 @@ export const StickyNote = memo(({
 }: Omit<StickyNoteProps, 'index' | 'lastUpdated'>) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiPickerPosition, setEmojiPickerPosition] = useState({ x: 0, y: 0 });
+  const NOTE_PREVIEW_LIMIT = 220;
+  const hasMoreContent = content.length > NOTE_PREVIEW_LIMIT;
+  const previewContent = hasMoreContent
+    ? `${content.slice(0, NOTE_PREVIEW_LIMIT).trimEnd()}…`
+    : content;
 
   // Generate unique random rotation between -4 and 4 degrees
   const rotation = useMemo(() => {
@@ -81,12 +92,6 @@ export const StickyNote = memo(({
     return magnitude * direction;
   }, []);
   
-  // Limit to 13 lines (primary constraint)
-  const displayContent = useMemo(() => {
-    const lines = content.split('\n');
-    return lines.length > 13 ? lines.slice(0, 13).join('\n') + '...' : content;
-  }, [content]);
-
   const handleEmojiClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
@@ -122,7 +127,7 @@ export const StickyNote = memo(({
     <>
       <Card
         className={cn(
-          "p-5 w-full aspect-square max-w-[280px] mx-auto flex flex-col justify-between sticky-note",
+          "p-5 w-full min-h-[280px] h-auto max-w-[280px] mx-auto flex flex-col justify-between sticky-note",
           "transition-all duration-200 hover:scale-105 cursor-pointer",
           "border-0 animate-in fade-in-0 zoom-in-95 relative select-none",
           "before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-16 before:h-6",
@@ -169,8 +174,8 @@ export const StickyNote = memo(({
             </h3>
           )}
           <LinkableText 
-            text={displayContent}
-            className={`text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting line-clamp-13 ${!title ? 'mt-2' : ''}`}
+            text={previewContent}
+            className={`max-h-[170px] overflow-hidden text-foreground text-lg leading-relaxed whitespace-pre-wrap break-words font-handwriting ${!title ? 'mt-2' : ''}`}
             style={fontFamily ? { fontFamily } : undefined}
           />
         </div>
@@ -202,10 +207,12 @@ export const StickyNote = memo(({
         )}
         
         <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center gap-2">
           <Badge variant="outline" className={cn("text-xs font-handwriting shrink-0 note-status dark:text-white", statusColors[status])}>
             {status}
           </Badge>
-          
+          {dueDate && <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-sans", dueDate < new Date().toISOString().slice(0, 10) ? "border-red-300 bg-red-100 text-red-700" : "border-orange-300 bg-orange-100 text-orange-700")}>{dueDate < new Date().toISOString().slice(0, 10) ? "Overdue" : dueDate}</span>}
+          </div>
           {/* Emoji Reaction Button */}
           <button
             onClick={handleEmojiClick}
@@ -222,7 +229,7 @@ export const StickyNote = memo(({
             onTogglePin();
           }}
           className={cn(
-            "absolute top-3 right-3 w-6 h-6 rounded-full transition-all flex items-center justify-center pin-icon",
+            "absolute top-3 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all pin-icon",
             "hover:bg-foreground/5 active:scale-90",
             pinned ? "text-red-500" : "text-foreground/40 hover:text-foreground/70"
           )}
@@ -230,6 +237,21 @@ export const StickyNote = memo(({
         >
           <Pin size={16} fill={pinned ? "currentColor" : "none"} />
         </button>
+
+        {/* Full-content preview */}
+        {onPreview && hasMoreContent && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreview();
+            }}
+            className="preview-icon absolute top-3 right-[4.5rem] z-10 flex h-7 w-7 items-center justify-center rounded-full text-foreground/70 opacity-100 transition-all hover:bg-foreground/10 hover:text-foreground"
+            aria-label="Preview full note"
+            title="Preview full note"
+          >
+            <Eye size={16} />
+          </button>
+        )}
 
         {/* Archive Button */}
         {onArchive && (
@@ -239,7 +261,7 @@ export const StickyNote = memo(({
               onArchive();
             }}
             className={cn(
-              "absolute top-3 right-12 w-6 h-6 rounded-full transition-all flex items-center justify-center",
+              "absolute top-3 right-10 z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all",
               "hover:bg-foreground/5 active:scale-90 text-foreground/40 hover:text-foreground/70"
             )}
             aria-label="Archive note"

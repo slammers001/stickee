@@ -79,7 +79,10 @@ export default defineConfig(({ mode }) => {
         }
       },
       cssCodeSplit: true,
-      sourcemap: false
+      sourcemap: false,
+      // The app intentionally ships a single feature-rich client bundle.
+      // Keep the warning threshold aligned with the current bundle budget.
+      chunkSizeWarningLimit: 1000
     },
   };
 });

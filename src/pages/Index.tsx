@@ -41,6 +41,7 @@ import type { StickyNoteStatus } from "@/types/note";
 import { analytics, AnalyticsEvents } from "@/utils/analytics";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { NoteDetailDialog } from "@/components/NoteDetailDialog";
+import { NotePreviewDialog } from "@/components/NotePreviewDialog";
 import { Checklist } from "@/components/Checklist";
 import { StickyNoteWindow } from "@/components/StickyNoteWindow";
 import { ArchivedNotesDialog } from "@/components/ArchivedNotesDialog";
@@ -55,6 +56,8 @@ export default function Index() {
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [previewNote, setPreviewNote] = useState<Note | null>(null);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [stickyNoteWindowOpen, setStickyNoteWindowOpen] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(() => {
@@ -75,7 +78,7 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState<SidebarTab>("notes");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
-    return window.innerWidth < 768;
+    return window.innerWidth < 1024;
   });
   
   // Checklist state and handlers
@@ -292,9 +295,16 @@ export default function Index() {
     }
   };
 
-  // Load notes on component mount
+  // Load notes on component mount. Never leave the workspace blocked forever if
+  // the remote backend is unavailable (for example, in a local preview).
   useEffect(() => {
-    loadNotes();
+    const timeoutId = window.setTimeout(() => {
+      setLoading(false);
+      toast.error('Could not reach the notes service. You can still use the workspace and retry later.');
+    }, 8000);
+
+    loadNotes().finally(() => window.clearTimeout(timeoutId));
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   // Filter notes based on search query
@@ -304,12 +314,18 @@ export default function Index() {
       return;
     }
 
-    const query = searchQuery.toLowerCase();
-    const filtered = notes.filter(note => 
-      note.content.toLowerCase().includes(query) ||
-      note.status.toLowerCase().includes(query) ||
-      (note.title && note.title.toLowerCase().includes(query))
-    );
+    const query = searchQuery.toLowerCase().trim();
+    const terms = query.split(/\s+/);
+    const operators = Object.fromEntries(terms.filter((term) => term.includes(":")).map((term) => term.split(":", 2)));
+    const text = terms.filter((term) => !term.includes(":")).join(" ");
+    const filtered = notes.filter(note => {
+      const haystack = `${note.title || ""} ${note.content} ${(note.tags || []).join(" ")} ${note.status}`.toLowerCase();
+      const due = note.dueDate || "";
+      return (!text || haystack.includes(text)) &&
+        (!operators.tag || (note.tags || []).some((tag) => tag.toLowerCase() === operators.tag)) &&
+        (!operators.status || note.status.toLowerCase() === operators.status) &&
+        (!operators.is || (operators.is === "pinned" ? note.pinned : operators.is === "due" ? Boolean(due) : true));
+    });
     setFilteredNotes(filtered);
   }, [searchQuery, notes]);
 
@@ -645,16 +661,17 @@ export default function Index() {
       <div className="flex-1 min-w-0 flex flex-col">
       {/* Header */}
       <header className="border-b bg-card shadow-sm sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 flex-shrink-0">
+        <div className="container mx-auto px-3 py-2 md:px-4 md:py-3">
+          <div className="flex items-center justify-between gap-2">
+            {/* Left: hamburger + logo */}
+            <div className="flex items-center gap-2 flex-shrink-0 min-w-0">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="md:hidden border-2 border-foreground/15"
+                className="flex-shrink-0 border-2 border-foreground/15 lg:hidden"
                 onClick={() => setSidebarCollapsed((c) => !c)}
-                aria-label="Toggle sidebar"
+                aria-label="Toggle navigation"
               >
                 {sidebarCollapsed ? (
                   <IconMenu2 stroke={2} className="h-5 w-5" />
@@ -665,77 +682,72 @@ export default function Index() {
               <img 
                 src="./stickee.png" 
                 alt="Stickee" 
-                className="h-14 w-14 object-contain icon-crisp no-select"
+                className="h-9 w-9 md:h-14 md:w-14 object-contain icon-crisp no-select hidden sm:block"
                 onError={(e) => {
-                  // Prevent infinite loop by setting a flag
                   const target = e.target as HTMLImageElement;
                   if (!target.dataset.errorHandled) {
                     target.dataset.errorHandled = "true";
                   }
                 }}
               />
-              <div className="flex flex-col">
-                <h1 className="text-2xl sm:text-4xl font-bold text-foreground tracking-tight font-handwriting">
-                  Stickee
-                </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Made by{" "}
-                  <a 
-                    href="https://github.com/slammers001" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="underline hover:text-foreground transition-colors"
-                  >
-                    slammers001
-                  </a>
-                </p>
-              </div>
+              <h1 className="text-lg sm:text-xl md:text-4xl font-bold text-foreground tracking-tight font-handwriting truncate">
+                Stickee
+              </h1>
+              <span className="hidden lg:inline text-xs text-muted-foreground whitespace-nowrap">
+                <a 
+                  href="https://github.com/slammers001" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground transition-colors"
+                >
+                  by slammers001
+                </a>
+              </span>
             </div>
-            <div className="flex items-center gap-2 sm:gap-4 ml-auto flex-shrink-0">
+
+            {/* Right: actions */}
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               <SearchBar onSearch={termsAgreed ? handleSearch : () => {}} disabled={!termsAgreed} />
-              <div className="h-6 w-px bg-border hidden md:block"></div>
               
-              {/* Mobile Issue Icon Button */}
+              {/* Issue icon — always visible */}
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setIssueDialogOpen(true)}
-                className="md:hidden flex-shrink-0"
+                className="flex-shrink-0 h-9 w-9"
               >
                 <IconAlertCircle stroke={2} className="h-4 w-4" />
               </Button>
               
-              {/* Select All Button - Hidden on mobile and tablet */}
+              {/* Select All — desktop only */}
               {filteredNotes.length > 0 && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (selectedNotes.size === filteredNotes.length) {
-                        setSelectedNotes(new Set());
-                      } else {
-                        setSelectedNotes(new Set(filteredNotes.map(note => note.id)));
-                      }
-                    }}
-                    className="hidden md:flex"
-                  >
-                    {selectedNotes.size === filteredNotes.length ? (
-                      <>
-                        <IconCheckbox stroke={2} className="h-4 w-4 mr-2" />
-                        Deselect All
-                      </>
-                    ) : (
-                      <>
-                        <IconCheckbox stroke={2} className="h-4 w-4 mr-2" />
-                        Select All ({filteredNotes.length})
-                      </>
-                    )}
-                  </Button>
-                </>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (selectedNotes.size === filteredNotes.length) {
+                      setSelectedNotes(new Set());
+                    } else {
+                      setSelectedNotes(new Set(filteredNotes.map(note => note.id)));
+                    }
+                  }}
+                  className="hidden md:flex"
+                >
+                  {selectedNotes.size === filteredNotes.length ? (
+                    <>
+                      <IconCheckbox stroke={2} className="h-4 w-4 mr-2" />
+                      Deselect All
+                    </>
+                  ) : (
+                    <>
+                      <IconCheckbox stroke={2} className="h-4 w-4 mr-2" />
+                      Select All ({filteredNotes.length})
+                    </>
+                  )}
+                </Button>
               )}
 
-              {/* Archive Button - Desktop only, shown when no notes are selected */}
+              {/* Archive — desktop only */}
               {selectedNotes.size === 0 && (
                 <Button
                   variant="outline"
@@ -748,41 +760,42 @@ export default function Index() {
                 </Button>
               )}
               
-              {/* Mass Delete Button - appears when notes are selected */}
+              {/* Mass Delete */}
               {selectedNotes.size > 0 && (
-                <>
-                  <div className="h-6 w-px bg-border"></div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setShowMassDeleteDialog(true)}
-                    className="bg-red-500 hover:bg-red-600 flex-shrink-0"
-                  >
-                    <IconTrash stroke={2} className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Delete ({selectedNotes.size})</span>
-                    <span className="sm:hidden">({selectedNotes.size})</span>
-                  </Button>
-                </>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowMassDeleteDialog(true)}
+                  className="bg-red-500 hover:bg-red-600 flex-shrink-0"
+                >
+                  <IconTrash stroke={2} className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Delete ({selectedNotes.size})</span>
+                  <span className="sm:hidden">({selectedNotes.size})</span>
+                </Button>
               )}
               
               <div className="h-6 w-px bg-border hidden md:block"></div>
               
-              {/* Issue Report Button - Hidden on mobile */}
+              {/* Issue report — desktop only */}
               <IssueReportButton 
                 size="sm"
                 className="hidden md:flex flex-1 md:flex-none"
               />
               
               <div className="h-6 w-px bg-border hidden md:block"></div>
+
+              {/* Settings */}
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setSettingsOpen(true)}
-                className="hidden md:flex"
+                className="flex-shrink-0 h-9 w-9"
+                aria-label="Open settings"
               >
                 <IconSettings stroke={2} className="h-5 w-5" />
               </Button>
               
+              {/* New note */}
               <Button
                 onClick={(e) => {
                   if (!termsAgreed) {
@@ -796,6 +809,7 @@ export default function Index() {
                 }}
                 disabled={!termsAgreed}
                 className="bg-primary hover:bg-primary/90 flex-shrink-0"
+                size="icon"
               >
                 <IconPlus stroke={2} className="h-5 w-5" />
               </Button>
@@ -848,7 +862,7 @@ export default function Index() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
+          <div className="notes-grid grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-8">
             {/* Pinned notes - not draggable */}
             {pinnedNotes.map((note) => (
               <StickyNote
@@ -859,9 +873,12 @@ export default function Index() {
                 color={note.color}
                 status={note.status}
                 pinned={note.pinned}
+                tags={note.tags}
+                dueDate={note.dueDate}
                 reactions={noteReactions[note.id] || []}
                 onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
                 onClick={() => handleNoteClick(note)}
+                onPreview={() => { setPreviewNote(note); setPreviewDialogOpen(true); }}
                 onTogglePin={() => togglePin(note.id)}
                 onArchive={() => handleArchive(note.id)}
                 onToggleSelect={() => handleToggleSelect(note.id)}
@@ -895,9 +912,12 @@ export default function Index() {
                   color={note.color}
                   status={note.status}
                   pinned={note.pinned}
+                  tags={note.tags}
+                  dueDate={note.dueDate}
                   reactions={noteReactions[note.id] || []}
                   onReactionUpdate={(reactions) => handleReactionUpdate(note.id, reactions)}
                   onClick={() => handleNoteClick(note)}
+                  onPreview={() => { setPreviewNote(note); setPreviewDialogOpen(true); }}
                   onTogglePin={() => togglePin(note.id)}
                   onArchive={() => handleArchive(note.id)}
                   onToggleSelect={() => handleToggleSelect(note.id)}
@@ -931,6 +951,15 @@ export default function Index() {
           />
         </Suspense>
       )}
+
+      <NotePreviewDialog
+        note={previewNote}
+        open={previewDialogOpen}
+        onOpenChange={(open) => {
+          setPreviewDialogOpen(open);
+          if (!open) setPreviewNote(null);
+        }}
+      />
 
       {/* Terms Popup */}
       {!termsAgreed && (
