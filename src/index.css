@@ -149,6 +149,10 @@ All colors MUST be HSL.
     font-family: var(--font-family-title), serif;
   }
 
+  .ease-bouncy {
+    transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
   .dark .font-handwriting {
     font-family: var(--font-family-handwriting), cursive;
   }
@@ -191,6 +195,18 @@ All colors MUST be HSL.
 
   .dark .pin-icon {
     color: #ffffff !important;
+  }
+
+  /* Keep note previews vertically scrollable without showing a scrollbar. */
+  .preview-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .preview-scroll::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   .dark .emoji-react-icon {
@@ -330,9 +346,19 @@ All colors MUST be HSL.
         display: block !important;
     }
     
-    /* Hide any text labels in buttons on mobile */
+    /* Hide unrelated button labels on mobile, but keep navigation drawer labels visible. */
     button span:not(.icon), .btn span:not(.icon) {
         display: none !important;
+    }
+
+    .app-sidebar button span:not(.icon),
+    .app-sidebar .min-w-0,
+    .app-sidebar .min-w-0 span {
+        display: block !important;
+    }
+
+    .app-sidebar button > span:first-child {
+        display: flex !important;
     }
     
     /* Hide emoji reactions completely on mobile */
@@ -442,10 +468,12 @@ All colors MUST be HSL.
     
     /* Sticky notes - better mobile layout */
     .sticky-note {
-        width: calc(100vw - 40px) !important;
-        max-width: 350px !important;
+        aspect-ratio: auto !important;
+        height: auto !important;
+        width: 100% !important;
+        max-width: none !important;
         min-height: 150px !important;
-        margin: 8px 20px !important;
+        margin: 0 !important;
         padding: 12px !important;
     }
     
@@ -459,14 +487,22 @@ All colors MUST be HSL.
         line-height: 1.4 !important;
     }
     
-    /* Notes container - single column with proper spacing */
-    .notes-container, .notes-grid {
-        display: flex !important;
-        flex-direction: column !important;
+    /* Notes container - two cards per row on mobile and tablet. */
+    .notes-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 12px !important;
         padding: 10px 0 !important;
         width: 100% !important;
-        align-items: center !important;
+        align-items: stretch !important;
+    }
+
+    .notes-grid > * {
+        min-width: 0 !important;
+    }
+
+    .notes-container {
+        width: 100% !important;
     }
     
     /* Dialog adjustments */
@@ -547,8 +583,8 @@ All colors MUST be HSL.
         justify-content: center !important;
     }
     
-    /* Ensure cancel button is visible */
-    button:contains("Cancel"), button:contains("Close"), button[variant="outline"], button[variant="secondary"] {
+    /* Keep explicitly styled secondary actions visible on mobile. */
+    button[variant="outline"], button[variant="secondary"] {
         display: flex !important;
         opacity: 1 !important;
         visibility: visible !important;
@@ -565,16 +601,8 @@ All colors MUST be HSL.
         display: none !important;
     }
     
-    /* Hide specific keyboard shortcut text elements */
-    .text-xs.text-muted-foreground:contains("Ctrl+Enter"),
-    .text-xs.text-muted-foreground:contains("Press"),
-    .close-hint:contains("Ctrl+Enter"),
-    .controls:contains("Ctrl+Enter") {
-        display: none !important;
-    }
-    
-    /* Hide any paragraph containing keyboard shortcuts */
-    p:contains("Ctrl+Enter"), p:contains("Control+Enter"), p:contains("Cmd+Enter") {
+    /* Keyboard shortcut hints use explicit classes where needed. */
+    .keyboard-hint, .shortcut-hint, .close-hint {
         display: none !important;
     }
     
@@ -622,6 +650,18 @@ All colors MUST be HSL.
         position: absolute !important;
         top: 8px !important;
         right: 8px !important;
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    .preview-icon {
+        right: 76px !important;
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    .sticky-note > button[aria-label="Archive note"] {
+        right: 42px !important;
         width: 32px !important;
         height: 32px !important;
     }
