@@ -51,20 +51,20 @@ export function AppSidebar({
         <button
           type="button"
           aria-label="Close sidebar"
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
           onClick={() => onCollapsedChange(true)}
         />
       )}
 
       <aside
         className={cn(
-          "fixed md:sticky top-0 left-0 z-40 h-screen flex flex-col",
+          "app-sidebar fixed lg:sticky top-0 left-0 z-40 h-screen w-[min(20rem,85vw)] flex flex-col",
           "border-r border-border bg-card text-card-foreground",
           "dark:bg-[hsl(var(--sidebar-background))] dark:border-[hsl(var(--sidebar-border))]",
           "transition-[width,transform] duration-200 ease-out",
           collapsed
-            ? "w-[4.25rem] -translate-x-full md:translate-x-0"
-            : "w-60 translate-x-0"
+            ? "w-[4.25rem] -translate-x-full lg:translate-x-0"
+            : "w-full max-w-[20rem] translate-x-0"
         )}
       >
         <div
@@ -76,7 +76,7 @@ export function AppSidebar({
           {collapsed ? (
             <button
               type="button"
-              className="group relative hidden h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:inline-flex"
+              className="group relative hidden h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:inline-flex"
               onClick={() => onCollapsedChange(false)}
               aria-label="Expand sidebar"
               title="Expand sidebar"
@@ -113,7 +113,7 @@ export function AppSidebar({
               type="button"
               variant="outline"
               size="icon"
-              className="ml-auto hidden h-8 w-8 border-border bg-background hover:bg-muted md:inline-flex"
+              className="ml-auto hidden h-8 w-8 border-border bg-background hover:bg-muted lg:inline-flex"
               onClick={() => onCollapsedChange(true)}
               aria-label="Collapse sidebar"
               title="Collapse sidebar"
@@ -141,14 +141,14 @@ export function AppSidebar({
                 type="button"
                 onClick={() => {
                   onTabChange(item.id);
-                  if (window.innerWidth < 768) onCollapsedChange(true);
+                  if (window.innerWidth < 1024) onCollapsedChange(true);
                 }}
                 className={cn(
                   "w-full flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-colors",
                   "font-handwriting text-lg leading-none",
                   active
                     ? "border-border bg-muted text-foreground shadow-sm dark:bg-[hsl(var(--sidebar-accent))] dark:border-[hsl(var(--sidebar-border))]"
-                    : "border-transparent bg-transparent text-foreground/80 hover:bg-muted/70 hover:text-foreground dark:hover:bg-[hsl(var(--sidebar-accent))]/70"
+                    : "border-transparent bg-transparent text-foreground hover:bg-muted/70 hover:text-foreground dark:hover:bg-[hsl(var(--sidebar-accent))]/70"
                 )}
                 title={item.label}
               >
@@ -158,12 +158,12 @@ export function AppSidebar({
                     active && "border-foreground/20 bg-background"
                   )}
                 >
-                  <NavIcon stroke={2} className="h-5 w-5 text-foreground" />
+                  <NavIcon stroke={2} className="h-5 w-5 shrink-0 text-foreground opacity-100" />
                 </span>
                 {!collapsed && (
                   <span className="min-w-0">
-                    <span className="block truncate font-semibold">{item.label}</span>
-                    <span className="block text-xs text-muted-foreground font-sans mt-0.5 truncate">
+                    <span className="block truncate font-semibold text-foreground opacity-100">{item.label}</span>
+                    <span className="block text-xs text-muted-foreground font-sans mt-0.5 truncate opacity-100">
                       {item.description}
                     </span>
                   </span>
