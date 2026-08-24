@@ -24,6 +24,7 @@ import { archiveNote } from "@/services/archiveService";
 import { ensureUserExists, updateUserVersion } from "@/services/userService";
 import { getReactionsForNote } from "@/services/emojiReactionService";
 import { soundEffects } from "@/utils/soundEffects";
+import { fireConfetti } from "@/utils/confetti";
 import type { ReactionSummary } from "@/types/emojiReaction";
 import { TermsPopup } from "@/components/TermsPopup";
 import { applyAppFont, getCssFontFamily } from "@/utils/fonts";
@@ -414,27 +415,26 @@ export default function Index() {
 
   const updateNote = async (id: string, title: string, content: string, status: StickyNoteStatus, color: string) => {
     try {
-      const updatedNote = await updateNoteService(id, { 
+      await updateNoteService(id, { 
         title: title || undefined,
         content, 
         status, 
         color
       });
       
-      if (updatedNote) {
-        setNotes(prevNotes => 
-          prevNotes.map(note => 
-            note.id === id ? { ...updatedNote } : note
-          )
-        );
-        setFilteredNotes(prevNotes => 
-          prevNotes.map(note => 
-            note.id === id ? { ...updatedNote } : note
-          )
-        );
-        setDetailDialogOpen(false);
-        // Note updated silently - no notification
+      if (status === "Done") {
+        soundEffects.playArchiveSound();
+        setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
+        setFilteredNotes(prevNotes => prevNotes.filter(note => note.id !== id));
+        await archiveNote(id);
+      } else {
+        const refreshed = await notesService.getNotes();
+        if (refreshed) {
+          setNotes(refreshed);
+          setFilteredNotes(refreshed);
+        }
       }
+      setDetailDialogOpen(false);
     } catch (error) {
       console.error('Error updating note:', error);
     }
@@ -623,6 +623,9 @@ export default function Index() {
   };
 
   const handleStatusChange = async (noteId: string, newStatus: StickyNoteStatus) => {
+    if (newStatus === "Done") {
+      fireConfetti();
+    }
     setNotes(prev => prev.map(n => n.id === noteId ? { ...n, status: newStatus } : n));
     setFilteredNotes(prev => prev.map(n => n.id === noteId ? { ...n, status: newStatus } : n));
     try {
@@ -694,13 +697,23 @@ export default function Index() {
                 Stickee
               </h1>
               <span className="hidden lg:inline text-xs text-muted-foreground whitespace-nowrap">
+                by{" "}
                 <a 
                   href="https://github.com/slammers001" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="underline hover:text-foreground transition-colors"
                 >
-                  by slammers001
+                  @slammers001
+                </a>
+                {" "}&amp;{" "}
+                <a 
+                  href="https://github.com/Hot-Coco" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground transition-colors"
+                >
+                  @Hot-Coco
                 </a>
               </span>
             </div>
@@ -898,7 +911,7 @@ export default function Index() {
                 onMouseLeave={handleMouseLeave}
                 className={cn(
                   "transition-all duration-200 relative cursor-move",
-                  draggedItem?.index === index ? "opacity-50" : ""
+                  ""
                 )}
               >
                 {/* Drop indicator line */}

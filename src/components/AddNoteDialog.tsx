@@ -15,6 +15,7 @@ import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 import { cn } from "@/lib/utils";
 import { soundEffects } from "@/utils/soundEffects";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
+import { fireConfetti } from "@/utils/confetti";
 import { Mic, MicOff } from "lucide-react";
 
 interface AddNoteDialogProps {
@@ -72,6 +73,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   const handleSaveAndClose = () => {
     if (content.trim()) {
       soundEffects.playNewNoteSound();
+      if (status === "Done") fireConfetti();
       onSave(title.trim(), content, status, color);
       // Reset form after successful save
       setTitle("");
@@ -127,13 +129,9 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   };
 
   const handleSave = () => {
-    console.log('handleSave called'); // Debug log
-    console.log('Content to save:', content); // Debug log
-    console.log('Content trimmed:', content.trim()); // Debug log
-    
     if (content.trim()) {
-      console.log('Saving note...'); // Debug log
       soundEffects.playNewNoteSound();
+      if (status === "Done") fireConfetti();
       onSave(title.trim(), content, status, color);
       // Reset form after successful save
       setTitle("");
@@ -141,8 +139,6 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
       setStatus("To-Do");
       setColor(colors[0]);
       onOpenChange(false);
-    } else {
-      console.log('No content to save - save cancelled'); // Debug log
     }
   };
 
@@ -183,22 +179,25 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     const normalizedText = transcript.toLowerCase().trim();
     console.log('Normalized text:', normalizedText); // Debug log
     
-    if (normalizedText === 'save' || normalizedText === 'save changes' || normalizedText.includes('save')) {
-      console.log('Save command detected'); // Debug log
-      // Don't add "save" to content, just save the note
+    if (normalizedText.includes('change status to')) {
+      if (normalizedText.includes('done')) setStatus('Done');
+      else if (normalizedText.includes('doing')) setStatus('Doing');
+      else if (normalizedText.includes('todo') || normalizedText.includes('to-do') || normalizedText.includes('to do')) setStatus('To-Do');
+      else if (normalizedText.includes('backlog')) setStatus('Backlog');
+      return;
+    }
+
+    if (normalizedText.includes('save stickee') || normalizedText.includes('save sticky')) {
       handleSave();
       return;
     }
     
-    if (normalizedText === 'close' || normalizedText === 'cancel' || normalizedText.includes('close')) {
-      console.log('Close command detected'); // Debug log
+    if (normalizedText.includes('close stickee') || normalizedText.includes('close sticky')) {
       onOpenChange(false);
       return;
     }
 
-    if (normalizedText === 'delete' || normalizedText === 'delete note' || normalizedText.includes('delete')) {
-      console.log('Delete command detected'); // Debug log
-      // For new notes, delete just means close without saving
+    if (normalizedText.includes('delete stickee') || normalizedText.includes('delete sticky')) {
       onOpenChange(false);
       return;
     }
@@ -226,11 +225,11 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col mx-4 sm:mx-0">
+      <DialogContent className="sm:max-w-[591px] max-h-[90vh] flex flex-col mx-4 sm:mx-0">
         <DialogHeader>
           <DialogTitle>Add a New Stickee Note</DialogTitle>
         </DialogHeader>
-        <div className="py-4 space-y-4 flex-1 overflow-y-auto">
+        <div className="py-2 space-y-2 flex-1">
           <div className="order-1 ml-2 mr-4">
             <label className="text-sm font-medium mb-2 block">Title (Optional)</label>
             <Input
@@ -238,7 +237,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               value={title}
               onChange={handleTitleChange}
               onKeyDown={handleTitleKeyDown}
-              className="font-title text-lg dark:text-white dark:placeholder:text-gray-400 max-w-md"
+              className="font-title text-base dark:text-white dark:placeholder:text-gray-400 max-w-md"
             />
             <div className="text-xs text-muted-foreground mt-1">
               {title.length}/20 characters
@@ -246,7 +245,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
           </div>
           <div className="order-2 sm:order-3">
             <label className="text-sm font-medium mb-2 block">Color</label>
-            <div className="flex gap-2 flex-wrap ml-2">
+            <div className="flex gap-1.5 flex-wrap ml-2">
               {colors.map((c) => {
                 const colorMap: Record<string, string> = {
                   yellow: "bg-[hsl(var(--note-yellow))]",
@@ -265,7 +264,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
                     key={c}
                     onClick={() => setColor(c)}
                     className={cn(
-                      "w-8 h-8 rounded-full transition-all border-2",
+                      "w-7 h-7 rounded-full transition-all border-2",
                       colorMap[c],
                       color === c ? "border-foreground scale-110" : "border-border hover:scale-105"
                     )}
@@ -282,45 +281,28 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               value={content}
               onChange={handleContentChange}
               onKeyDown={handleKeyDown}
-              className="min-h-[150px] resize-none font-handwriting text-lg dark:text-white dark:placeholder:text-gray-400 w-full"
+              className="min-h-[100px] resize-none font-handwriting text-base dark:text-white dark:placeholder:text-gray-400 w-full"
               autoFocus
             />
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-xs text-muted-foreground mt-1">
               Press Ctrl+Enter to save quickly • Maximum 1500 characters
             </p>
             
             {/* Voice Controls */}
             {isSupported && (
-              <div className="mt-3 p-3 bg-muted/30 rounded-lg border">
+              <div className="mt-2">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant={isListening ? "destructive" : "outline"}
-                      size="sm"
-                      onClick={toggleListening}
-                      className="transition-all duration-200"
-                    >
-                      {isListening ? (
-                        <>
-                          <MicOff className="h-4 w-4 mr-2" />
-                          Stop Recording
-                        </>
-                      ) : (
-                        <>
-                          <Mic className="h-4 w-4 mr-2" />
-                          Start Recording
-                        </>
-                      )}
-                    </Button>
-                    <div className="text-xs text-muted-foreground mt-1">FEATURE COMING SOON</div>
-                    
-                    {isListening && (
-                      <div className="flex items-center gap-2">
+                    {isListening ? (
+                      <button
+                        onClick={toggleListening}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-red-500 text-white text-sm transition-all duration-200"
+                      >
                         <div className="flex items-center gap-1">
                           {[...Array(3)].map((_, i) => (
                             <div
                               key={i}
-                              className="w-1 h-3 bg-red-500 rounded-full animate-pulse"
+                              className="w-1 h-3 bg-white rounded-full animate-pulse"
                               style={{
                                 animationDelay: `${i * 0.1}s`,
                                 animationDuration: '1s'
@@ -328,13 +310,23 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
                             />
                           ))}
                         </div>
-                        <span className="text-sm text-red-500">Listening...</span>
-                      </div>
+                        <span>Listening…</span>
+                      </button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={toggleListening}
+                        className="transition-all duration-200"
+                      >
+                        <Mic className="h-4 w-4 mr-2" />
+                        Voice Recording
+                      </Button>
                     )}
                   </div>
                   
                   <div className="text-xs text-muted-foreground">
-                    Say: "save", "close", or "delete"
+                    Say: "Save stickee", "Close stickee", "Change status to …"
                   </div>
                 </div>
 
@@ -355,7 +347,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               </div>
             )}
             <div className="text-xs text-muted-foreground mt-1">
-              {content.length}/1500 characters
+              {content.split(/\s+/).filter(Boolean).length} words • {content.length}/1500 characters
             </div>
           </div>
           <div className="order-4">
@@ -366,7 +358,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
                   key={s}
                   variant="outline"
                   className={cn(
-                    "cursor-pointer transition-all font-handwriting text-base px-3 py-1 status-text",
+                    "cursor-pointer transition-all font-handwriting text-sm px-2.5 py-0.5 status-text",
                     status === s ? "selected" : "",
                     status === s ? statusColors[s] : "hover:bg-muted"
                   )}

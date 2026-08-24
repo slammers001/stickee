@@ -49,10 +49,10 @@ const colorMap: Record<string, string> = {
 };
 
 const statusColors: Record<NoteStatus, string> = {
-  "To-Do": "bg-red-100 text-red-800 border-red-200",
-  "Doing": "bg-blue-100 text-blue-800 border-blue-200",
-  "Done": "bg-green-100 text-green-800 border-green-200",
-  "Backlog": "bg-gray-200 text-gray-800 border-gray-300",
+  "To-Do": "bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800",
+  "Doing": "bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800",
+  "Done": "bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800",
+  "Backlog": "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600",
 };
 
 export const StickyNote = memo(({ 
@@ -208,7 +208,7 @@ export const StickyNote = memo(({
         
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-2">
-          <Badge variant="outline" className={cn("text-xs font-handwriting shrink-0 note-status dark:text-white", statusColors[status])}>
+          <Badge variant="outline" className={cn("text-xs font-handwriting shrink-0 note-status", statusColors[status])}>
             {status}
           </Badge>
           {dueDate && <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-sans", dueDate < new Date().toISOString().slice(0, 10) ? "border-red-300 bg-red-100 text-red-700" : "border-orange-300 bg-orange-100 text-orange-700")}>{dueDate < new Date().toISOString().slice(0, 10) ? "Overdue" : dueDate}</span>}
@@ -262,7 +262,7 @@ export const StickyNote = memo(({
             }}
             className={cn(
               "absolute top-3 right-10 z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all",
-              "hover:bg-foreground/5 active:scale-90 text-foreground/40 hover:text-foreground/70"
+              "hover:bg-foreground/5 active:scale-90 text-black/60 hover:text-black"
             )}
             aria-label="Archive note"
           >
