@@ -214,14 +214,6 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
               .color-lavender { background-color: hsl(var(--note-lavender)); }
               .color-peach { background-color: hsl(var(--note-peach)); }
               .color-mint { background-color: hsl(var(--note-mint)); }
-              ${savedFont === "handwriting" ? `
-              @font-face {
-                font-family: 'Indie Flower';
-                font-style: normal;
-                font-weight: 400;
-                font-display: swap;
-                src: url(https://fonts.gstatic.com/s/indieflower/v17/m8JVjfNVeKWVnh3QMuKkFcZVaUuH.woff2) format('woff2');
-              }` : ''}
             </style>
           </head>
           <body>

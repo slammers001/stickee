@@ -11,6 +11,10 @@ export interface Note {
   lastUpdated: number;
   last_updated?: number; // For Supabase compatibility
   pinned: boolean;
+  tags?: string[];
+  dueDate?: string;
+  deletedAt?: string;
+  version?: number;
   user_id?: string; // Made optional
   created_at?: string; // For Supabase compatibility
   reactions?: ReactionSummary[]; // Optional array of reaction summaries

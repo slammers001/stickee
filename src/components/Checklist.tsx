@@ -110,7 +110,7 @@ export function Checklist({
           text-white rounded-lg transition-all duration-200
           hover:scale-105
           ${isOpen ? 'rotate-180 rounded-full' : 'rotate-0 rounded-lg'}
-          transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+          transition-transform duration-500 ease-bouncy
           ${!termsAgreed ? 'opacity-50 cursor-not-allowed' : ''}`
         }
         title={!termsAgreed ? "You must agree to Terms of Service to use the checklist" : "Toggle checklist"}

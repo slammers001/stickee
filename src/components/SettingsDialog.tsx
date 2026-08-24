@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Settings, Download } from "lucide-react";
+import { Heart, Settings, Download, Sun, Moon, Monitor, Palette, Type, Bookmark, FileText, Database } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -11,6 +11,7 @@ import { ensureUserExists } from "@/services/userService";
 import { exportUserData, downloadExportFile, importUserData, validateImportFile } from "@/services/exportService";
 import { TermsOfService } from "@/components/TermsOfService";
 import { applyAppFont, getCssFontFamily, getFontDisplayName as getSharedFontDisplayName } from "@/utils/fonts";
+import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
 
 type FontFamily = "serif" | "sans-serif" | "monospace" | 
   "abeezee" | "aclonica" | "advent-pro" | "tenali-ramakrishna" | "truculenta" | "ubuntu-sans-mono" | "unbounded" | "nova-mono" | "orbitron" | "bahianita" | "syne-mono" | "vt323" | "xanh-mono" | "cutive-mono" | "arbutus-slab" | "nixie-one" | "noticia-text" | "arvo" | "oi" | "oldenburg" | "orelega-one" | "nova-oval" | "atma" | "butcherman" | "cherry-bomb-one" |
@@ -321,187 +322,42 @@ export const SettingsDialog = ({ open, onOpenChange, onFontChange }: SettingsDia
   return (
     <>
       <Dialog open={open && !showTermsModal} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[700px] max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>Settings</DialogTitle>
-            <DialogDescription>
-              Customize your Stickee experience
-            </DialogDescription>
+        <DialogContent className="flex h-[min(680px,calc(100vh-2rem))] w-[calc(100vw-1rem)] max-w-[760px] flex-col overflow-hidden border-2 border-foreground/15 bg-white p-0 text-foreground shadow-2xl dark:bg-card backdrop-blur">
+          <DialogHeader className="border-b border-border bg-card px-6 py-5 text-left">
+            <div className="flex items-center gap-3"><span className="flex h-11 w-11 rotate-[-4deg] items-center justify-center rounded-lg bg-primary shadow-sm"><Settings className="h-5 w-5" /></span><div><DialogTitle className="font-title text-2xl">Settings</DialogTitle><DialogDescription className="mt-1">Tune your little corner of Stickee.</DialogDescription></div></div>
           </DialogHeader>
           
-          {/* Tab Navigation */}
-          <div className="flex space-x-1 p-1 bg-muted rounded-lg">
-            <Button
-              variant={activeTab === "ui" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveTab("ui")}
-              className="flex-1"
-            >
-              UI
-            </Button>
-            <Button
-              variant={activeTab === "fonts" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveTab("fonts")}
-              className="flex-1"
-            >
-              Fonts
-            </Button>
-            <Button
-              variant={activeTab === "bookmarks" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveTab("bookmarks")}
-              className="flex-1"
-            >
-              Bookmarks ({favoriteFonts.length}/10)
-            </Button>
-            <Button
-              variant={activeTab === "terms" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveTab("terms")}
-              className="flex-1"
-            >
-              Terms
-            </Button>
-            <Button
-              variant={activeTab === "data" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveTab("data")}
-              className="flex-1"
-            >
-              Data
-            </Button>
-          </div>
-
-          <div className="grid gap-6 py-4 max-h-[500px] overflow-y-auto">
-            {activeTab === "ui" && (
+          <div className="min-h-0 flex-1 overflow-y-auto border-border px-4 py-4 sm:px-6 sm:py-5 space-y-4">
+            {(
               <>
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium">Theme</h3>
-                  <RadioGroup value={theme} onValueChange={setTheme}>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="light" id="light" />
-                      <Label htmlFor="light">
-                        Light
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="dark" id="dark" />
-                      <Label htmlFor="dark">
-                        Dark
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="system" id="system" />
-                      <Label htmlFor="system">
-                        System
-                      </Label>
-                    </div>
+                <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                  <div className="mb-4 flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent"><Palette className="h-4 w-4" /></span><div><h3 className="font-sans font-semibold">Appearance</h3><p className="text-xs text-muted-foreground">Choose how Stickee looks on this device.</p></div></div>
+                  <RadioGroup value={theme || "light"} onValueChange={setTheme} className="grid gap-3 sm:grid-cols-3">
+                    {[{ value: "light", label: "Light", detail: "Bright paper", icon: Sun }, { value: "dark", label: "Dark", detail: "Easy on the eyes", icon: Moon }, { value: "system", label: "System", detail: "Follow device", icon: Monitor }].map(({ value, label, detail, icon: Icon }) => <Label key={value} htmlFor={`theme-${value}`} className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-colors ${theme === value ? "border-foreground bg-primary/20" : "border-border hover:bg-muted"}`}><RadioGroupItem value={value} id={`theme-${value}`} /><Icon className="h-4 w-4" /><span><span className="block font-sans text-sm font-semibold">{label}</span><span className="block font-sans text-xs text-muted-foreground">{detail}</span></span></Label>)}
                   </RadioGroup>
-                </div>
+                </section>
               </>
             )}
             
-            {activeTab === "fonts" && (
-              <div className="space-y-4">
-                <div className="bg-muted p-3 rounded-lg">
-                  <p className="text-sm font-medium">Currently Using:</p>
-                  <p className="text-lg" style={{ fontFamily: getFontDisplayValue(fontFamily) }}>
-                    {getFontDisplayName(fontFamily)}
-                  </p>
-                </div>
-                <h3 className="text-sm font-medium">Font Family</h3>
-                <RadioGroup value={fontMode} onValueChange={handleFontModeChange}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="basic" id="basic" />
-                    <Label htmlFor="basic" className="text-lg">
-                      Basic Fonts
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="handwriting" id="handwriting" />
-                    <Label htmlFor="handwriting" className="text-lg" style={{ fontFamily: '"Indie Flower", cursive' }}>
-                      Handwriting
-                    </Label>
-                  </div>
-                </RadioGroup>
-                
-                {fontMode === "basic" && (
-                  <div className="ml-6 space-y-2 max-h-60 overflow-y-auto">
-                    <RadioGroup value={fontFamily} onValueChange={handleFontChange}>
-                      {getVisibleFonts().map((font) => (
-                        <div key={font} className="flex items-center justify-between space-x-2">
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value={font} id={font} />
-                            <Label 
-                              htmlFor={font} 
-                              className={`${font === "serif" ? "font-serif" : ""} ${getFontLabelClasses(font)}`}
-                              style={{ fontFamily: getFontDisplayValue(font) }}
-                            >
-                              {getFontDisplayName(font)}
-                              {(font === "onest" || font === "josefin-sans" || font === "lato" || font === "open-sans" || font === "raleway" || font === "montserrat" || font === "ubuntu" || font === "gloock" || font === "architects-daughter" || font === "dawning-of-a-new-day" || font === "satisfy") && (
-                                <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                  NEW
-                                </span>
-                              )}
-                            </Label>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleFavoriteFont(font)}
-                            className={isFavorite(font) ? "text-red-500" : ""}
-                          >
-                            <Heart className={`h-4 w-4 ${isFavorite(font) ? "fill-current" : ""}`} />
-                          </Button>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                )}
-                
-                {fontMode === "handwriting" && (
-                  <div className="ml-6 space-y-2 max-h-60 overflow-y-auto">
-                    <RadioGroup value={fontFamily} onValueChange={handleFontChange}>
-                      {getVisibleFonts().map((font) => (
-                        <div key={font} className="flex items-center justify-between space-x-2">
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value={font} id={font} />
-                            <Label 
-                              htmlFor={font} 
-                              className={getFontLabelClasses(font)}
-                              style={{ fontFamily: getFontDisplayValue(font) }}
-                            >
-                              {getFontDisplayName(font)}
-                              {(font === "architects-daughter" || font === "dawning-of-a-new-day" || font === "satisfy") && (
-                                <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                  NEW
-                                </span>
-                              )}
-                            </Label>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleFavoriteFont(font)}
-                            className={isFavorite(font) ? "text-red-500" : ""}
-                          >
-                            <Heart className={`h-4 w-4 ${isFavorite(font) ? "fill-current" : ""}`} />
-                          </Button>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                )}
+            {(
+              <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div className="mb-1 flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent"><Type className="h-4 w-4" /></span><div><h3 className="font-sans font-semibold">Font appearance</h3><p className="text-xs text-muted-foreground">Choose a style and font without scrolling through a long list.</p></div></div>
+                <label className="block space-y-2 font-sans text-sm font-medium">Font style
+                  <Select value={fontMode} onValueChange={(value) => handleFontModeChange(value as FontMode)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="basic">Basic fonts</SelectItem><SelectItem value="handwriting">Handwriting fonts</SelectItem></SelectContent></Select>
+                </label>
+                <label className="block space-y-2 font-sans text-sm font-medium">Font family
+                  <Select value={fontFamily} onValueChange={(value) => handleFontChange(value as FontFamily)}><SelectTrigger><SelectValue placeholder={getFontDisplayName(fontFamily)} /></SelectTrigger><SelectContent>{getVisibleFonts().map((font) => <SelectItem key={font} value={font}>{getFontDisplayName(font)}</SelectItem>)}</SelectContent></Select>
+                </label>
+                <p className="rounded-md bg-muted/50 p-3 text-lg" style={{ fontFamily: getFontDisplayValue(fontFamily) }}>Aa — {getFontDisplayName(fontFamily)}</p>
               </div>
             )}
             
-            {activeTab === "bookmarks" && (
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Favorite Fonts ({favoriteFonts.length}/10)</h3>
+            {(
+              <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div className="mb-1 flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent"><Bookmark className="h-4 w-4" /></span><div><h3 className="font-sans font-semibold">Favorite Fonts ({favoriteFonts.length}/10)</h3><p className="text-xs text-muted-foreground">Quick access to your favorite fonts for easy switching.</p></div></div>
                 {favoriteFonts.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    No favorite fonts yet. Click heart icon on any font to add it to your bookmarks.
+                    No favorite fonts yet. Click the heart icon on any font to add it to your bookmarks.
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -534,57 +390,53 @@ export const SettingsDialog = ({ open, onOpenChange, onFontChange }: SettingsDia
               </div>
             )}
             
-            {activeTab === "terms" && (
-              <>
-                <div className="space-y-4">
-                  <div className="text-center space-y-4 p-6 border rounded-lg bg-muted/50">
-                    <h2 className="text-xl font-semibold text-foreground">Welcome to Stickee!</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Please review and agree to our Terms of Service to continue using the application.
-                    </p>
+            {(
+              <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div className="mb-1 flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent"><FileText className="h-4 w-4" /></span><div><h3 className="font-sans font-semibold">Terms</h3><p className="text-xs text-muted-foreground">Review and manage your terms agreement.</p></div></div>
+                <div className="text-center space-y-4 p-6 border rounded-lg bg-muted/50">
+                  <h2 className="text-xl font-semibold text-foreground">Welcome to Stickee!</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Please review and agree to our Terms of Service to continue using the application.
+                  </p>
+                  
+                  <div className="flex flex-col space-y-3 max-w-sm mx-auto">
+                    <Button 
+                      onClick={() => {
+                        toast.success("Terms already agreed!");
+                      }}
+                      className="w-full"
+                      disabled
+                    >
+                      I Agree to Terms of Service
+                    </Button>
                     
-                    <div className="flex flex-col space-y-3 max-w-sm mx-auto">
-                      <Button 
-                        onClick={() => {
-                          toast.success("Terms already agreed!");
-                        }}
-                        className="w-full"
-                        disabled
-                      >
-                        I Agree to Terms of Service
-                      </Button>
-                      
-                      <Button 
-                        onClick={handleDisagreeTerms}
-                        variant="destructive"
-                        className="w-full"
-                      >
-                        Disagree to Terms of Service
-                      </Button>
-                      
-                      <Button 
-                        onClick={() => setShowTermsModal(true)}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        View Terms
-                      </Button>
-                    </div>
+                    <Button 
+                      onClick={handleDisagreeTerms}
+                      variant="destructive"
+                      className="w-full"
+                    >
+                      Disagree to Terms of Service
+                    </Button>
                     
-                    <p className="text-xs text-muted-foreground text-center">
-                      You have already agreed to the terms to use Stickee. You can review the terms anytime.
-                    </p>
+                    <Button 
+                      onClick={() => setShowTermsModal(true)}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      View Terms
+                    </Button>
                   </div>
+                  
+                  <p className="text-xs text-muted-foreground text-center">
+                    You have already agreed to the terms to use Stickee. You can review the terms anytime.
+                  </p>
                 </div>
-              </>
+              </div>
             )}
             
-            {activeTab === "data" && (
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Data Management</h3>
-                <p className="text-sm text-muted-foreground">
-                  Export your data to keep a backup or import data from a previous export.
-                </p>
+            {(
+              <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div className="mb-1 flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent"><Database className="h-4 w-4" /></span><div><h3 className="font-sans font-semibold">Data Management</h3><p className="text-xs text-muted-foreground">Export your data to keep a backup or import data from a previous export.</p></div></div>
                 
                 <div className="space-y-4">
                   <div className="border rounded-lg p-4 space-y-4">
@@ -668,19 +520,6 @@ export const SettingsDialog = ({ open, onOpenChange, onFontChange }: SettingsDia
                 </div>
               </div>
             )}
-          </div>
-          <div className="pt-4 border-t">
-            <p className="text-xs text-muted-foreground text-center">
-              By using this app you agree to{" "}
-              <button
-                onClick={() => {
-                  setActiveTab("terms");
-                }}
-                className="text-xs underline hover:text-foreground transition-colors"
-              >
-                Terms of Service
-              </button>
-            </p>
           </div>
         </DialogContent>
       </Dialog>
