@@ -179,7 +179,7 @@ export default function Index() {
 
   // Keyboard shortcut for new note - optimized for INP
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
     
     const handleKeyDown = (e: KeyboardEvent) => {
       // Check if terms are agreed
