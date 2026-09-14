@@ -1,15 +1,19 @@
-import { useState, useEffect } from "react";
-import { Heart, Download } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Heart, Download, Camera } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { getFontSettings, saveFontSettings, updateCurrentFont, updateFavoriteFonts } from "@/services/fontSettingsService";
 import { ensureUserExists } from "@/services/userService";
 import { exportUserData, downloadExportFile, importUserData, validateImportFile } from "@/services/exportService";
+import { getProfile, saveProfile, type UserProfile } from "@/services/profileService";
+import { UserAvatar } from "@/components/UserAvatar";
 import { TermsOfService } from "@/components/TermsOfService";
 import { applyAppFont, getCssFontFamily, getFontDisplayName as getSharedFontDisplayName } from "@/utils/fonts";
+import { useAuth } from "@/contexts/AuthContext";
 
 type FontFamily = "serif" | "sans-serif" | "monospace" | 
   "abeezee" | "aclonica" | "advent-pro" | "tenali-ramakrishna" | "truculenta" | "ubuntu-sans-mono" | "unbounded" | "nova-mono" | "orbitron" | "bahianita" | "syne-mono" | "vt323" | "xanh-mono" | "cutive-mono" | "arbutus-slab" | "nixie-one" | "noticia-text" | "arvo" | "oi" | "oldenburg" | "orelega-one" | "nova-oval" | "atma" | "butcherman" | "cherry-bomb-one" |
@@ -22,7 +26,7 @@ type FontFamily = "serif" | "sans-serif" | "monospace" |
 
 type FontMode = "basic" | "handwriting";
 
-type ActiveTab = "ui" | "fonts" | "bookmarks" | "terms" | "data";
+type ActiveTab = "profile" | "ui" | "fonts" | "bookmarks" | "terms" | "data";
 
 interface SettingsPanelProps {
   onFontChange?: (font: string) => void;
@@ -30,6 +34,12 @@ interface SettingsPanelProps {
 
 export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<UserProfile>({ name: '', email: '', avatarColor: '#fff1bf', avatarImage: null });
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [fontMode, setFontMode] = useState<FontMode>(() => 
     (localStorage.getItem("stickee-font-mode") as FontMode) || "basic"
   );
@@ -39,7 +49,7 @@ export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
   const [favoriteFonts, setFavoriteFonts] = useState<FontFamily[]>(() => 
     JSON.parse(localStorage.getItem("stickee-favorite-fonts") || "[]")
   );
-  const [activeTab, setActiveTab] = useState<ActiveTab>("ui");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("profile");
   const [importing, setImporting] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
 
@@ -127,6 +137,63 @@ export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
     syncWithSupabase();
   }, []);
 
+  // Load profile
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (user?.id) {
+        const p = await getProfile(user.id);
+        setProfile(p);
+        setProfileName(p.name);
+        setProfileEmail(p.email);
+      }
+    };
+    loadProfile();
+  }, [user?.id]);
+
+  const handleSaveProfile = async () => {
+    if (!user?.id) return;
+    setProfileSaving(true);
+    const updated: UserProfile = {
+      ...profile,
+      name: profileName,
+      email: profileEmail,
+    };
+    await saveProfile(user.id, updated);
+    setProfile(updated);
+    setProfileSaving(false);
+    toast.success('Profile saved!');
+  };
+
+  const handleAvatarColorChange = async (color: string) => {
+    if (!user?.id) return;
+    const updated = { ...profile, avatarColor: color };
+    await saveProfile(user.id, updated);
+    setProfile(updated);
+  };
+
+  const handleAvatarImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user?.id) return;
+    
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64 = reader.result as string;
+      const updated = { ...profile, avatarImage: base64 };
+      await saveProfile(user.id!, updated);
+      setProfile(updated);
+      toast.success('Profile picture updated!');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveAvatarImage = async () => {
+    if (!user?.id) return;
+    const updated = { ...profile, avatarImage: null };
+    await saveProfile(user.id, updated);
+    setProfile(updated);
+    toast.success('Profile picture removed!');
+  };
+
   const handleDisagreeTerms = () => {
     localStorage.removeItem("stickee-terms-agreed");
     toast.error("You have disagreed to the Terms of Service. App functionality is restricted.");
@@ -190,6 +257,7 @@ export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
 
       {/* Tab Navigation */}
       <div className="flex space-x-1 p-1 bg-muted rounded-lg mb-6">
+        <Button variant={activeTab === "profile" ? "default" : "ghost"} size="sm" onClick={() => setActiveTab("profile")} className="flex-1">Profile</Button>
         <Button variant={activeTab === "ui" ? "default" : "ghost"} size="sm" onClick={() => setActiveTab("ui")} className="flex-1">UI</Button>
         <Button variant={activeTab === "fonts" ? "default" : "ghost"} size="sm" onClick={() => setActiveTab("fonts")} className="flex-1">Fonts</Button>
         <Button variant={activeTab === "bookmarks" ? "default" : "ghost"} size="sm" onClick={() => setActiveTab("bookmarks")} className="flex-1">Bookmarks ({favoriteFonts.length}/10)</Button>
@@ -198,6 +266,87 @@ export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
       </div>
 
       <div className="space-y-6">
+        {activeTab === "profile" && (
+          <div className="space-y-6">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="relative">
+                <UserAvatar
+                  name={profileName || profile.name}
+                  color={profile.avatarColor}
+                  image={profile.avatarImage}
+                  size="xl"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors"
+                  title="Change profile picture"
+                >
+                  <Camera className="h-4 w-4" />
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarImageUpload}
+                  className="hidden"
+                />
+              </div>
+              
+              {profile.avatarImage && (
+                <Button variant="outline" size="sm" onClick={handleRemoveAvatarImage}>
+                  Remove picture
+                </Button>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="profile-name">Name</Label>
+              <Input
+                id="profile-name"
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                placeholder="Your name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="profile-email">Email</Label>
+              <Input
+                id="profile-email"
+                type="email"
+                value={profileEmail}
+                onChange={(e) => setProfileEmail(e.target.value)}
+                placeholder="Your email"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Avatar Color</Label>
+              <div className="flex gap-2">
+                {['#FFF1BF', '#735C40', '#FFC2CC'].map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => handleAvatarColorChange(color)}
+                    className={`h-8 w-8 rounded-full border-2 transition-all ${
+                      profile.avatarColor === color
+                        ? 'border-foreground scale-110'
+                        : 'border-transparent hover:scale-105'
+                    }`}
+                    style={{ backgroundColor: color }}
+                    title={color}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <Button onClick={handleSaveProfile} disabled={profileSaving} className="w-full">
+              {profileSaving ? 'Saving...' : 'Save Profile'}
+            </Button>
+          </div>
+        )}
+
         {activeTab === "ui" && (
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Theme</h3>
