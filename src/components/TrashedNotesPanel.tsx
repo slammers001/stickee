@@ -264,7 +264,7 @@ export function TrashedNotesPanel({ onNotesRefresh }: TrashedNotesPanelProps) {
               <h3 className="text-lg font-semibold">Empty Trash?</h3>
             </div>
             <p className="text-muted-foreground mb-6">
-              This will permanently delete all {trashedNotes.length} note{trashedNotes.length !== 1 ? 's' : ''} in the trash. This action cannot be undone.
+              This will permanently delete all ({trashedNotes.length}) notes in the trash. This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <Button
