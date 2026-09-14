@@ -48,6 +48,7 @@ const NAV = [
     label: "Reminders",
     icon: IconBell,
     description: "Set note reminders",
+    divider: true,
   },
   {
     id: "attachments" as const,
@@ -66,6 +67,7 @@ const NAV = [
     label: "Archive",
     icon: IconArchive,
     description: "Archived notes",
+    divider: true,
   },
   {
     id: "trash" as const,
@@ -78,6 +80,7 @@ const NAV = [
     label: "Settings",
     icon: IconSettings,
     description: "App preferences",
+    divider: true,
   },
 ];
 
@@ -178,39 +181,46 @@ export function AppSidebar({
             const active = activeTab === item.id;
             const NavIcon = item.icon;
             return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  onTabChange(item.id);
-                  if (window.innerWidth < 768) onCollapsedChange(true);
-                }}
-                className={cn(
-                  "w-full flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-colors",
-                  "font-handwriting text-lg leading-none",
-                  active
-                    ? "border-border bg-muted text-foreground shadow-sm dark:bg-[hsl(var(--sidebar-accent))] dark:border-[hsl(var(--sidebar-border))]"
-                    : "border-transparent bg-transparent text-foreground/80 hover:bg-muted/70 hover:text-foreground dark:hover:bg-[hsl(var(--sidebar-accent))]/70"
+              <div key={item.id}>
+                {item.divider && (
+                  <div className={cn(
+                    "my-2 border-t border-border dark:border-[hsl(var(--sidebar-border))]",
+                    collapsed ? "mx-2" : "mx-1"
+                  )} />
                 )}
-                title={item.label}
-              >
-                <span
+                <button
+                  type="button"
+                  onClick={() => {
+                    onTabChange(item.id);
+                    if (window.innerWidth < 768) onCollapsedChange(true);
+                  }}
                   className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background shrink-0",
-                    active && "border-foreground/20 bg-background"
+                    "w-full flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-colors",
+                    "font-handwriting text-lg leading-none",
+                    active
+                      ? "border-border bg-muted text-foreground shadow-sm dark:bg-[hsl(var(--sidebar-accent))] dark:border-[hsl(var(--sidebar-border))]"
+                      : "border-transparent bg-transparent text-foreground/80 hover:bg-muted/70 hover:text-foreground dark:hover:bg-[hsl(var(--sidebar-accent))]/70"
                   )}
+                  title={item.label}
                 >
-                  <NavIcon stroke={2} className="h-5 w-5 text-foreground" />
-                </span>
-                {!collapsed && (
-                  <span className="min-w-0">
-                    <span className="block truncate font-semibold">{item.label}</span>
-                    <span className="block text-xs text-muted-foreground font-sans mt-0.5 truncate">
-                      {item.description}
-                    </span>
+                  <span
+                    className={cn(
+                      "flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background shrink-0",
+                      active && "border-foreground/20 bg-background"
+                    )}
+                  >
+                    <NavIcon stroke={2} className="h-5 w-5 text-foreground" />
                   </span>
-                )}
-              </button>
+                  {!collapsed && (
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold">{item.label}</span>
+                      <span className="block text-xs text-muted-foreground font-sans mt-0.5 truncate">
+                        {item.description}
+                      </span>
+                    </span>
+                  )}
+                </button>
+              </div>
             );
           })}
         </nav>
