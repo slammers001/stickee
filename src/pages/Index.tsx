@@ -1,7 +1,6 @@
 import { useState, useEffect, Suspense } from "react";
 import {
   IconAlertCircle,
-  IconArchive,
   IconCheckbox,
   IconMenu2,
   IconPlus,
@@ -43,7 +42,8 @@ import { SettingsDialog } from "@/components/SettingsDialog";
 import { NoteDetailDialog } from "@/components/NoteDetailDialog";
 import { Checklist } from "@/components/Checklist";
 import { StickyNoteWindow } from "@/components/StickyNoteWindow";
-import { ArchivedNotesDialog } from "@/components/ArchivedNotesDialog";
+import { ArchivedNotesPanel } from "@/components/ArchivedNotesPanel";
+import { TrashedNotesPanel } from "@/components/TrashedNotesPanel";
 import { AppSidebar, type SidebarTab } from "@/components/AppSidebar";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { TemplatesPanel, type NoteTemplate } from "@/components/TemplatesPanel";
@@ -71,7 +71,6 @@ export default function Index() {
   const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [noteReactions, setNoteReactions] = useState<Record<string, ReactionSummary[]>>({});
   const [showMassDeleteDialog, setShowMassDeleteDialog] = useState(false);
-  const [archivedNotesDialogOpen, setArchivedNotesDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<SidebarTab>("notes");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -735,19 +734,6 @@ export default function Index() {
                 </>
               )}
 
-              {/* Archive Button - Desktop only, shown when no notes are selected */}
-              {selectedNotes.size === 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setArchivedNotesDialogOpen(true)}
-                  className="hidden md:flex"
-                >
-                  <IconArchive stroke={2} className="h-4 w-4 mr-2" />
-                  Archived Notes
-                </Button>
-              )}
-              
               {/* Mass Delete Button - appears when notes are selected */}
               {selectedNotes.size > 0 && (
                 <>
@@ -816,6 +802,10 @@ export default function Index() {
           onStatusChange={handleStatusChange}
           onNoteClick={handleNoteClick}
         />
+      ) : activeTab === "archive" ? (
+        <ArchivedNotesPanel onNotesRefresh={loadNotes} />
+      ) : activeTab === "trash" ? (
+        <TrashedNotesPanel onNotesRefresh={loadNotes} />
       ) : (
       <main className="container mx-auto px-4 py-8">
         {filteredNotes.length === 0 ? (
@@ -977,15 +967,6 @@ export default function Index() {
         open={issueDialogOpen}
         onOpenChange={setIssueDialogOpen}
       />
-
-      {/* Archived Notes Dialog */}
-      <Suspense fallback={<div>Loading...</div>}>
-        <ArchivedNotesDialog
-          open={archivedNotesDialogOpen}
-          onOpenChange={setArchivedNotesDialogOpen}
-          onNotesRefresh={loadNotes}
-        />
-      </Suspense>
 
       {/* Version Display */}
       <div className="fixed bottom-4 left-4 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded shadow-sm" style={{ fontFamily: 'var(--font-family-handwriting)' }}>

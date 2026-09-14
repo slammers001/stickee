@@ -22,7 +22,8 @@ const mapSupabaseNote = (note: any): Note => {
     created_at: note.created_at || timestamp, // For Supabase compatibility
     user_id: note.user_id, // Include user_id in the returned object
     archived: Boolean(note.archived), // Include archived status
-    archived_at: note.archived_at // Include archived timestamp
+    archived_at: note.archived_at, // Include archived timestamp
+    deleted_at: note.deleted_at // Include deleted timestamp
   };
 };
 
@@ -142,18 +143,35 @@ export const updateNote = async (id: string, updates: Partial<Omit<Note, 'id'>>)
   }
 };
 
-// Delete a note
+// Soft-delete a note (move to trash). Falls back to permanent delete if deleted_at column doesn't exist.
 export const deleteNote = async (id: string): Promise<boolean> => {
   const userId = await getUserId();
   
   try {
+    // Try soft-delete first
     const { error } = await supabase
       .from('notes')
-      .delete()
+      .update({ 
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
-      .eq('user_id', userId); // Ensure we only delete the user's own note
+      .eq('user_id', userId);
 
-    if (error) throw error;
+    if (error) {
+      // If the column doesn't exist, fall back to permanent delete
+      if (error.message?.includes('deleted_at') || error.code === '42703') {
+        console.warn('deleted_at column not found, performing permanent delete');
+        const { error: deleteError } = await supabase
+          .from('notes')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', userId);
+        if (deleteError) throw deleteError;
+        return true;
+      }
+      throw error;
+    }
     return true;
   } catch (error) {
     console.error('Error deleting note:', error);

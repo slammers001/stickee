@@ -77,7 +77,8 @@ export const getArchivedNotes = async (): Promise<Note[]> => {
       created_at: note.created_at,
       user_id: note.user_id,
       archived: Boolean(note.archived),
-      archived_at: note.archived_at
+      archived_at: note.archived_at,
+      deleted_at: note.deleted_at
     }));
   } catch (error) {
     console.error('Error fetching archived notes:', error);
