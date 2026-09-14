@@ -271,7 +271,6 @@ export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
               <p className="text-sm text-muted-foreground">Please review and agree to our Terms of Service to continue using the application.</p>
               <div className="flex flex-col space-y-3 max-w-sm mx-auto">
                 <Button onClick={() => toast.success("Terms already agreed!")} className="w-full" disabled>I Agree to Terms of Service</Button>
-                <Button onClick={handleDisagreeTerms} variant="destructive" className="w-full">Disagree to Terms of Service</Button>
                 <Button onClick={() => setShowTermsModal(true)} variant="outline" className="w-full">View Terms</Button>
               </div>
               <p className="text-xs text-muted-foreground text-center">You have already agreed to the terms to use Stickee. You can review the terms anytime.</p>
