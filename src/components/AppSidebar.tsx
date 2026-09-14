@@ -1,15 +1,21 @@
 import {
+  IconArchive,
   IconArrowLeft,
   IconArrowRight,
+  IconBell,
   IconDiamond,
   IconLayoutBoard,
   IconLayoutKanban,
+  IconPaperclip,
+  IconSettings,
   IconTemplate,
+  IconTrash,
+  IconUsers,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-export type SidebarTab = "notes" | "stickeeboard" | "templates";
+export type SidebarTab = "notes" | "stickeeboard" | "templates" | "reminders" | "attachments" | "shared" | "archive" | "trash" | "settings";
 
 interface AppSidebarProps {
   activeTab: SidebarTab;
@@ -36,6 +42,42 @@ const NAV = [
     label: "Templates",
     icon: IconTemplate,
     description: "Ready-made note layouts",
+  },
+  {
+    id: "reminders" as const,
+    label: "Reminders",
+    icon: IconBell,
+    description: "Set note reminders",
+  },
+  {
+    id: "attachments" as const,
+    label: "Attachments",
+    icon: IconPaperclip,
+    description: "Files attached to notes",
+  },
+  {
+    id: "shared" as const,
+    label: "Shared",
+    icon: IconUsers,
+    description: "Notes shared with others",
+  },
+  {
+    id: "archive" as const,
+    label: "Archive",
+    icon: IconArchive,
+    description: "Archived notes",
+  },
+  {
+    id: "trash" as const,
+    label: "Trash",
+    icon: IconTrash,
+    description: "Deleted notes",
+  },
+  {
+    id: "settings" as const,
+    label: "Settings",
+    icon: IconSettings,
+    description: "App preferences",
   },
 ];
 
