@@ -23,7 +23,7 @@ var vite_config_default = defineConfig(({ mode }) => {
     base: "./",
     server: {
       host: "::",
-      port: 8080
+      port: 9000
     },
     define: {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(env.VITE_SUPABASE_URL || ""),

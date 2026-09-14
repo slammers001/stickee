@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils';
-import { getInitials } from '@/services/profileService';
 
 interface UserAvatarProps {
   name: string;
@@ -16,8 +15,19 @@ const sizeClasses = {
   xl: 'h-24 w-24 text-2xl',
 };
 
+const getTextColor = (bgColor: string): string => {
+  // Black text for #fff1bf, white for everything else
+  return bgColor.toLowerCase() === '#fff1bf' ? '#000000' : '#ffffff';
+};
+
+const getFirstLetter = (name: string): string => {
+  if (!name) return '?';
+  return name.trim().charAt(0).toUpperCase();
+};
+
 export const UserAvatar = ({ name, color, image, size = 'md', className }: UserAvatarProps) => {
-  const initials = getInitials(name);
+  const firstLetter = getFirstLetter(name);
+  const textColor = getTextColor(color);
 
   if (image) {
     return (
@@ -36,13 +46,13 @@ export const UserAvatar = ({ name, color, image, size = 'md', className }: UserA
   return (
     <div
       className={cn(
-        'rounded-full flex items-center justify-center font-semibold text-white',
+        'rounded-full flex items-center justify-center font-semibold',
         sizeClasses[size],
         className
       )}
-      style={{ backgroundColor: color }}
+      style={{ backgroundColor: color, color: textColor }}
     >
-      {initials}
+      {firstLetter}
     </div>
   );
 };
