@@ -806,6 +806,18 @@ export default function Index() {
         <ArchivedNotesPanel onNotesRefresh={loadNotes} />
       ) : activeTab === "trash" ? (
         <TrashedNotesPanel onNotesRefresh={loadNotes} />
+      ) : activeTab === "reminders" || activeTab === "attachments" || activeTab === "shared" ? (
+        <main className="container mx-auto px-4 py-8">
+          <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
+            <IconSettings stroke={1.5} className="h-16 w-16 text-muted-foreground mb-6" />
+            <h2 className="text-2xl font-semibold text-foreground mb-2 font-handwriting">
+              Coming Soon
+            </h2>
+            <p className="text-muted-foreground max-w-md">
+              This feature is currently under development. Stay tuned!
+            </p>
+          </div>
+        </main>
       ) : (
       <main className="container mx-auto px-4 py-8">
         {filteredNotes.length === 0 ? (
