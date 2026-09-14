@@ -32,10 +32,6 @@ export const openLinkInBrowser = async (url: string) => {
   try {
     await invoke('open_url', { url: normalizedUrl });
   } catch (error) {
-    const newWindow = window.open(normalizedUrl, '_blank', 'noopener,noreferrer');
-    
-    if (!newWindow) {
-      window.location.href = normalizedUrl;
-    }
+    window.open(normalizedUrl, '_blank', 'noopener,noreferrer');
   }
 };
