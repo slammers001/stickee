@@ -811,10 +811,10 @@ export default function Index() {
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
             <IconSettings stroke={1.5} className="h-16 w-16 text-muted-foreground mb-6" />
             <h2 className="text-2xl font-semibold text-foreground mb-2 font-handwriting">
-              Coming Soon
+              {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} is currently under development
             </h2>
             <p className="text-muted-foreground max-w-md">
-              This feature is currently under development. Stay tuned!
+              Stay tuned!
             </p>
           </div>
         </main>
