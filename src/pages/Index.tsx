@@ -38,10 +38,10 @@ import { cn } from "@/lib/utils";
 import type { Note } from "@/types/note";
 import type { StickyNoteStatus } from "@/types/note";
 import { analytics, AnalyticsEvents } from "@/utils/analytics";
-import { SettingsDialog } from "@/components/SettingsDialog";
 import { NoteDetailDialog } from "@/components/NoteDetailDialog";
 import { Checklist } from "@/components/Checklist";
 import { StickyNoteWindow } from "@/components/StickyNoteWindow";
+import { SettingsPanel } from "@/components/SettingsPanel";
 import { ArchivedNotesPanel } from "@/components/ArchivedNotesPanel";
 import { TrashedNotesPanel } from "@/components/TrashedNotesPanel";
 import { AppSidebar, type SidebarTab } from "@/components/AppSidebar";
@@ -63,7 +63,6 @@ export default function Index() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [currentFont, setCurrentFont] = useState(
     () => localStorage.getItem("stickee-font-family") || "onest"
   );
@@ -761,15 +760,6 @@ export default function Index() {
               
               <div className="h-6 w-px bg-border hidden md:block"></div>
               <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setSettingsOpen(true)}
-                className="hidden md:flex"
-              >
-                <IconSettings stroke={2} className="h-5 w-5" />
-              </Button>
-              
-              <Button
                 onClick={(e) => {
                   if (!termsAgreed) {
                     e.preventDefault();
@@ -818,6 +808,8 @@ export default function Index() {
             </p>
           </div>
         </main>
+      ) : activeTab === "settings" ? (
+        <SettingsPanel onFontChange={setCurrentFont} />
       ) : (
       <main className="container mx-auto px-4 py-8">
         {filteredNotes.length === 0 ? (
@@ -944,11 +936,6 @@ export default function Index() {
       )}
 
       {/* Settings Dialog */}
-      <SettingsDialog 
-        open={settingsOpen} 
-        onOpenChange={setSettingsOpen}
-        onFontChange={setCurrentFont}
-      />
       
       <StickyNoteWindow
         isOpen={stickyNoteWindowOpen}
