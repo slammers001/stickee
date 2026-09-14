@@ -3,9 +3,9 @@ import {
   IconArrowLeft,
   IconArrowRight,
   IconBell,
-  IconDiamond,
   IconLayoutBoard,
   IconLayoutKanban,
+  IconLogout,
   IconPaperclip,
   IconSettings,
   IconTemplate,
@@ -14,6 +14,7 @@ import {
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 export type SidebarTab = "notes" | "stickeeboard" | "templates" | "reminders" | "attachments" | "shared" | "archive" | "trash" | "settings";
 
@@ -90,6 +91,8 @@ export function AppSidebar({
   collapsed,
   onCollapsedChange,
 }: AppSidebarProps) {
+  const { signOut } = useAuth();
+
   return (
     <>
       {!collapsed && (
@@ -227,14 +230,32 @@ export function AppSidebar({
 
         <div className="border-t border-border p-3 dark:border-[hsl(var(--sidebar-border))]">
           {!collapsed ? (
-            <p className="text-[11px] text-muted-foreground font-handwriting leading-snug">
-              Sticky notes, but make them stick.
-            </p>
+            <div className="space-y-2">
+              <p className="text-[11px] text-muted-foreground font-handwriting leading-snug">
+                Sticky notes, but make them stick.
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={signOut}
+                className="w-full justify-start text-muted-foreground hover:text-foreground"
+              >
+                <IconLogout stroke={2} className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
           ) : (
-            <IconDiamond
-              stroke={2}
-              className="h-4 w-4 mx-auto text-muted-foreground opacity-70"
-            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={signOut}
+              className="w-full text-muted-foreground hover:text-foreground"
+              title="Sign Out"
+            >
+              <IconLogout stroke={2} className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </aside>
