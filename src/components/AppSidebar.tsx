@@ -38,12 +38,12 @@ const NAV = [
     icon: IconLayoutKanban,
     description: "Kanban board view",
   },
-  {
-    id: "templates" as const,
-    label: "Templates",
-    icon: IconTemplate,
-    description: "Ready-made note layouts",
-  },
+  // {
+  //   id: "templates" as const,
+  //   label: "Templates",
+  //   icon: IconTemplate,
+  //   description: "Ready-made note layouts",
+  // },
   {
     id: "reminders" as const,
     label: "Reminders",
