@@ -837,7 +837,7 @@ export default function Index() {
             <p className="text-muted-foreground mb-6 max-w-md">
               {searchQuery 
                 ? `No notes found matching "${searchQuery}". Try a different search term or clear the search.`
-                : "Click the Stickee icon to create your first Stickee note!"
+                : "Click the Stickee icon above to create your first Stickee note!"
               }
             </p>
           </div>
