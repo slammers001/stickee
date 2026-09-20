@@ -250,7 +250,6 @@ export const VoiceNoteEditor = ({
               </>
             )}
           </Button>
-          <div className="text-xs text-muted-foreground mt-1">FEATURE COMING SOON</div>
           
           {isListening && (
             <div className="flex items-center gap-2">
