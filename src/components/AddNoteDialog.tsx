@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -146,12 +146,49 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     }
   };
 
+  const handleVoiceResultRef = useRef<(transcript: string) => void>(() => {});
+
+  const handleVoiceResult = (transcript: string) => {
+    const normalizedText = transcript.toLowerCase().trim();
+    const words = normalizedText.split(/\s+/).map(w => w.replace(/[^a-z]/g, ''));
+
+    const isSave = words.some(w => w === 'save' || w === 'saved');
+    const isClose = words.some(w => w === 'close' || w === 'closed' || w === 'cancel');
+    const isDelete = words.some(w => w === 'delete' || w === 'deleted' || w === 'clear');
+
+    if (isSave || isClose || isDelete) {
+      // Compute the new content including the transcript
+      const newContent = content + (content ? '\n' : '') + transcript;
+      setContent(newContent);
+
+      if (isSave) {
+        if (newContent.trim()) {
+          soundEffects.playNewNoteSound();
+          onSave(title.trim(), newContent, status, color);
+          setTitle("");
+          setContent("");
+          setStatus("To-Do");
+          setColor(colors[0]);
+          onOpenChange(false);
+        }
+      } else if (isClose || isDelete) {
+        onOpenChange(false);
+      }
+      return;
+    }
+
+    setContent(prev => prev + (prev ? '\n' : '') + transcript);
+  };
+
+  // Keep ref up to date
+  handleVoiceResultRef.current = handleVoiceResult;
+
   // Voice recognition setup
   useEffect(() => {
     setCallbacks(
       (result) => {
         if (result.isFinal) {
-          handleVoiceResult(result.transcript);
+          handleVoiceResultRef.current(result.transcript);
         }
       },
       () => {
@@ -175,43 +212,6 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
       resetTranscript();
     }
   }, [open]);
-
-  const handleVoiceResult = (transcript: string) => {
-    console.log('Voice result received:', transcript); // Debug log
-    
-    // Check for control commands first
-    const normalizedText = transcript.toLowerCase().trim();
-    console.log('Normalized text:', normalizedText); // Debug log
-    
-    if (normalizedText === 'save' || normalizedText === 'save changes' || normalizedText.includes('save')) {
-      console.log('Save command detected'); // Debug log
-      // Don't add "save" to content, just save the note
-      handleSave();
-      return;
-    }
-    
-    if (normalizedText === 'close' || normalizedText === 'cancel' || normalizedText.includes('close')) {
-      console.log('Close command detected'); // Debug log
-      onOpenChange(false);
-      return;
-    }
-
-    if (normalizedText === 'delete' || normalizedText === 'delete note' || normalizedText.includes('delete')) {
-      console.log('Delete command detected'); // Debug log
-      // For new notes, delete just means close without saving
-      onOpenChange(false);
-      return;
-    }
-
-    // Add content immediately (no stabilization delay)
-    console.log('Adding content to note:', transcript); // Debug log
-    setContent(prev => {
-      const newContent = prev + (prev ? '\n' : '') + transcript;
-      return newContent;
-    });
-    
-    // Don't reset transcript here - let it naturally update
-  };
 
   const toggleListening = () => {
     if (isListening) {
@@ -334,7 +334,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
                   </div>
                   
                   <div className="text-xs text-muted-foreground">
-                    Say: "save", "close", or "delete"
+                    Say: "save" or "delete"
                   </div>
                 </div>
 

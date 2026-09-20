@@ -22,7 +22,7 @@ export const VoiceNoteEditor = ({
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
   const [isListening, setIsListening] = useState(false);
-  const [processingTimeout, setProcessingTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [processingTimeout, setProcessingTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [lastTranscript, setLastTranscript] = useState('');
   const [stableCount, setStableCount] = useState(0);
   
@@ -79,16 +79,19 @@ export const VoiceNoteEditor = ({
     const normalizedText = transcript.toLowerCase().trim();
     
     if (normalizedText.includes('save') || normalizedText.includes('save changes')) {
+      setContent(prev => prev + (prev ? '\n' : '') + transcript);
       handleSave();
       return;
     }
     
     if (normalizedText.includes('close') || normalizedText.includes('cancel')) {
+      setContent(prev => prev + (prev ? '\n' : '') + transcript);
       handleClose();
       return;
     }
     
     if (normalizedText.includes('delete') || normalizedText.includes('delete note')) {
+      setContent(prev => prev + (prev ? '\n' : '') + transcript);
       handleDelete();
       return;
     }
@@ -269,7 +272,7 @@ export const VoiceNoteEditor = ({
 
         {/* Voice Commands Help */}
         <div className="text-xs text-muted-foreground">
-          Say: "save", "close", or "delete"
+          Say: "save" or "delete"
         </div>
       </div>
 

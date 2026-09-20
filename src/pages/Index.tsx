@@ -922,6 +922,7 @@ export default function Index() {
             note={selectedNote}
             onSave={updateNote}
             onDelete={deleteNote}
+            onAddNote={addNote}
           />
         </Suspense>
       )}
