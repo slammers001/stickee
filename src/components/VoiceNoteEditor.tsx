@@ -129,6 +129,7 @@ export const VoiceNoteEditor = ({
     } else {
       startListening();
       setIsListening(true);
+      textareaRef.current?.focus();
     }
   };
 

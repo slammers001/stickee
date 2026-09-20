@@ -62,6 +62,7 @@ export const NoteDetailDialog = ({
   const [initialTitle, setInitialTitle] = useState(note?.title || "");
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
     transcript,
@@ -175,6 +176,7 @@ export const NoteDetailDialog = ({
     } else {
       startListening();
       setIsListening(true);
+      textareaRef.current?.focus();
     }
   };
 
@@ -294,6 +296,7 @@ export const NoteDetailDialog = ({
           <div className="order-3 sm:order-2">
             <label className="text-sm font-medium mb-2 block">Content</label>
             <Textarea
+              ref={textareaRef}
               value={content}
               onChange={handleContentChange}
               onKeyDown={handleContentKeyDown}

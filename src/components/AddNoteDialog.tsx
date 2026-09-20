@@ -41,6 +41,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   const [color, setColor] = useState(colors[0]);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
     transcript,
@@ -220,6 +221,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     } else {
       startListening();
       setIsListening(true);
+      textareaRef.current?.focus();
     }
   };
 
@@ -278,6 +280,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
           <div className="order-3 sm:order-2">
             <label className="text-sm font-medium mb-2 block">Content</label>
             <Textarea
+              ref={textareaRef}
               placeholder="Type your note here..."
               value={content}
               onChange={handleContentChange}
