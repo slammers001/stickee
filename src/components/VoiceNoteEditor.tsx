@@ -78,23 +78,23 @@ export const VoiceNoteEditor = ({
     // Check for control commands first
     const normalizedText = transcript.toLowerCase().trim();
     
-    if (normalizedText.includes('save') || normalizedText.includes('save changes')) {
-      setContent(prev => prev + (prev ? '\n' : '') + transcript);
-      handleSave();
-      return;
-    }
+    // if (normalizedText.includes('save') || normalizedText.includes('save changes')) {
+    //   setContent(prev => prev + (prev ? '\n' : '') + transcript);
+    //   handleSave();
+    //   return;
+    // }
     
-    if (normalizedText.includes('close') || normalizedText.includes('cancel')) {
-      setContent(prev => prev + (prev ? '\n' : '') + transcript);
-      handleClose();
-      return;
-    }
+    // if (normalizedText.includes('close') || normalizedText.includes('cancel')) {
+    //   setContent(prev => prev + (prev ? '\n' : '') + transcript);
+    //   handleClose();
+    //   return;
+    // }
     
-    if (normalizedText.includes('delete') || normalizedText.includes('delete note')) {
-      setContent(prev => prev + (prev ? '\n' : '') + transcript);
-      handleDelete();
-      return;
-    }
+    // if (normalizedText.includes('delete') || normalizedText.includes('delete note')) {
+    //   setContent(prev => prev + (prev ? '\n' : '') + transcript);
+    //   handleDelete();
+    //   return;
+    // }
 
     // Check if transcript has stabilized
     if (transcript === lastTranscript) {

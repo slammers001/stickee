@@ -157,26 +157,26 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     const isClose = words.some(w => w === 'close' || w === 'closed' || w === 'cancel');
     const isDelete = words.some(w => w === 'delete' || w === 'deleted' || w === 'clear');
 
-    if (isSave || isClose || isDelete) {
-      // Compute the new content including the transcript
-      const newContent = content + (content ? '\n' : '') + transcript;
-      setContent(newContent);
+    // if (isSave || isClose || isDelete) {
+    //   // Compute the new content including the transcript
+    //   const newContent = content + (content ? '\n' : '') + transcript;
+    //   setContent(newContent);
 
-      if (isSave) {
-        if (newContent.trim()) {
-          soundEffects.playNewNoteSound();
-          onSave(title.trim(), newContent, status, color);
-          setTitle("");
-          setContent("");
-          setStatus("To-Do");
-          setColor(colors[0]);
-          onOpenChange(false);
-        }
-      } else if (isClose || isDelete) {
-        onOpenChange(false);
-      }
-      return;
-    }
+    //   if (isSave) {
+    //     if (newContent.trim()) {
+    //       soundEffects.playNewNoteSound();
+    //       onSave(title.trim(), newContent, status, color);
+    //       setTitle("");
+    //       setContent("");
+    //       setStatus("To-Do");
+    //       setColor(colors[0]);
+    //       onOpenChange(false);
+    //     }
+    //   } else if (isClose || isDelete) {
+    //     onOpenChange(false);
+    //   }
+    //   return;
+    // }
 
     setContent(prev => prev + (prev ? '\n' : '') + transcript);
   };
