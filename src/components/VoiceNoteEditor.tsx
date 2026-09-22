@@ -78,20 +78,23 @@ export const VoiceNoteEditor = ({
     // Check for control commands first
     const normalizedText = transcript.toLowerCase().trim();
     
-    if (normalizedText.includes('save') || normalizedText.includes('save changes')) {
-      handleSave();
-      return;
-    }
+    // if (normalizedText.includes('save') || normalizedText.includes('save changes')) {
+    //   setContent(prev => prev + (prev ? '\n' : '') + transcript);
+    //   handleSave();
+    //   return;
+    // }
     
-    if (normalizedText.includes('close') || normalizedText.includes('cancel')) {
-      handleClose();
-      return;
-    }
+    // if (normalizedText.includes('close') || normalizedText.includes('cancel')) {
+    //   setContent(prev => prev + (prev ? '\n' : '') + transcript);
+    //   handleClose();
+    //   return;
+    // }
     
-    if (normalizedText.includes('delete') || normalizedText.includes('delete note')) {
-      handleDelete();
-      return;
-    }
+    // if (normalizedText.includes('delete') || normalizedText.includes('delete note')) {
+    //   setContent(prev => prev + (prev ? '\n' : '') + transcript);
+    //   handleDelete();
+    //   return;
+    // }
 
     // Check if transcript has stabilized
     if (transcript === lastTranscript) {
@@ -126,6 +129,7 @@ export const VoiceNoteEditor = ({
     } else {
       startListening();
       setIsListening(true);
+      textareaRef.current?.focus();
     }
   };
 
@@ -246,7 +250,6 @@ export const VoiceNoteEditor = ({
               </>
             )}
           </Button>
-          <div className="text-xs text-muted-foreground mt-1">FEATURE COMING SOON</div>
           
           {isListening && (
             <div className="flex items-center gap-2">
@@ -268,9 +271,9 @@ export const VoiceNoteEditor = ({
         </div>
 
         {/* Voice Commands Help */}
-        <div className="text-xs text-muted-foreground">
-          Say: "save", "close", or "delete"
-        </div>
+        {/* <div className="text-xs text-muted-foreground">
+          Say: "save" or "delete"
+        </div> */}
       </div>
 
       {/* Live Transcript */}

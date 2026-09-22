@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +31,7 @@ interface NoteDetailDialogProps {
   } | null;
   onSave: (id: string, title: string, content: string, status: NoteStatus, color: string) => void;
   onDelete: (id: string) => void;
+  onAddNote?: (title: string, content: string, status: NoteStatus, color: string) => void;
 }
 
 const colors = ["yellow", "pink", "blue", "green", "purple", "orange", "teal", "lavender", "peach", "mint"];
@@ -50,6 +51,7 @@ export const NoteDetailDialog = ({
   note,
   onSave,
   onDelete,
+  onAddNote,
 }: NoteDetailDialogProps) => {
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
@@ -60,6 +62,7 @@ export const NoteDetailDialog = ({
   const [initialTitle, setInitialTitle] = useState(note?.title || "");
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
     transcript,
@@ -103,12 +106,45 @@ export const NoteDetailDialog = ({
     setShowUnsavedDialog(false);
   };
 
+  const handleVoiceResultRef = useRef<(transcript: string) => void>(() => {});
+
+  const handleVoiceResult = (transcript: string) => {
+    const normalizedText = transcript.toLowerCase().trim();
+    const words = normalizedText.split(/\s+/).map(w => w.replace(/[^a-z]/g, ''));
+
+    const isSave = words.some(w => w === 'save' || w === 'saved');
+    const isClose = words.some(w => w === 'close' || w === 'closed' || w === 'cancel');
+    const isDelete = words.some(w => w === 'delete' || w === 'deleted' || w === 'clear');
+
+    // if (isSave || isClose || isDelete) {
+    //   // Compute the new content including the transcript
+    //   const newContent = content + (content ? '\n' : '') + transcript;
+    //   setContent(newContent);
+
+    //   if (isSave) {
+    //     const fullContent = newContent.trim();
+    //     if (onAddNote && fullContent) {
+    //       soundEffects.playNewNoteSound();
+    //       onAddNote(title.trim(), fullContent, status, color);
+    //     }
+    //   } else if (isClose || isDelete) {
+    //     handleOpenChange(false);
+    //   }
+    //   return;
+    // }
+
+    setContent(prev => prev + (prev ? '\n' : '') + transcript);
+  };
+
+  // Keep ref up to date
+  handleVoiceResultRef.current = handleVoiceResult;
+
   // Voice recognition setup
   useEffect(() => {
     setCallbacks(
       (result) => {
         if (result.isFinal) {
-          handleVoiceResult(result.transcript);
+          handleVoiceResultRef.current(result.transcript);
         }
       },
       () => {
@@ -133,35 +169,6 @@ export const NoteDetailDialog = ({
     }
   }, [open]);
 
-  const handleVoiceResult = (transcript: string) => {
-    // Check for control commands first
-    const normalizedText = transcript.toLowerCase().trim();
-    
-    if (normalizedText.includes('save') || normalizedText.includes('save changes')) {
-      // Don't add "save" to content, just save the note
-      handleSaveAndClose();
-      return;
-    }
-    
-    if (normalizedText.includes('close') || normalizedText.includes('cancel')) {
-      handleOpenChange(false);
-      return;
-    }
-
-    if (normalizedText.includes('delete') || normalizedText.includes('delete note')) {
-      handleDelete();
-      return;
-    }
-
-    // Add content immediately (no stabilization delay)
-    setContent(prev => {
-      const newContent = prev + (prev ? '\n' : '') + transcript;
-      return newContent;
-    });
-    
-    // Don't reset transcript here - let it naturally update
-  };
-
   const toggleListening = () => {
     if (isListening) {
       stopListening();
@@ -169,6 +176,7 @@ export const NoteDetailDialog = ({
     } else {
       startListening();
       setIsListening(true);
+      textareaRef.current?.focus();
     }
   };
 
@@ -288,6 +296,7 @@ export const NoteDetailDialog = ({
           <div className="order-3 sm:order-2">
             <label className="text-sm font-medium mb-2 block">Content</label>
             <Textarea
+              ref={textareaRef}
               value={content}
               onChange={handleContentChange}
               onKeyDown={handleContentKeyDown}
@@ -321,7 +330,6 @@ export const NoteDetailDialog = ({
                         </>
                       )}
                     </Button>
-                    <div className="text-xs text-muted-foreground mt-1">FEATURE COMING SOON</div>
                     
                     {isListening && (
                       <div className="flex items-center gap-2">
@@ -342,9 +350,9 @@ export const NoteDetailDialog = ({
                     )}
                   </div>
                   
-                  <div className="text-xs text-muted-foreground">
-                    Say: "save", "close", or "delete"
-                  </div>
+                  {/* <div className="text-xs text-muted-foreground">
+                    Say: "save" or "delete"
+                  </div> */}
                 </div>
 
                 {/* Live Transcript */}

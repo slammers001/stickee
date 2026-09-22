@@ -20,7 +20,7 @@ export const VoiceRecorder = ({
   disabled = false 
 }: VoiceRecorderProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingTimeout, setProcessingTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [processingTimeout, setProcessingTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [lastTranscript, setLastTranscript] = useState('');
   const [stableCount, setStableCount] = useState(0);
   const {

@@ -90,6 +90,17 @@ export const useVoiceRecognition = () => {
 
     recognition.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
+      
+      // Auto-restart on transient network errors
+      if (event.error === 'network' || event.error === 'aborted') {
+        try {
+          recognition.start();
+        } catch (e) {
+          // Already started, ignore
+        }
+        return;
+      }
+      
       setState(prev => ({
         ...prev,
         isListening: false,

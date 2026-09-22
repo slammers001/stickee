@@ -837,7 +837,7 @@ export default function Index() {
             <p className="text-muted-foreground mb-6 max-w-md">
               {searchQuery 
                 ? `No notes found matching "${searchQuery}". Try a different search term or clear the search.`
-                : "Click the Stickee icon to create your first Stickee note!"
+                : "Click the Stickee icon above to create your first Stickee note!"
               }
             </p>
           </div>
@@ -922,6 +922,7 @@ export default function Index() {
             note={selectedNote}
             onSave={updateNote}
             onDelete={deleteNote}
+            onAddNote={addNote}
           />
         </Suspense>
       )}
@@ -969,7 +970,7 @@ export default function Index() {
 
       {/* Version Display */}
       <div className="fixed bottom-4 left-4 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded shadow-sm" style={{ fontFamily: 'var(--font-family-handwriting)' }}>
-        Version 2.0.1
+        Version 2.0.2
       </div>
       </div>
     </div>

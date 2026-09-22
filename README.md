@@ -2,7 +2,10 @@
 Stickee is a modern desktop application designed for managing and organizing digital sticky notes. Built with React, TypeScript, and Tauri, it combines the simplicity of traditional sticky notes with powerful digital features.
 To learn about Stickee, go to [https://stickee-info.simicodes.xyz](https://stickee-info.simicodes.xyz/).
 You can also view it on vercel: https://stickee.vercel.app
-
+## How has Stickee improved in the past versions?
+| | |
+|---|---|
+| <img src="https://github.com/user-attachments/assets/0eda383c-a591-4022-af64-114423d0dd00" width="400" /> | <img src="https://github.com/user-attachments/assets/4c7cd683-83bb-4e86-a236-0eb6e2fa6d71" width="400" /> |
 <!--![Stickee Architecture](./excalidraws/list_view.excalidraw.png)-->
 
 ## Key Features
