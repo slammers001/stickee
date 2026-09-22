@@ -11,7 +11,7 @@ All colors MUST be HSL.
     --background: 0 0% 97%;
     --foreground: 0 0% 15%;
     
-    --font-family-base: 'Indie Flower', cursive;
+    --font-family-base: 'Montserrat', sans-serif;
     --font-family-handwriting: 'Indie Flower', cursive;
     --font-family-title: 'Arbutus', serif;
 
@@ -120,6 +120,7 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-family-base);
     background-image: 
       repeating-linear-gradient(
         0deg,
