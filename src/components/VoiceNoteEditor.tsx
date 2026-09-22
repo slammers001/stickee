@@ -22,7 +22,7 @@ export const VoiceNoteEditor = ({
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
   const [isListening, setIsListening] = useState(false);
-  const [processingTimeout, setProcessingTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [processingTimeout, setProcessingTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [lastTranscript, setLastTranscript] = useState('');
   const [stableCount, setStableCount] = useState(0);
   
