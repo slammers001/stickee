@@ -335,9 +335,9 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
                     )}
                   </div>
                   
-                  <div className="text-xs text-muted-foreground">
+                  {/* <div className="text-xs text-muted-foreground">
                     Say: "save" or "delete"
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Live Transcript */}

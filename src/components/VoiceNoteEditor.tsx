@@ -271,9 +271,9 @@ export const VoiceNoteEditor = ({
         </div>
 
         {/* Voice Commands Help */}
-        <div className="text-xs text-muted-foreground">
+        {/* <div className="text-xs text-muted-foreground">
           Say: "save" or "delete"
-        </div>
+        </div> */}
       </div>
 
       {/* Live Transcript */}
