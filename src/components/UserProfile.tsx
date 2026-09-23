@@ -3,11 +3,19 @@ import { getCurrentUser } from "@/services/userService";
 import { useEffect, useState } from "react";
 import { User } from "lucide-react";
 
+const GUEST_USER = { id: "", isGuest: true, displayName: "" };
+
 export const UserProfile = () => {
-  const [user, setUser] = useState(getCurrentUser());
+  const [user, setUser] = useState(GUEST_USER);
 
   useEffect(() => {
-    setUser(getCurrentUser());
+    let active = true;
+    getCurrentUser().then((currentUser) => {
+      if (active) setUser(currentUser);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   return (

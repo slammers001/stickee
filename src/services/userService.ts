@@ -5,9 +5,15 @@ const APP_VERSION = import.meta.env.VITE_APP_VERSION;
 
 const USER_ID_KEY = 'stickee_user_id';
 
-// Get user ID with fallback to localStorage
+// Get user ID. Prefers the authenticated Supabase account so that notes and
+// other data stay tied to the signed-in user and never leak across accounts.
 export const getUserId = async (): Promise<string> => {
-  // Fallback to localStorage for backward compatibility
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user?.id) {
+    return session.user.id;
+  }
+
+  // Fallback to localStorage for backward compatibility (guests / no session)
   let userId = localStorage.getItem(USER_ID_KEY);
   if (!userId) {
     console.log('No user ID found, creating new one');
@@ -55,6 +61,17 @@ export const getUserId = async (): Promise<string> => {
 };
 
 export const getCurrentUser = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user) {
+    const { user } = session;
+    const name = user.user_metadata?.name || user.email || user.id.substring(0, 8);
+    return {
+      id: user.id,
+      isGuest: false,
+      displayName: name
+    };
+  }
+
   const userId = await getUserId();
   return {
     id: userId,
