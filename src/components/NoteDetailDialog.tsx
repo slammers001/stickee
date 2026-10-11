@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Mic, MicOff } from "lucide-react";
+import { AttachmentPicker } from "@/components/AttachmentPicker";
+import type { NoteAttachment } from '@/types/attachment';
 import { NoteStatus } from "./StickyNote";
 import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 import { cn, limitInsertedText } from "@/lib/utils";
@@ -29,10 +31,11 @@ interface NoteDetailDialogProps {
     status: NoteStatus;
     lastUpdated: number;
     pinned: boolean;
+    attachments?: NoteAttachment[];
   } | null;
-  onSave: (id: string, title: string, content: string, status: NoteStatus, color: string) => void;
+  onSave: (id: string, title: string, content: string, status: NoteStatus, color: string, attachments: File[]) => void;
   onDelete: (id: string) => void;
-  onAddNote?: (title: string, content: string, status: NoteStatus, color: string) => void;
+  onAddNote?: (title: string, content: string, status: NoteStatus, color: string, attachments?: File[]) => void;
 }
 
 const colors = ["yellow", "pink", "blue", "green", "purple", "orange", "teal", "lavender", "peach", "mint"];
@@ -61,6 +64,7 @@ export const NoteDetailDialog = ({
   const [initialStatus, setInitialStatus] = useState<NoteStatus>(note?.status || "To-Do");
   const [initialColor, setInitialColor] = useState(note?.color || "yellow");
   const [initialTitle, setInitialTitle] = useState(note?.title || "");
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -92,7 +96,7 @@ export const NoteDetailDialog = ({
   const handleSaveAndClose = () => {
     if (note && content.trim()) {
       soundEffects.playSaveSound();
-      onSave(note.id, title.trim(), content, status, color);
+      onSave(note.id, title.trim(), content, status, color, attachments);
       setShowUnsavedDialog(false);
       onOpenChange(false);
     }
@@ -231,7 +235,7 @@ export const NoteDetailDialog = ({
   const handleSave = () => {
     if (note && content.trim()) {
       soundEffects.playSaveSound();
-      onSave(note.id, title.trim(), content, status, color);
+      onSave(note.id, title.trim(), content, status, color, attachments);
       onOpenChange(false);
     }
   };
@@ -381,6 +385,10 @@ export const NoteDetailDialog = ({
             </div>
           </div>
           <div className="order-4">
+            <label className="text-sm font-medium mb-2 block">Attachments</label>
+            <AttachmentPicker pending={attachments} existing={note.attachments} onChange={setAttachments} />
+          </div>
+          <div className="order-5">
             <label className="text-sm font-medium mb-2 block">Status</label>
             <div className="flex gap-2">
               {statuses.map((s) => (

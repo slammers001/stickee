@@ -47,6 +47,7 @@ import { TrashedNotesPanel } from "@/components/TrashedNotesPanel";
 import { AppSidebar, type SidebarTab } from "@/components/AppSidebar";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { TemplatesPanel, type NoteTemplate } from "@/components/TemplatesPanel";
+import { getAttachments, uploadAttachments } from '@/services/attachmentsService';
 
 // Using the Note interface from types/note.ts
 
@@ -277,8 +278,12 @@ export default function Index() {
       await updateUserVersion();
       
       const loadedNotes = await fetchNotes();
-      setNotes(loadedNotes);
-      setFilteredNotes(loadedNotes);
+      const notesWithAttachments = await Promise.all(loadedNotes.map(async (note) => ({
+        ...note,
+        attachments: await getAttachments(note.id).catch(() => []),
+      })));
+      setNotes(notesWithAttachments);
+      setFilteredNotes(notesWithAttachments);
       
       // Load reactions after notes are loaded
       await loadReactions(loadedNotes);
@@ -323,7 +328,7 @@ export default function Index() {
     }
   };
 
-  const addNote = async (title: string, content: string, status: StickyNoteStatus, color: string) => {
+  const addNote = async (title: string, content: string, status: StickyNoteStatus, color: string, attachments: File[] = []) => {
     try {
       // Play new note sound immediately
       soundEffects.playNewNoteSound();
@@ -358,6 +363,10 @@ export default function Index() {
         lastUpdated: Date.now()
       });
       
+      if (attachments.length) {
+        newNote.attachments = await uploadAttachments(newNote.id, attachments);
+      }
+
       // Replace the temporary note with the real one
       setNotes(prevNotes => 
         prevNotes.map(note => 
@@ -394,14 +403,16 @@ export default function Index() {
     }
   };
 
-  const updateNote = async (id: string, title: string, content: string, status: StickyNoteStatus, color: string) => {
+  const updateNote = async (id: string, title: string, content: string, status: StickyNoteStatus, color: string, attachments: File[] = []) => {
     try {
-      const updatedNote = await updateNoteService(id, { 
-        title: title || undefined,
-        content, 
-        status, 
-        color
-      });
+  const updatedNote = await updateNoteService(id, {
+  title: title || undefined,
+  content,
+  status,
+  color
+  });
+  if (attachments.length) await uploadAttachments(id, attachments);
+  if (updatedNote) updatedNote.attachments = await getAttachments(id);
       
       if (updatedNote) {
         setNotes(prevNotes => 

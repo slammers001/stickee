@@ -1,4 +1,5 @@
 import { ReactionSummary } from './emojiReaction';
+import type { NoteAttachment } from './attachment';
 
 export type NoteStatus = 'To-Do' | 'Doing' | 'Done' | 'Backlog';
 
@@ -18,6 +19,7 @@ export interface Note {
   archived_at?: string; // When the note was archived
   deleted_at?: string; // When the note was moved to trash
   isTemp?: boolean; // Whether the note is a temporary placeholder
+  attachments?: NoteAttachment[];
 }
 
 export type StickyNoteStatus = NoteStatus;

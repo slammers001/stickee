@@ -17,11 +17,12 @@ import { toast } from "sonner";
 import { soundEffects } from "@/utils/soundEffects";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
 import { Mic, MicOff } from "lucide-react";
+import { AttachmentPicker } from "@/components/AttachmentPicker";
 
 interface AddNoteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (title: string, content: string, status: NoteStatus, color: string) => void;
+  onSave: (title: string, content: string, status: NoteStatus, color: string, attachments: File[]) => void;
 }
 
 const colors = ["yellow", "pink", "blue", "green", "purple", "orange", "teal", "lavender", "peach", "mint"];
@@ -40,6 +41,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<NoteStatus>("To-Do");
   const [color, setColor] = useState(colors[0]);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -68,13 +70,14 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
       setContent("");
       setStatus("To-Do");
       setColor(colors[0]);
+      setAttachments([]);
     }
   };
 
   const handleSaveAndClose = () => {
     if (content.trim()) {
       soundEffects.playNewNoteSound();
-      onSave(title.trim(), content, status, color);
+      onSave(title.trim(), content, status, color, attachments);
       // Reset form after successful save
       setTitle("");
       setContent("");
@@ -140,7 +143,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     if (content.trim()) {
       console.log('Saving note...'); // Debug log
       soundEffects.playNewNoteSound();
-      onSave(title.trim(), content, status, color);
+      onSave(title.trim(), content, status, color, attachments);
       // Reset form after successful save
       setTitle("");
       setContent("");
@@ -366,6 +369,10 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
             </div>
           </div>
           <div className="order-4">
+            <label className="text-sm font-medium mb-2 block">Attachments</label>
+            <AttachmentPicker pending={attachments} onChange={setAttachments} />
+          </div>
+          <div className="order-5">
             <label className="text-sm font-medium mb-2 block">Status</label>
             <div className="flex gap-2">
               {statuses.map((s) => (

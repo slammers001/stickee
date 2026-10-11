@@ -23,7 +23,8 @@ const mapSupabaseNote = (note: any): Note => {
     user_id: note.user_id, // Include user_id in the returned object
     archived: Boolean(note.archived), // Include archived status
     archived_at: note.archived_at, // Include archived timestamp
-    deleted_at: note.deleted_at // Include deleted timestamp
+    deleted_at: note.deleted_at, // Include deleted timestamp
+    attachments: note.attachments ?? []
   };
 };
 
