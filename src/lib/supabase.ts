@@ -30,10 +30,13 @@ const handleSupabaseError = (error: any, context: string) => {
   throw error;
 };
 
-export const signUpWithEmail = async (email: string, password: string) => {
+export const signUpWithEmail = async (email: string, password: string, fullName?: string) => {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: fullName
+      ? { data: { name: fullName, full_name: fullName } }
+      : undefined,
   });
   
   if (error) handleSupabaseError(error, 'signUpWithEmail');

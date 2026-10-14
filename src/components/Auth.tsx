@@ -23,7 +23,7 @@ export const Auth = () => {
     setMessage('');
 
     try {
-      const result = await signUpWithEmail(email, password);
+      const result = await signUpWithEmail(email, password, name.trim());
       if (result?.user) {
         // Store name in localStorage for profile
         const profileKey = `stickee_profile_${result.user.id}`;

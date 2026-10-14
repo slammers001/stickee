@@ -41,6 +41,17 @@ export const saveProfile = async (userId: string, profile: UserProfile): Promise
   try {
     localStorage.setItem(getStorageKey(userId), JSON.stringify(profile));
     
+    // Sync display name into Supabase Auth user metadata
+    if (profile.name.trim()) {
+      try {
+        await supabase.auth.updateUser({
+          data: { name: profile.name.trim(), full_name: profile.name.trim() },
+        });
+      } catch (error) {
+        console.error('Error updating auth display name:', error);
+      }
+    }
+
     // Also try to save to Supabase if columns exist
     try {
       await supabase
