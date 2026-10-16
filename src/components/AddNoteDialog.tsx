@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { NoteStatus } from "@/components/StickyNote";
 import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
-import { cn, limitInsertedText } from "@/lib/utils";
+import { cn, limitInsertedText, NOTE_CONTENT_LIMIT, NOTE_TITLE_LIMIT } from "@/lib/utils";
 import { toast } from "sonner";
 import { soundEffects } from "@/utils/soundEffects";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
@@ -100,13 +100,13 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = e.target;
-    // Limit to 1500 characters
-    const { text, removed } = limitInsertedText(content, textarea.value, textarea.selectionEnd, 1500);
+    // Limit to NOTE_CONTENT_LIMIT characters
+    const { text, removed } = limitInsertedText(content, textarea.value, textarea.selectionEnd, NOTE_CONTENT_LIMIT);
     setContent(text);
     if (removed > 0) {
       const caret = textarea.selectionEnd - removed;
       requestAnimationFrame(() => textarea.setSelectionRange(caret, caret));
-      toast.info("Notes can have a maximum of 1500 characters", { id: "note-content-limit" });
+      toast.info(`Notes can have a maximum of ${NOTE_CONTENT_LIMIT} characters`, { id: "note-content-limit" });
     }
   };
 
@@ -119,8 +119,8 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Limit to 20 characters
-    if (value.length <= 20) {
+    // Limit to NOTE_TITLE_LIMIT characters
+    if (value.length <= NOTE_TITLE_LIMIT) {
       setTitle(value);
     }
   };
@@ -248,7 +248,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               className="font-title text-lg dark:text-white dark:placeholder:text-gray-400 max-w-md"
             />
             <div className="text-xs text-muted-foreground mt-1">
-              {title.length}/20 characters
+              {title.length}/{NOTE_TITLE_LIMIT} characters
             </div>
           </div>
           <div className="order-2 sm:order-3">
@@ -294,7 +294,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               autoFocus
             />
             <p className="text-xs text-muted-foreground mt-2">
-              Press Ctrl+Enter to save quickly • Maximum 1500 characters
+              Press Ctrl+Enter to save quickly • Maximum {NOTE_CONTENT_LIMIT} characters
             </p>
             
             {/* Voice Controls */}
@@ -362,7 +362,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               </div>
             )}
             <div className="text-xs text-muted-foreground mt-1">
-              {content.length}/1500 characters
+              {content.length}/{NOTE_CONTENT_LIMIT} characters
             </div>
           </div>
           <div className="order-4">

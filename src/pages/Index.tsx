@@ -414,7 +414,7 @@ export default function Index() {
             note.id === id ? { ...updatedNote } : note
           )
         );
-        setDetailDialogOpen(false);
+        handleDetailDialogOpenChange(false);
         // Note updated silently - no notification
       }
     } catch (error) {
@@ -451,7 +451,7 @@ export default function Index() {
       await deleteNoteService(id);
       setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
       setFilteredNotes(prevNotes => prevNotes.filter(note => note.id !== id));
-      setDetailDialogOpen(false);
+      handleDetailDialogOpenChange(false);
       // Note deleted silently - no notification
     } catch (error) {
       console.error('Error deleting note:', error);
@@ -554,6 +554,15 @@ export default function Index() {
     // Only open detail dialog - don't toggle selection
     setSelectedNote(note);
     setDetailDialogOpen(true);
+  };
+
+  const handleDetailDialogOpenChange = (open: boolean) => {
+    setDetailDialogOpen(open);
+    // Drop the selected note when closing so the editor is always rebuilt from
+    // the saved note the next time it is opened (discarded edits disappear).
+    if (!open) {
+      setSelectedNote(null);
+    }
   };
 
   const handleToggleSelect = (noteId: string) => {
@@ -918,7 +927,7 @@ export default function Index() {
         <Suspense fallback={<div>Loading...</div>}>
           <NoteDetailDialog
             open={detailDialogOpen}
-            onOpenChange={setDetailDialogOpen}
+            onOpenChange={handleDetailDialogOpenChange}
             note={selectedNote}
             onSave={updateNote}
             onDelete={deleteNote}

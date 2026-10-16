@@ -108,6 +108,15 @@ export function ArchivedNotesPanel({ onNotesRefresh }: ArchivedNotesPanelProps) 
     setEditDialogOpen(true);
   };
 
+  const handleEditDialogOpenChange = (open: boolean) => {
+    setEditDialogOpen(open);
+    // Clear the selection on close so discarded edits cannot leak into the
+    // next time the editor is opened for the same note.
+    if (!open) {
+      setSelectedNote(null);
+    }
+  };
+
   const handleUpdateNote = async (id: string, title: string, content: string, status: any, color: string) => {
     try {
       const updatedNote = await updateNote(id, { 
@@ -226,7 +235,7 @@ export function ArchivedNotesPanel({ onNotesRefresh }: ArchivedNotesPanelProps) 
       {selectedNote && (
         <NoteDetailDialog
           open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
+          onOpenChange={handleEditDialogOpenChange}
           note={selectedNote}
           onSave={handleUpdateNote}
           onDelete={handleDeleteFromEdit}
