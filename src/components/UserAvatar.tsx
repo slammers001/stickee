@@ -1,9 +1,9 @@
 import { cn } from '@/lib/utils';
+import { getAvatarTheme } from '@/services/profileService';
 
 interface UserAvatarProps {
   name: string;
   color: string;
-  image?: string | null;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
@@ -15,33 +15,13 @@ const sizeClasses = {
   xl: 'h-24 w-24 text-2xl',
 };
 
-const getTextColor = (bgColor: string): string => {
-  // Black text for #fff1bf, white for everything else
-  return bgColor.toLowerCase() === '#fff1bf' ? '#000000' : '#ffffff';
-};
-
 const getFirstLetter = (name: string): string => {
   if (!name) return '?';
   return name.trim().charAt(0).toUpperCase();
 };
 
-export const UserAvatar = ({ name, color, image, size = 'md', className }: UserAvatarProps) => {
-  const firstLetter = getFirstLetter(name);
-  const textColor = getTextColor(color);
-
-  if (image) {
-    return (
-      <img
-        src={image}
-        alt={name || 'User avatar'}
-        className={cn(
-          'rounded-full object-cover',
-          sizeClasses[size],
-          className
-        )}
-      />
-    );
-  }
+export const UserAvatar = ({ name, color, size = 'md', className }: UserAvatarProps) => {
+  const theme = getAvatarTheme(color);
 
   return (
     <div
@@ -50,9 +30,9 @@ export const UserAvatar = ({ name, color, image, size = 'md', className }: UserA
         sizeClasses[size],
         className
       )}
-      style={{ backgroundColor: color, color: textColor }}
+      style={{ backgroundColor: theme.background, color: theme.letter }}
     >
-      {firstLetter}
+      {getFirstLetter(name)}
     </div>
   );
 };

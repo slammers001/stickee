@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { signUpWithEmail, signInWithEmail } from '@/lib/supabase';
+import { saveProfile } from '@/services/profileService';
 import { IconUser, IconMail, IconLock, IconArrowLeft } from '@tabler/icons-react';
 
 type AuthMode = 'signin' | 'signup';
@@ -25,16 +26,12 @@ export const Auth = () => {
     try {
       const result = await signUpWithEmail(email, password, name.trim());
       if (result?.user) {
-        // Store name in localStorage for profile
-        const profileKey = `stickee_profile_${result.user.id}`;
-        const DEFAULT_COLORS = ['#fff1bf', '#735c40', '#FFC2CC'];
-        const randomColor = DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)];
-        localStorage.setItem(profileKey, JSON.stringify({
+        // Store name in the profile; the avatar is assigned from Supabase on first load
+        await saveProfile(result.user.id, {
           name: name.trim(),
           email: email,
-          avatarColor: randomColor,
-          avatarImage: null,
-        }));
+          avatarColor: '',
+        });
         
         if (result.session) {
           setMessage('');
