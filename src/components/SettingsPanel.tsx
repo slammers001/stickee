@@ -279,7 +279,7 @@ export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
               />
               {authEmail && (
                 <p className="text-xs text-muted-foreground">
-                  Managed by your sign-in account and can't be changed here.
+                  Cannot be changed for now.
                 </p>
               )}
             </div>
