@@ -750,7 +750,9 @@ export default function Index() {
                 </>
               )}
               
-              <div className="h-6 w-px bg-border hidden md:block"></div>
+              {(filteredNotes.length > 0 || selectedNotes.size > 0) && (
+                <div className="h-6 w-px bg-border hidden md:block"></div>
+              )}
               
               {/* Issue Report Button - Hidden on mobile */}
               <IssueReportButton 
