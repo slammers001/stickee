@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Pin, Smile, CheckSquare, Archive, Copy } from "lucide-react";
+import { Pin, Smile, CheckSquare, Archive, Copy, Bell } from "lucide-react";
 import { EmojiPicker } from "./EmojiPicker";
 import { ReactionSummary } from "@/types/emojiReaction";
 import { toggleReaction } from "@/services/emojiReactionService";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { LinkableText } from "./LinkableText";
 import { analytics, AnalyticsEvents } from "@/utils/analytics";
 import { memo } from "react";
+import { formatReminderDate, formatReminderTime, isOverdue, isToday } from "@/utils/reminderTime";
 
 export type NoteStatus = 'To-Do' | 'Doing' | 'Done' | 'Backlog';
 
@@ -31,6 +32,10 @@ interface StickyNoteProps {
   isSelected?: boolean;
   showSelectionCheckbox?: boolean;
   fontFamily?: string;
+  /** ISO UTC time of the note's reminder, when it has one */
+  remindAt?: string | null;
+  /** True once the reminder has been completed or dismissed */
+  remindDone?: boolean;
 }
 
 const colorMap: Record<string, string> = {
@@ -68,7 +73,9 @@ export const StickyNote = memo(({
   onToggleSelect,
   isSelected = false,
   showSelectionCheckbox = false,
-  fontFamily
+  fontFamily,
+  remindAt,
+  remindDone = false
 }: Omit<StickyNoteProps, 'index' | 'lastUpdated'>) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiPickerPosition, setEmojiPickerPosition] = useState({ x: 0, y: 0 });
@@ -87,6 +94,13 @@ export const StickyNote = memo(({
     const lines = content.split('\n');
     return lines.length > 13 ? lines.slice(0, 13).join('\n') + '...' : content;
   }, [content]);
+
+  const reminderTone = useMemo(() => {
+    if (!remindAt || remindDone) return null;
+    if (isOverdue(remindAt)) return 'overdue';
+    if (isToday(remindAt)) return 'today';
+    return 'upcoming';
+  }, [remindAt, remindDone]);
 
   const handleEmojiClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -219,9 +233,26 @@ export const StickyNote = memo(({
         )}
         
         <div className="flex items-center justify-between mt-2">
-          <Badge variant="outline" className={cn("text-xs font-handwriting shrink-0 note-status dark:text-white", statusColors[status])}>
-            {status}
-          </Badge>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Badge variant="outline" className={cn("text-xs font-handwriting shrink-0 note-status dark:text-white", statusColors[status])}>
+              {status}
+            </Badge>
+
+            {reminderTone && remindAt && (
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full border shrink-0",
+                  reminderTone === "overdue" && "border-red-300 text-red-600 bg-red-50 dark:bg-red-950/40",
+                  reminderTone === "today" && "border-amber-300 text-amber-700 bg-amber-50 dark:bg-amber-950/40",
+                  reminderTone === "upcoming" && "border-border text-muted-foreground bg-background/60"
+                )}
+                title={`Reminder: ${formatReminderDate(remindAt)}`}
+              >
+                <Bell size={12} />
+                {formatReminderTime(remindAt)}
+              </span>
+            )}
+          </div>
           
           <div className="flex items-center gap-1">
             <button

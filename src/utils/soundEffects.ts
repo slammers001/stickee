@@ -358,6 +358,37 @@ class SoundEffects {
     sweepOsc.start(currentTime);
     sweepOsc.stop(currentTime + 0.4);
   }
+
+  // Play reminder sound (soft two note chime)
+  playReminderSound() {
+    if (!this.audioContext) return;
+
+    const ctx = this.audioContext;
+    const currentTime = ctx.currentTime;
+
+    const notes = [
+      { freq: 880.00, time: 0, duration: 0.35 },    // A5
+      { freq: 1174.66, time: 0.18, duration: 0.5 },  // D6
+    ];
+
+    notes.forEach(({ freq, time, duration }) => {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      oscillator.frequency.setValueAtTime(freq, currentTime + time);
+      oscillator.type = 'sine';
+
+      gainNode.gain.setValueAtTime(0, currentTime + time);
+      gainNode.gain.linearRampToValueAtTime(0.2, currentTime + time + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + time + duration);
+
+      oscillator.start(currentTime + time);
+      oscillator.stop(currentTime + time + duration);
+    });
+  }
 }
 
 // Export singleton instance

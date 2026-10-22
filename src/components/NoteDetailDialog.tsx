@@ -17,6 +17,8 @@ import { cn, limitInsertedText } from "@/lib/utils";
 import { toast } from "sonner";
 import { soundEffects } from "@/utils/soundEffects";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
+import { ReminderEditor } from "@/components/ReminderEditor";
+import type { ReminderRepeat } from "@/types/note";
 
 interface NoteDetailDialogProps {
   open: boolean;
@@ -33,6 +35,10 @@ interface NoteDetailDialogProps {
   onSave: (id: string, title: string, content: string, status: NoteStatus, color: string) => void;
   onDelete: (id: string) => void;
   onAddNote?: (title: string, content: string, status: NoteStatus, color: string) => void;
+  /** The note's current reminder (if it has one) */
+  reminder?: { remindAt: string | null; repeat: ReminderRepeat } | null;
+  /** Persists a reminder change (null clears it) */
+  onSaveReminder?: (remindAt: string | null, repeat: ReminderRepeat) => void | Promise<void>;
 }
 
 const colors = ["yellow", "pink", "blue", "green", "purple", "orange", "teal", "lavender", "peach", "mint"];
@@ -53,6 +59,8 @@ export const NoteDetailDialog = ({
   onSave,
   onDelete,
   onAddNote,
+  reminder,
+  onSaveReminder,
 }: NoteDetailDialogProps) => {
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
@@ -63,6 +71,9 @@ export const NoteDetailDialog = ({
   const [initialTitle, setInitialTitle] = useState(note?.title || "");
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [remindAt, setRemindAt] = useState<string | null>(reminder?.remindAt ?? null);
+  const [remindRepeat, setRemindRepeat] = useState<ReminderRepeat>(reminder?.repeat ?? "none");
+  const [savingReminder, setSavingReminder] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
@@ -228,6 +239,22 @@ export const NoteDetailDialog = ({
     }
   }, [note]);
 
+  // Keep the reminder field in sync with the saved reminder
+  useEffect(() => {
+    setRemindAt(reminder?.remindAt ?? null);
+    setRemindRepeat(reminder?.repeat ?? "none");
+  }, [reminder?.remindAt, reminder?.repeat]);
+
+  const handleSaveReminder = async (nextRemindAt: string | null, nextRepeat: ReminderRepeat) => {
+    if (!onSaveReminder) return;
+    setSavingReminder(true);
+    try {
+      await onSaveReminder(nextRemindAt, nextRepeat);
+    } finally {
+      setSavingReminder(false);
+    }
+  };
+
   const handleSave = () => {
     if (note && content.trim()) {
       soundEffects.playSaveSound();
@@ -298,6 +325,20 @@ export const NoteDetailDialog = ({
               })}
             </div>
           </div>
+          {onSaveReminder && (
+            <div className="order-4">
+              <ReminderEditor
+                value={remindAt}
+                repeat={remindRepeat}
+                saving={savingReminder}
+                onChange={(value, repeat) => {
+                  setRemindAt(value);
+                  setRemindRepeat(repeat);
+                }}
+                onSave={handleSaveReminder}
+              />
+            </div>
+          )}
           <div className="order-3 sm:order-2">
             <label className="text-sm font-medium mb-2 block">Content</label>
             <Textarea

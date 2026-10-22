@@ -23,7 +23,12 @@ const mapSupabaseNote = (note: any): Note => {
     user_id: note.user_id, // Include user_id in the returned object
     archived: Boolean(note.archived), // Include archived status
     archived_at: note.archived_at, // Include archived timestamp
-    deleted_at: note.deleted_at // Include deleted timestamp
+    deleted_at: note.deleted_at, // Include deleted timestamp
+    remind_at: note.remind_at ?? null,
+    remind_repeat: note.remind_repeat ?? 'none',
+    remind_state: note.remind_state ?? 'pending',
+    remind_fired_at: note.remind_fired_at ?? null,
+    remind_snoozed_until: note.remind_snoozed_until ?? null,
   };
 };
 
@@ -64,7 +69,12 @@ export const createNote = async (noteData: Omit<Note, 'id'>): Promise<Note> => {
       status: noteData.status,
       pinned: noteData.pinned,
       updated_at: new Date().toISOString(),
-      user_id: userId // Always include user_id from our local service
+      user_id: userId, // Always include user_id from our local service
+      remind_at: noteData.remind_at ?? null,
+      remind_repeat: noteData.remind_repeat ?? 'none',
+      remind_state: noteData.remind_state ?? 'pending',
+      remind_fired_at: noteData.remind_fired_at ?? null,
+      remind_snoozed_until: noteData.remind_snoozed_until ?? null,
     };
 
     console.log('Saving note with data:', noteDataToSend);
@@ -116,6 +126,11 @@ export const updateNote = async (id: string, updates: Partial<Omit<Note, 'id'>>)
   if (updates.status !== undefined) updateData.status = updates.status;
   if (updates.pinned !== undefined) updateData.pinned = updates.pinned;
   if (updates.title !== undefined) updateData.title = encryptTitle(updates.title);
+  if (updates.remind_at !== undefined) updateData.remind_at = updates.remind_at;
+  if (updates.remind_repeat !== undefined) updateData.remind_repeat = updates.remind_repeat;
+  if (updates.remind_state !== undefined) updateData.remind_state = updates.remind_state;
+  if (updates.remind_fired_at !== undefined) updateData.remind_fired_at = updates.remind_fired_at;
+  if (updates.remind_snoozed_until !== undefined) updateData.remind_snoozed_until = updates.remind_snoozed_until;
 
   // Remove fields that shouldn't be sent to Supabase
   delete updateData.lastUpdated;
@@ -153,6 +168,11 @@ export const deleteNote = async (id: string): Promise<boolean> => {
       .from('notes')
       .update({ 
         deleted_at: new Date().toISOString(),
+        remind_at: null,
+        remind_repeat: 'none',
+        remind_state: 'pending',
+        remind_fired_at: null,
+        remind_snoozed_until: null,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)

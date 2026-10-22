@@ -72,5 +72,11 @@ export const AnalyticsEvents = {
   TERMS_AGREED: 'terms_agreed',
   STICKY_NOTE_CREATED: 'sticky_note_created',
   CHECKLIST_ITEM_ADDED: 'checklist_item_added',
-  CHECKLIST_ITEM_COMPLETED: 'checklist_item_completed'
+  CHECKLIST_ITEM_COMPLETED: 'checklist_item_completed',
+  REMINDER_SET: 'reminder_set',
+  REMINDER_FIRED: 'reminder_fired',
+  REMINDER_COMPLETED: 'reminder_completed',
+  REMINDER_DISMISSED: 'reminder_dismissed',
+  REMINDER_SNOOZED: 'reminder_snoozed',
+  REMINDER_CLEARED: 'reminder_cleared'
 } as const;

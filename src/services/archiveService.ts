@@ -13,6 +13,11 @@ export const archiveNote = async (id: string): Promise<boolean> => {
       .update({ 
         archived: true,
         archived_at: new Date().toISOString(),
+        remind_at: null,
+        remind_repeat: 'none',
+        remind_state: 'pending',
+        remind_fired_at: null,
+        remind_snoozed_until: null,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)

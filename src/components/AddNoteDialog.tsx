@@ -17,11 +17,24 @@ import { toast } from "sonner";
 import { soundEffects } from "@/utils/soundEffects";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
 import { Mic, MicOff } from "lucide-react";
+import { ReminderEditor } from "@/components/ReminderEditor";
+import type { ReminderRepeat } from "@/types/note";
+
+export interface ReminderDraft {
+  remindAt: string | null;
+  repeat: ReminderRepeat;
+}
 
 interface AddNoteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (title: string, content: string, status: NoteStatus, color: string) => void;
+  onSave: (
+    title: string,
+    content: string,
+    status: NoteStatus,
+    color: string,
+    reminder?: ReminderDraft
+  ) => void;
 }
 
 const colors = ["yellow", "pink", "blue", "green", "purple", "orange", "teal", "lavender", "peach", "mint"];
@@ -42,6 +55,8 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   const [color, setColor] = useState(colors[0]);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [remindAt, setRemindAt] = useState<string | null>(null);
+  const [remindRepeat, setRemindRepeat] = useState<ReminderRepeat>("none");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
@@ -56,6 +71,15 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
 
   const hasUnsavedChanges = title.trim() !== "" || content.trim() !== "";
 
+  const resetForm = () => {
+    setTitle("");
+    setContent("");
+    setStatus("To-Do");
+    setColor(colors[0]);
+    setRemindAt(null);
+    setRemindRepeat("none");
+  };
+
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen && hasUnsavedChanges) {
       setShowUnsavedDialog(true);
@@ -64,32 +88,23 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     onOpenChange(newOpen);
     if (!newOpen) {
       // Reset form when closing successfully
-      setTitle("");
-      setContent("");
-      setStatus("To-Do");
-      setColor(colors[0]);
+      resetForm();
     }
   };
 
   const handleSaveAndClose = () => {
     if (content.trim()) {
       soundEffects.playNewNoteSound();
-      onSave(title.trim(), content, status, color);
+      onSave(title.trim(), content, status, color, { remindAt, repeat: remindRepeat });
       // Reset form after successful save
-      setTitle("");
-      setContent("");
-      setStatus("To-Do");
-      setColor(colors[0]);
+      resetForm();
       setShowUnsavedDialog(false);
       onOpenChange(false);
     }
   };
 
   const handleDiscardAndClose = () => {
-    setTitle("");
-    setContent("");
-    setStatus("To-Do");
-    setColor(colors[0]);
+    resetForm();
     setShowUnsavedDialog(false);
     onOpenChange(false);
   };
@@ -140,12 +155,9 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     if (content.trim()) {
       console.log('Saving note...'); // Debug log
       soundEffects.playNewNoteSound();
-      onSave(title.trim(), content, status, color);
+      onSave(title.trim(), content, status, color, { remindAt, repeat: remindRepeat });
       // Reset form after successful save
-      setTitle("");
-      setContent("");
-      setStatus("To-Do");
-      setColor(colors[0]);
+      resetForm();
       onOpenChange(false);
     } else {
       console.log('No content to save - save cancelled'); // Debug log
@@ -384,13 +396,20 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               ))}
             </div>
           </div>
+          <div className="order-5">
+            <ReminderEditor
+              value={remindAt}
+              repeat={remindRepeat}
+              onChange={(value, repeat) => {
+                setRemindAt(value);
+                setRemindRepeat(repeat);
+              }}
+            />
+          </div>
         </div>
         <DialogFooter className="flex gap-2">
           <Button variant="outline" onClick={() => {
-            setTitle("");
-            setContent("");
-            setStatus("To-Do");
-            setColor(colors[0]);
+            resetForm();
             onOpenChange(false);
           }}>
             Cancel

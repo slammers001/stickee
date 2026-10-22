@@ -47,6 +47,13 @@ import { TrashedNotesPanel } from "@/components/TrashedNotesPanel";
 import { AppSidebar, type SidebarTab } from "@/components/AppSidebar";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { TemplatesPanel, type NoteTemplate } from "@/components/TemplatesPanel";
+import { RemindersPanel } from "@/components/RemindersPanel";
+import { useReminders } from "@/hooks/useReminders";
+import { useReminderScheduler } from "@/hooks/useReminderScheduler";
+import { requestNotificationPermission } from "@/utils/notifications";
+import type { ReminderDraft } from "@/components/AddNoteDialog";
+import type { ReminderRepeat } from "@/types/note";
+import type { ReminderItem } from "@/services/reminderService";
 
 // Using the Note interface from types/note.ts
 
@@ -86,6 +93,27 @@ export default function Index() {
     deleteItem: deleteChecklistItem,
     toggleChecklist,
   } = useChecklist();
+
+  // Reminders
+  const {
+    reminders,
+    remindersByNoteId,
+    dueCount,
+    loading: remindersLoading,
+    refresh: refreshReminders,
+    saveReminder,
+    removeReminder,
+    snooze: snoozeReminder,
+    complete: completeReminder,
+    dismiss: dismissReminder,
+  } = useReminders();
+
+  // Fire reminders that come due while the app is open
+  useReminderScheduler({
+    onFired: () => {
+      refreshReminders();
+    },
+  });
 
   // Check for terms agreement on mount and storage changes
   useEffect(() => {
@@ -323,8 +351,19 @@ export default function Index() {
     }
   };
 
-  const addNote = async (title: string, content: string, status: StickyNoteStatus, color: string) => {
+  const addNote = async (
+    title: string,
+    content: string,
+    status: StickyNoteStatus,
+    color: string,
+    reminder?: ReminderDraft
+  ) => {
     try {
+      // Ask for notification permission while we are still in the click handler
+      if (reminder?.remindAt) {
+        requestNotificationPermission();
+      }
+
       // Play new note sound immediately
       soundEffects.playNewNoteSound();
       
@@ -372,6 +411,20 @@ export default function Index() {
       
       // Load reactions for the new note
       await loadReactions([newNote]);
+
+      // Attach the reminder, if one was picked in the dialog
+      if (reminder?.remindAt) {
+        try {
+          await saveReminder(newNote.id, reminder.remindAt, reminder.repeat);
+          analytics.track(AnalyticsEvents.REMINDER_SET, {
+            note_id: newNote.id,
+            repeat: reminder.repeat,
+          });
+        } catch (reminderError) {
+          console.error('Error setting reminder:', reminderError);
+          toast.error('Note saved, but the reminder could not be set');
+        }
+      }
       
       // Note added silently - no notification
       
@@ -615,6 +668,90 @@ export default function Index() {
     }
   };
 
+  const handleSaveReminder = async (noteId: string, remindAt: string | null, repeat: ReminderRepeat) => {
+    // Ask for permission while we are still inside the click handler
+    const permissionPromise = remindAt
+      ? requestNotificationPermission()
+      : Promise.resolve<NotificationPermission | 'unsupported'>('granted');
+
+    try {
+      if (remindAt) {
+        await saveReminder(noteId, remindAt, repeat);
+        analytics.track(AnalyticsEvents.REMINDER_SET, {
+          note_id: noteId,
+          repeat,
+        });
+        toast.success('Reminder set');
+
+        const permission = await permissionPromise;
+        if (permission === 'denied') {
+          toast.info('Desktop notifications are blocked - reminders will show inside the app instead');
+        }
+      } else {
+        await removeReminder(noteId);
+        analytics.track(AnalyticsEvents.REMINDER_CLEARED, { note_id: noteId });
+        toast.success('Reminder removed');
+      }
+    } catch (error) {
+      console.error('Error saving reminder:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to save reminder');
+    }
+  };
+
+  const handleOpenReminderNote = (noteId: string) => {
+    const note = notes.find(n => n.id === noteId);
+    if (!note) return;
+    setSelectedNote(note);
+    setDetailDialogOpen(true);
+  };
+
+  const handleSnoozeReminder = async (reminder: ReminderItem, minutes: number) => {
+    try {
+      await snoozeReminder(reminder, minutes);
+      analytics.track(AnalyticsEvents.REMINDER_SNOOZED, {
+        note_id: reminder.noteId,
+        minutes,
+      });
+      toast.success(minutes >= 60 ? `Snoozed for ${minutes / 60} hour(s)` : `Snoozed for ${minutes} minutes`);
+    } catch (error) {
+      console.error('Error snoozing reminder:', error);
+      toast.error('Failed to snooze reminder');
+    }
+  };
+
+  const handleCompleteReminder = async (reminder: ReminderItem) => {
+    try {
+      await completeReminder(reminder);
+      analytics.track(AnalyticsEvents.REMINDER_COMPLETED, { note_id: reminder.noteId });
+      toast.success('Reminder completed');
+    } catch (error) {
+      console.error('Error completing reminder:', error);
+      toast.error('Failed to complete reminder');
+    }
+  };
+
+  const handleDismissReminder = async (reminder: ReminderItem) => {
+    try {
+      await dismissReminder(reminder);
+      analytics.track(AnalyticsEvents.REMINDER_DISMISSED, { note_id: reminder.noteId });
+      toast.success('Reminder dismissed');
+    } catch (error) {
+      console.error('Error dismissing reminder:', error);
+      toast.error('Failed to dismiss reminder');
+    }
+  };
+
+  const handleRemoveReminder = async (noteId: string) => {
+    try {
+      await removeReminder(noteId);
+      analytics.track(AnalyticsEvents.REMINDER_CLEARED, { note_id: noteId });
+      toast.success('Reminder removed');
+    } catch (error) {
+      console.error('Error removing reminder:', error);
+      toast.error('Failed to remove reminder');
+    }
+  };
+
   const handleAddTemplate = async (template: NoteTemplate) => {
     if (!termsAgreed) {
       toast.error("You must agree to the Terms of Service to create notes");
@@ -638,6 +775,7 @@ export default function Index() {
         onTabChange={setActiveTab}
         collapsed={sidebarCollapsed}
         onCollapsedChange={setSidebarCollapsed}
+        reminderCount={dueCount}
       />
 
       <div className="flex-1 min-w-0 flex flex-col">
@@ -798,7 +936,18 @@ export default function Index() {
         <ArchivedNotesPanel onNotesRefresh={loadNotes} />
       ) : activeTab === "trash" ? (
         <TrashedNotesPanel onNotesRefresh={loadNotes} />
-      ) : activeTab === "reminders" || activeTab === "attachments" || activeTab === "shared" ? (
+      ) : activeTab === "reminders" ? (
+        <RemindersPanel
+          reminders={reminders}
+          loading={remindersLoading}
+          onRefresh={refreshReminders}
+          onOpenNote={handleOpenReminderNote}
+          onSnooze={handleSnoozeReminder}
+          onComplete={handleCompleteReminder}
+          onDismiss={handleDismissReminder}
+          onRemove={handleRemoveReminder}
+        />
+      ) : activeTab === "attachments" || activeTab === "shared" ? (
         <main className="container mx-auto px-4 py-8">
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
             <IconSettings stroke={1.5} className="h-16 w-16 text-muted-foreground mb-6" />
@@ -864,6 +1013,8 @@ export default function Index() {
                 isSelected={selectedNotes.has(note.id)}
                 showSelectionCheckbox={selectedNotes.size > 0}
                 fontFamily={getCssFontFamily(currentFont)}
+                remindAt={remindersByNoteId[note.id]?.remindAt}
+                remindDone={remindersByNoteId[note.id]?.state !== 'pending'}
               />
             ))}
             {/* Unpinned notes - draggable */}
@@ -900,6 +1051,8 @@ export default function Index() {
                   isSelected={selectedNotes.has(note.id)}
                   showSelectionCheckbox={selectedNotes.size > 0}
                   fontFamily={getCssFontFamily(currentFont)}
+                  remindAt={remindersByNoteId[note.id]?.remindAt}
+                  remindDone={remindersByNoteId[note.id]?.state !== 'pending'}
                 />
               </div>
             ))}
@@ -925,6 +1078,11 @@ export default function Index() {
             onSave={updateNote}
             onDelete={deleteNote}
             onAddNote={addNote}
+            reminder={selectedNote ? remindersByNoteId[selectedNote.id] ? { remindAt: remindersByNoteId[selectedNote.id].remindAt, repeat: remindersByNoteId[selectedNote.id].repeat } : null : null}
+            onSaveReminder={(remindAt, repeat) => {
+              if (!selectedNote) return;
+              return handleSaveReminder(selectedNote.id, remindAt, repeat);
+            }}
           />
         </Suspense>
       )}
