@@ -145,22 +145,49 @@ export const updateFavoriteFonts = async (favoriteFonts: string[]): Promise<bool
   const userId = await getUserId();
   
   try {
+    const { data: existingSettings } = await supabase
+      .from('font_settings')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (existingSettings) {
+      const { error } = await supabase
+        .from('font_settings')
+        .update({
+          favorite_fonts: favoriteFonts,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+      
+      if (error) {
+        console.error('Error updating favorite fonts:', error);
+        return false;
+      }
+      
+      return true;
+    }
+
+    // No row yet (e.g. the initial sync never ran): create one so the write is
+    // not silently dropped.
     const { error } = await supabase
       .from('font_settings')
-      .update({
+      .insert({
+        user_id: userId,
+        current_font: localStorage.getItem("stickee-font-family") || "onest",
         favorite_fonts: favoriteFonts,
+        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      })
-      .eq('user_id', userId);
+      });
     
     if (error) {
-      console.error('Error updating favorite fonts:', error);
+      console.error('Error creating favorite fonts:', error);
       return false;
     }
     
     return true;
   } catch (error) {
-    console.error('Error updating favorite fonts:', error);
+    console.error('Error saving favorite fonts:', error);
     return false;
   }
 };
