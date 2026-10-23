@@ -41,7 +41,7 @@ export const useReminderScheduler = ({ onFired }: UseReminderSchedulerOptions = 
 
       if (!isStale) {
         soundEffects.playReminderSound();
-        showReminderNotification(reminder);
+        await showReminderNotification(reminder);
 
         toast('⏰ Reminder', {
           description: reminder.title || reminder.content.slice(0, 80),
