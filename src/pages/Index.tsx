@@ -48,6 +48,7 @@ import { AppSidebar, type SidebarTab } from "@/components/AppSidebar";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { TemplatesPanel, type NoteTemplate } from "@/components/TemplatesPanel";
 import { RemindersPanel } from "@/components/RemindersPanel";
+import type { ReminderFormValues } from "@/components/ReminderFormDialog";
 import { useReminders } from "@/hooks/useReminders";
 import { useReminderScheduler } from "@/hooks/useReminderScheduler";
 import { requestNotificationPermission } from "@/utils/notifications";
@@ -102,6 +103,9 @@ export default function Index() {
     loading: remindersLoading,
     refresh: refreshReminders,
     saveReminder,
+    clearNoteReminder,
+    addReminder,
+    editReminder,
     removeReminder,
     snooze: snoozeReminder,
     complete: completeReminder,
@@ -688,7 +692,7 @@ export default function Index() {
           toast.info('Desktop notifications are blocked - reminders will show inside the app instead');
         }
       } else {
-        await removeReminder(noteId);
+        await clearNoteReminder(noteId);
         analytics.track(AnalyticsEvents.REMINDER_CLEARED, { note_id: noteId });
         toast.success('Reminder removed');
       }
@@ -741,14 +745,58 @@ export default function Index() {
     }
   };
 
-  const handleRemoveReminder = async (noteId: string) => {
+  const handleRemoveReminder = async (reminder: ReminderItem) => {
     try {
-      await removeReminder(noteId);
-      analytics.track(AnalyticsEvents.REMINDER_CLEARED, { note_id: noteId });
+      await removeReminder(reminder);
+      analytics.track(AnalyticsEvents.REMINDER_CLEARED, { note_id: reminder.noteId });
       toast.success('Reminder removed');
     } catch (error) {
       console.error('Error removing reminder:', error);
       toast.error('Failed to remove reminder');
+      throw error;
+    }
+  };
+
+  const handleCreateReminder = async ({ title, remindAt, repeat }: ReminderFormValues) => {
+    // Ask for permission while we are still inside the click handler
+    const permissionPromise = requestNotificationPermission();
+
+    try {
+      await addReminder(title, remindAt, repeat);
+      analytics.track(AnalyticsEvents.REMINDER_SET, {
+        source: 'standalone',
+        repeat,
+      });
+      toast.success('Reminder added');
+
+      const permission = await permissionPromise;
+      if (permission === 'denied') {
+        toast.info('Desktop notifications are blocked - reminders will show inside the app instead');
+      }
+    } catch (error) {
+      console.error('Error creating reminder:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create reminder');
+      throw error;
+    }
+  };
+
+  const handleUpdateReminder = async (reminder: ReminderItem, { title, remindAt, repeat }: ReminderFormValues) => {
+    try {
+      await editReminder(reminder, {
+        title: reminder.source === 'standalone' ? title : undefined,
+        remindAt,
+        repeat,
+      });
+      analytics.track(AnalyticsEvents.REMINDER_SET, {
+        note_id: reminder.noteId,
+        source: reminder.source,
+        repeat,
+      });
+      toast.success('Reminder updated');
+    } catch (error) {
+      console.error('Error updating reminder:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update reminder');
+      throw error;
     }
   };
 
@@ -946,6 +994,8 @@ export default function Index() {
           onComplete={handleCompleteReminder}
           onDismiss={handleDismissReminder}
           onRemove={handleRemoveReminder}
+          onCreate={handleCreateReminder}
+          onUpdate={handleUpdateReminder}
         />
       ) : activeTab === "attachments" || activeTab === "shared" ? (
         <main className="container mx-auto px-4 py-8">

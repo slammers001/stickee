@@ -25,7 +25,7 @@ export const showReminderNotification = (reminder: ReminderItem): void => {
   try {
     const notification = new Notification('Stickee reminder', {
       body: reminder.title || reminder.content.slice(0, 80),
-      tag: `stickee-reminder-${reminder.noteId}`,
+      tag: `stickee-reminder-${reminder.id}`,
     });
     notification.onclick = () => {
       window.focus();

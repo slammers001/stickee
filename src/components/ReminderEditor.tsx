@@ -48,7 +48,7 @@ export function ReminderEditor({
     <div className={cn("space-y-2", className)}>
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2 text-sm font-medium">
-          <Bell stroke={2} className="h-4 w-4" />
+          <Bell strokeWidth={2} className="h-4 w-4" />
           Reminder
         </div>
         {value && (
@@ -119,7 +119,7 @@ export function ReminderEditor({
             onClick={handleClear}
             className="text-xs text-muted-foreground hover:text-foreground"
           >
-            <BellOff stroke={2} className="h-3 w-3 mr-1" />
+            <BellOff strokeWidth={2} className="h-3 w-3 mr-1" />
             Clear
           </Button>
         )}

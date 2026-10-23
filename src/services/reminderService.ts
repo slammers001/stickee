@@ -1,11 +1,17 @@
 import { supabase } from '@/lib/supabase';
 import { getUserId } from './userService';
-import { decryptContent, decryptTitle } from '@/utils/encryption';
+import { decryptContent, decryptTitle, encryptTitle } from '@/utils/encryption';
 import { effectiveReminderTime, nextOccurrence } from '@/utils/reminderTime';
 import type { ReminderRepeat, ReminderState } from '@/types/note';
 
+export type ReminderSource = 'note' | 'standalone';
+
 export interface ReminderItem {
-  noteId: string;
+  /** Unique reminder id - the note id for note reminders, the reminders row id otherwise. */
+  id: string;
+  /** Set when the reminder belongs to a note. */
+  noteId: string | null;
+  source: ReminderSource;
   title?: string;
   content: string;
   remindAt: string;
@@ -16,8 +22,17 @@ export interface ReminderItem {
   effectiveAt: string;
 }
 
+export interface ReminderUpdate {
+  title?: string;
+  remindAt?: string;
+  repeat?: ReminderRepeat;
+}
+
 export const MISSING_REMINDER_SETUP_MESSAGE =
   'Reminders are not set up yet. Run supabase/migrations/add_note_reminders.sql in your Supabase SQL editor.';
+
+export const MISSING_STANDALONE_REMINDER_SETUP_MESSAGE =
+  'Standalone reminders are not set up yet. Run supabase/migrations/add_standalone_reminders.sql in your Supabase SQL editor.';
 
 const isMissingColumnError = (error: unknown): boolean => {
   const code = (error as { code?: string })?.code;
@@ -25,18 +40,56 @@ const isMissingColumnError = (error: unknown): boolean => {
   return code === '42703' || message.includes('remind_at') || message.includes('remind_repeat');
 };
 
-const mapReminder = (note: any): ReminderItem => {
-  const remindAt = note.remind_at as string;
-  const snoozedUntil = (note.remind_snoozed_until as string | null) || null;
+const isMissingTableError = (error: unknown): boolean => {
+  const code = (error as { code?: string })?.code;
+  const message = String((error as { message?: string })?.message || '');
+  return code === '42P01' || message.includes('relation "public.reminders"') || message.includes('relation "reminders"');
+};
+
+interface ReminderRow {
+  id: string;
+  title?: string | null;
+  content?: string | null;
+  remind_at: string;
+  remind_repeat?: string | null;
+  remind_state?: string | null;
+  remind_fired_at?: string | null;
+  remind_snoozed_until?: string | null;
+}
+
+const mapReminder = (note: ReminderRow): ReminderItem => {
+  const remindAt = note.remind_at;
+  const snoozedUntil = note.remind_snoozed_until || null;
 
   return {
+    id: note.id,
     noteId: note.id,
-    title: decryptTitle(note.title),
-    content: decryptContent(note.content),
+    source: 'note',
+    title: decryptTitle(note.title ?? undefined),
+    content: decryptContent(note.content || ''),
     remindAt,
     repeat: (note.remind_repeat as ReminderRepeat) || 'none',
     state: (note.remind_state as ReminderState) || 'pending',
-    firedAt: (note.remind_fired_at as string | null) || null,
+    firedAt: note.remind_fired_at || null,
+    snoozedUntil,
+    effectiveAt: effectiveReminderTime(remindAt, snoozedUntil) || remindAt,
+  };
+};
+
+const mapStandaloneReminder = (reminder: ReminderRow): ReminderItem => {
+  const remindAt = reminder.remind_at;
+  const snoozedUntil = reminder.remind_snoozed_until || null;
+
+  return {
+    id: reminder.id,
+    noteId: null,
+    source: 'standalone',
+    title: decryptTitle(reminder.title ?? undefined),
+    content: '',
+    remindAt,
+    repeat: (reminder.remind_repeat as ReminderRepeat) || 'none',
+    state: (reminder.remind_state as ReminderState) || 'pending',
+    firedAt: reminder.remind_fired_at || null,
     snoozedUntil,
     effectiveAt: effectiveReminderTime(remindAt, snoozedUntil) || remindAt,
   };
@@ -62,23 +115,39 @@ export const getReminders = async (): Promise<ReminderItem[]> => {
   try {
     const userId = await getUserId();
 
-    const { data, error } = await supabase
-      .from('notes')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('archived', false)
-      .is('deleted_at', null)
-      .not('remind_at', 'is', null);
+    const [notesResult, standaloneResult] = await Promise.all([
+      supabase
+        .from('notes')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('archived', false)
+        .is('deleted_at', null)
+        .not('remind_at', 'is', null),
+      supabase
+        .from('reminders')
+        .select('*')
+        .eq('user_id', userId),
+    ]);
 
-    if (error) {
-      if (isMissingColumnError(error)) {
-        console.warn(MISSING_REMINDER_SETUP_MESSAGE);
-        return [];
-      }
-      throw error;
+    const items: ReminderItem[] = [];
+
+    if (notesResult.error) {
+      if (!isMissingColumnError(notesResult.error)) throw notesResult.error;
+      console.warn(MISSING_REMINDER_SETUP_MESSAGE);
+    } else {
+      items.push(...(notesResult.data || []).map(mapReminder));
     }
 
-    return (data || []).map(mapReminder);
+    if (standaloneResult.error) {
+      if (!isMissingTableError(standaloneResult.error)) throw standaloneResult.error;
+      console.warn(MISSING_STANDALONE_REMINDER_SETUP_MESSAGE);
+    } else {
+      items.push(...(standaloneResult.data || []).map(mapStandaloneReminder));
+    }
+
+    return items.sort(
+      (a, b) => new Date(a.effectiveAt).getTime() - new Date(b.effectiveAt).getTime()
+    );
   } catch (error) {
     console.error('Error fetching reminders:', error);
     return [];
@@ -111,6 +180,37 @@ const updateReminderColumns = async (
   }
 };
 
+const updateStandaloneColumns = async (
+  id: string,
+  updates: Record<string, unknown>
+): Promise<void> => {
+  const userId = await getUserId();
+
+  const { error } = await supabase
+    .from('reminders')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('user_id', userId);
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      throw new Error(MISSING_STANDALONE_REMINDER_SETUP_MESSAGE);
+    }
+    throw error;
+  }
+};
+
+const updateReminderRecord = async (
+  reminder: ReminderItem,
+  updates: Record<string, unknown>
+): Promise<void> => {
+  if (reminder.source === 'note' && reminder.noteId) {
+    await updateReminderColumns(reminder.noteId, updates);
+    return;
+  }
+  await updateStandaloneColumns(reminder.id, updates);
+};
+
 /** Set (or replace) the reminder on a note. */
 export const setReminder = async (
   noteId: string,
@@ -126,6 +226,68 @@ export const setReminder = async (
   });
 };
 
+/** Create a reminder that is not attached to a note. */
+export const createStandaloneReminder = async (
+  title: string,
+  remindAt: string,
+  repeat: ReminderRepeat = 'none'
+): Promise<void> => {
+  const userId = await getUserId();
+  const trimmedTitle = title.trim();
+
+  const { error } = await supabase
+    .from('reminders')
+    .insert([{
+      user_id: userId,
+      title: trimmedTitle ? encryptTitle(trimmedTitle) : null,
+      remind_at: remindAt,
+      remind_repeat: repeat,
+      remind_state: 'pending',
+    }]);
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      throw new Error(MISSING_STANDALONE_REMINDER_SETUP_MESSAGE);
+    }
+    throw error;
+  }
+};
+
+/** Edit a reminder's text, time, or repeat setting. */
+export const updateReminder = async (
+  reminder: ReminderItem,
+  updates: ReminderUpdate
+): Promise<void> => {
+  if (reminder.source === 'note') {
+    if (!updates.remindAt) return;
+    await setReminder(reminder.noteId as string, updates.remindAt, updates.repeat ?? reminder.repeat);
+    return;
+  }
+
+  const payload: Record<string, unknown> = {};
+
+  if (updates.title !== undefined) {
+    const trimmedTitle = updates.title.trim();
+    payload.title = trimmedTitle ? encryptTitle(trimmedTitle) : null;
+  }
+
+  if (updates.remindAt !== undefined) {
+    payload.remind_at = updates.remindAt;
+    payload.remind_state = 'pending';
+    payload.remind_fired_at = null;
+    payload.remind_snoozed_until = null;
+  }
+
+  if (updates.repeat !== undefined) {
+    payload.remind_repeat = updates.repeat;
+    payload.remind_state = 'pending';
+    payload.remind_fired_at = null;
+    payload.remind_snoozed_until = null;
+  }
+
+  await updateStandaloneColumns(reminder.id, payload);
+};
+
 /** Remove the reminder from a note. */
 export const clearReminder = async (noteId: string): Promise<void> => {
   await updateReminderColumns(noteId, {
@@ -137,18 +299,45 @@ export const clearReminder = async (noteId: string): Promise<void> => {
   });
 };
 
+/** Delete a standalone reminder row. */
+export const deleteStandaloneReminder = async (id: string): Promise<void> => {
+  const userId = await getUserId();
+
+  const { error } = await supabase
+    .from('reminders')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      throw new Error(MISSING_STANDALONE_REMINDER_SETUP_MESSAGE);
+    }
+    throw error;
+  }
+};
+
+/** Remove any reminder, whether it belongs to a note or stands alone. */
+export const removeReminder = async (reminder: ReminderItem): Promise<void> => {
+  if (reminder.source === 'note' && reminder.noteId) {
+    await clearReminder(reminder.noteId);
+    return;
+  }
+  await deleteStandaloneReminder(reminder.id);
+};
+
 /** Record that a reminder just fired. */
-export const markFired = async (noteId: string): Promise<void> => {
-  await updateReminderColumns(noteId, {
+export const markFired = async (reminder: ReminderItem): Promise<void> => {
+  await updateReminderRecord(reminder, {
     remind_fired_at: new Date().toISOString(),
     remind_snoozed_until: null,
   });
 };
 
 /** Push a reminder back by the given number of minutes. */
-export const snoozeReminder = async (noteId: string, minutes: number): Promise<void> => {
+export const snoozeReminder = async (reminder: ReminderItem, minutes: number): Promise<void> => {
   const until = new Date(Date.now() + minutes * 60 * 1000).toISOString();
-  await updateReminderColumns(noteId, {
+  await updateReminderRecord(reminder, {
     remind_snoozed_until: until,
   });
 };
@@ -160,7 +349,7 @@ export const snoozeReminder = async (noteId: string, minutes: number): Promise<v
 export const completeReminder = async (reminder: ReminderItem): Promise<void> => {
   if (reminder.repeat !== 'none') {
     const next = nextOccurrence(reminder.remindAt, reminder.repeat);
-    await updateReminderColumns(reminder.noteId, {
+    await updateReminderRecord(reminder, {
       remind_at: next,
       remind_state: 'pending',
       remind_fired_at: null,
@@ -169,7 +358,7 @@ export const completeReminder = async (reminder: ReminderItem): Promise<void> =>
     return;
   }
 
-  await updateReminderColumns(reminder.noteId, {
+  await updateReminderRecord(reminder, {
     remind_state: 'completed',
     remind_fired_at: new Date().toISOString(),
     remind_snoozed_until: null,
@@ -180,7 +369,7 @@ export const completeReminder = async (reminder: ReminderItem): Promise<void> =>
 export const dismissReminder = async (reminder: ReminderItem): Promise<void> => {
   if (reminder.repeat !== 'none') {
     const next = nextOccurrence(reminder.remindAt, reminder.repeat);
-    await updateReminderColumns(reminder.noteId, {
+    await updateReminderRecord(reminder, {
       remind_at: next,
       remind_state: 'pending',
       remind_fired_at: null,
@@ -189,7 +378,7 @@ export const dismissReminder = async (reminder: ReminderItem): Promise<void> => 
     return;
   }
 
-  await updateReminderColumns(reminder.noteId, {
+  await updateReminderRecord(reminder, {
     remind_state: 'dismissed',
     remind_fired_at: new Date().toISOString(),
     remind_snoozed_until: null,

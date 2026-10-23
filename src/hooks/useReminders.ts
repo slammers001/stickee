@@ -2,11 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   clearReminder,
   completeReminder,
+  createStandaloneReminder,
   dismissReminder,
   getReminders,
+  removeReminder as removeReminderService,
   setReminder,
   snoozeReminder,
+  updateReminder as updateReminderService,
   type ReminderItem,
+  type ReminderUpdate,
 } from '@/services/reminderService';
 import { isOverdue, isToday } from '@/utils/reminderTime';
 import type { ReminderRepeat } from '@/types/note';
@@ -42,7 +46,7 @@ export const useReminders = () => {
   const remindersByNoteId = useMemo(() => {
     const map: Record<string, ReminderItem> = {};
     reminders.forEach((reminder) => {
-      map[reminder.noteId] = reminder;
+      if (reminder.noteId) map[reminder.noteId] = reminder;
     });
     return map;
   }, [reminders]);
@@ -52,13 +56,28 @@ export const useReminders = () => {
     await refresh();
   };
 
-  const removeReminder = async (noteId: string) => {
+  const clearNoteReminder = async (noteId: string) => {
     await clearReminder(noteId);
     await refresh();
   };
 
+  const addReminder = async (title: string, remindAt: string, repeat: ReminderRepeat = 'none') => {
+    await createStandaloneReminder(title, remindAt, repeat);
+    await refresh();
+  };
+
+  const editReminder = async (reminder: ReminderItem, updates: ReminderUpdate) => {
+    await updateReminderService(reminder, updates);
+    await refresh();
+  };
+
+  const removeReminder = async (reminder: ReminderItem) => {
+    await removeReminderService(reminder);
+    await refresh();
+  };
+
   const snooze = async (reminder: ReminderItem, minutes: number) => {
-    await snoozeReminder(reminder.noteId, minutes);
+    await snoozeReminder(reminder, minutes);
     await refresh();
   };
 
@@ -80,6 +99,9 @@ export const useReminders = () => {
     loading,
     refresh,
     saveReminder,
+    clearNoteReminder,
+    addReminder,
+    editReminder,
     removeReminder,
     snooze,
     complete,

@@ -31,7 +31,7 @@ export const useReminderScheduler = ({ onFired }: UseReminderSchedulerOptions = 
 
     const fireReminder = async (reminder: ReminderItem) => {
       try {
-        await markFired(reminder.noteId);
+        await markFired(reminder);
       } catch (error) {
         console.error('Error marking reminder as fired:', error);
       }
