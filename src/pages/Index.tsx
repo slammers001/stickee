@@ -57,6 +57,10 @@ import type { ReminderItem } from "@/services/reminderService";
 
 // Using the Note interface from types/note.ts
 
+// The PostHog product tour's first step anchors to this id, so exactly one
+// "new note" control must carry it on every signed-in screen.
+const NEW_NOTE_TOUR_TARGET_ID = "stickee-big-icon";
+
 export default function Index() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
@@ -768,6 +772,8 @@ export default function Index() {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
+  const showEmptyStateIcon = activeTab === "notes" && filteredNotes.length === 0 && !searchQuery;
+
   return (
     <div className="min-h-screen bg-background flex">
       <AppSidebar
@@ -912,6 +918,7 @@ export default function Index() {
                 }}
                 disabled={!termsAgreed}
                 className="bg-primary hover:bg-primary/90 flex-shrink-0"
+                id={showEmptyStateIcon ? undefined : NEW_NOTE_TOUR_TARGET_ID}
               >
                 <IconPlus stroke={2} className="h-5 w-5" />
               </Button>
@@ -966,6 +973,7 @@ export default function Index() {
         {filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
             <img 
+              id={showEmptyStateIcon ? NEW_NOTE_TOUR_TARGET_ID : undefined}
               src={searchQuery ? "./Stickee-Not-Found.png" : "./stickee.png"} 
               alt={searchQuery ? "No notes found" : "Stickee"} 
               className="mb-6 max-w-sm h-auto object-contain transition-all duration-200 hover:scale-110 hover:rotate-[-10deg] cursor-pointer"
