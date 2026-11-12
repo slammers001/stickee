@@ -214,8 +214,15 @@ export const SettingsDialog = ({ open, onOpenChange, onFontChange }: SettingsDia
         } catch (error) {
           console.error('Failed to sync font settings to Supabase:', error);
         }
+        return;
       }
-      // If settings exist, we keep current localStorage values as they're more recent
+      // Remote settings exist: restore bookmarks locally so they survive a
+      // reload (the local mirror is the one that gets lost).
+      const remoteFavorites = Array.isArray(settings.favorite_fonts) ? settings.favorite_fonts : [];
+      if (remoteFavorites.length > currentFavorites.length) {
+        setFavoriteFonts(remoteFavorites as FontFamily[]);
+        localStorage.setItem("stickee-favorite-fonts", JSON.stringify(remoteFavorites));
+      }
     };
     
     syncWithSupabase();
@@ -269,6 +276,9 @@ export const SettingsDialog = ({ open, onOpenChange, onFontChange }: SettingsDia
         : [...favoriteFonts, font];
     
     setFavoriteFonts(newFavorites);
+    // Keep the local mirror in sync so bookmarks survive a reload even when the
+    // Supabase write is unavailable.
+    localStorage.setItem("stickee-favorite-fonts", JSON.stringify(newFavorites));
     
     // Save to Supabase
     try {
@@ -538,20 +548,18 @@ export const SettingsDialog = ({ open, onOpenChange, onFontChange }: SettingsDia
               <>
                 <div className="space-y-4">
                   <div className="text-center space-y-4 p-6 border rounded-lg bg-muted/50">
-                    <h2 className="text-xl font-semibold text-foreground">Welcome to Stickee!</h2>
+                    <h2 className="text-xl font-semibold text-foreground">Terms of Service</h2>
                     <p className="text-sm text-muted-foreground">
-                      Please review and agree to our Terms of Service to continue using the application.
+                      You have already agreed to the Stickee Terms of Service. You can review them anytime below, and withdraw your agreement if you change your mind.
                     </p>
                     
                     <div className="flex flex-col space-y-3 max-w-sm mx-auto">
                       <Button 
-                        onClick={() => {
-                          toast.success("Terms already agreed!");
-                        }}
+                        onClick={() => setShowTermsModal(true)}
+                        variant="outline"
                         className="w-full"
-                        disabled
                       >
-                        I Agree to Terms of Service
+                        View Terms
                       </Button>
                       
                       <Button 
@@ -561,19 +569,7 @@ export const SettingsDialog = ({ open, onOpenChange, onFontChange }: SettingsDia
                       >
                         Disagree to Terms of Service
                       </Button>
-                      
-                      <Button 
-                        onClick={() => setShowTermsModal(true)}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        View Terms
-                      </Button>
                     </div>
-                    
-                    <p className="text-xs text-muted-foreground text-center">
-                      You have already agreed to the terms to use Stickee. You can review the terms anytime.
-                    </p>
                   </div>
                 </div>
               </>
@@ -673,9 +669,8 @@ export const SettingsDialog = ({ open, onOpenChange, onFontChange }: SettingsDia
             <p className="text-xs text-muted-foreground text-center">
               By using this app you agree to{" "}
               <button
-                onClick={() => {
-                  setActiveTab("terms");
-                }}
+                type="button"
+                onClick={() => setShowTermsModal(true)}
                 className="text-xs underline hover:text-foreground transition-colors"
               >
                 Terms of Service

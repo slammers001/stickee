@@ -8,13 +8,13 @@
 
 ## 1. Acceptance of Terms
 
-By downloading, installing, or using Stickee ("the Application"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not install or use the Application.
+By accessing or using Stickee ("the Application"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not access or use the Application.
 
 ---
 
 ## 2. Description of Service
 
-Stickee is a desktop application for creating, organizing, and managing digital sticky notes and tasks. The Application is provided "as is" for personal and non-commercial use.
+Stickee is a web application, accessed through your web browser, for creating, organizing, and managing digital sticky notes and tasks. The Application is provided "as is" for personal and non-commercial use.
 
 ---
 
@@ -29,16 +29,16 @@ Slammers001 grants you a limited, non-exclusive, non-transferable, revocable lic
 
 ---
 
-## 4. System Requirements and Compatibility
+## 4. Compatibility
 
-Stickee v0.1.0 is currently available only for Windows operating systems. You are responsible for ensuring your system meets the minimum requirements for installation and operation.
+Stickee is a browser-based application and runs on the operating system of your choice — Windows, macOS, Linux, or mobile — as long as you use a current, supported web browser. You are responsible for keeping your browser and device up to date so the Application can run correctly.
 
 ---
 
 ## 5. Data and Privacy
 
-### 5.1 Local Storage
-Stickee stores all note data locally on your device. No data is transmitted to external servers unless explicitly configured by you for backup purposes.
+### 5.1 Your Data
+Stickee stores your notes in your Stickee account, and your interface preferences (such as font and theme choices) in your browser's local storage. Your notes stay tied to your account and are not shared with other users.
 
 ### 5.2 Data Responsibility
 You are solely responsible for:
@@ -96,8 +96,8 @@ These Terms may be updated periodically. Continued use of Stickee after changes 
 Your license to use Stickee terminates automatically if you:
 
 - Fail to comply with these Terms
-- Destroy all copies of the Application
-- Request removal from your system
+- Stop using the Application and delete your account
+- Request removal of your account
 
 ---
 
