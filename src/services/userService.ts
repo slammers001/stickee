@@ -64,10 +64,11 @@ export const getCurrentUser = async () => {
   const { data: { session } } = await supabase.auth.getSession();
   if (session?.user) {
     const { user } = session;
-    const name = user.user_metadata?.name || user.email || user.id.substring(0, 8);
+    const isGuest = user.user_metadata?.is_guest === true || (user.email ?? '').endsWith('@guest.stickee.local');
+    const name = user.user_metadata?.name || user.user_metadata?.full_name || (isGuest ? 'Guest' : user.email) || user.id.substring(0, 8);
     return {
       id: user.id,
-      isGuest: false,
+      isGuest,
       displayName: name
     };
   }

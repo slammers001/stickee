@@ -30,6 +30,12 @@ const handleSupabaseError = (error: any, context: string) => {
   throw error;
 };
 
+export const GUEST_EMAIL_DOMAIN = 'guest.stickee.local';
+export const GUEST_EMAIL_DISPLAY = 'YOU HAVE A GUEST ACCOUNT';
+
+export const isGuestUser = (user: { email?: string | null; user_metadata?: Record<string, any> } | null | undefined) =>
+  !!user && (user.user_metadata?.is_guest === true || (user.email ?? '').endsWith(`@${GUEST_EMAIL_DOMAIN}`));
+
 export const signUpWithEmail = async (email: string, password: string, fullName?: string) => {
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -50,6 +56,38 @@ export const signInWithEmail = async (email: string, password: string) => {
   });
   
   if (error) handleSupabaseError(error, 'signInWithEmail');
+  return data;
+};
+
+export const signUpAsGuest = async (name: string, password: string) => {
+  const trimmedName = name.trim();
+  const guestEmail = `guest-${crypto.randomUUID()}@${GUEST_EMAIL_DOMAIN}`;
+
+  const { data, error } = await supabase.auth.signUp({
+    email: guestEmail,
+    password,
+    options: {
+      data: {
+        name: trimmedName,
+        full_name: trimmedName,
+        is_guest: true,
+      },
+    },
+  });
+
+  if (error) handleSupabaseError(error, 'signUpAsGuest');
+
+  // Some Supabase setups require email confirmation and won't create a session
+  // on sign-up. Try to sign in immediately so guest access is seamless.
+  if (!data.session) {
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email: guestEmail,
+      password,
+    });
+    if (signInError) handleSupabaseError(signInError, 'signUpAsGuest:signIn');
+    return signInData;
+  }
+
   return data;
 };
 

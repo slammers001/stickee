@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { signUpWithEmail, signInWithEmail } from '@/lib/supabase';
+import { signUpWithEmail, signInWithEmail, signUpAsGuest } from '@/lib/supabase';
 import { saveProfile } from '@/services/profileService';
-import { IconUser, IconMail, IconLock, IconArrowLeft } from '@tabler/icons-react';
+import { IconUser, IconMail, IconLock } from '@tabler/icons-react';
 
-type AuthMode = 'signin' | 'signup';
+type AuthMode = 'signin' | 'signup' | 'guest';
 
 export const Auth = () => {
   const [mode, setMode] = useState<AuthMode>('signin');
@@ -17,22 +17,25 @@ export const Auth = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
+  const resetFeedback = () => {
+    setError('');
+    setMessage('');
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
+    resetFeedback();
 
     try {
       const result = await signUpWithEmail(email, password, name.trim());
       if (result?.user) {
-        // Store name in the profile; the avatar is assigned from Supabase on first load
         await saveProfile(result.user.id, {
           name: name.trim(),
           email: email,
           avatarColor: '',
         });
-        
+
         if (result.session) {
           setMessage('');
         } else {
@@ -51,8 +54,7 @@ export const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
+    resetFeedback();
 
     try {
       await signInWithEmail(email, password);
@@ -63,6 +65,39 @@ export const Auth = () => {
       setLoading(false);
     }
   };
+
+  const handleGuest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    resetFeedback();
+
+    try {
+      const trimmedName = name.trim();
+      const result = await signUpAsGuest(trimmedName, password);
+      if (result?.user) {
+        await saveProfile(result.user.id, {
+          name: trimmedName,
+          email: '',
+          avatarColor: '',
+        });
+      }
+    } catch (err: any) {
+      console.error('Guest sign in error:', err);
+      setError(err.message || 'Failed to start guest session. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit =
+    mode === 'signup' ? handleSignUp : mode === 'guest' ? handleGuest : handleSignIn;
+
+  const description =
+    mode === 'signin'
+      ? 'Sign in to access your sticky notes'
+      : mode === 'signup'
+        ? 'Create an account to get started'
+        : 'Enter a name and password to use Stickee as a guest';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -76,13 +111,11 @@ export const Auth = () => {
           <h1 className="text-4xl font-bold text-foreground font-handwriting">
             Stickee
           </h1>
-          <p className="mt-3 text-muted-foreground">
-            {mode === 'signin' ? 'Sign in to access your sticky notes' : 'Create an account to get started'}
-          </p>
+          <p className="mt-3 text-muted-foreground">{description}</p>
         </div>
 
-        <form onSubmit={mode === 'signup' ? handleSignUp : handleSignIn} className="space-y-4">
-          {mode === 'signup' && (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {(mode === 'signup' || mode === 'guest') && (
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <div className="relative">
@@ -102,23 +135,25 @@ export const Auth = () => {
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <div className="relative">
-              <IconMail stroke={2} className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="pl-10"
-              />
+          {mode !== 'guest' && (
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <IconMail stroke={2} className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="pl-10"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
@@ -158,35 +193,93 @@ export const Auth = () => {
             size="lg"
           >
             {loading
-              ? (mode === 'signup' ? 'Creating account...' : 'Signing in...')
-              : (mode === 'signup' ? 'Sign Up' : 'Sign In')
-            }
+              ? mode === 'signup'
+                ? 'Creating account...'
+                : mode === 'guest'
+                  ? 'Starting guest session...'
+                  : 'Signing in...'
+              : mode === 'signup'
+                ? 'Sign Up'
+                : mode === 'guest'
+                  ? 'Continue as Guest'
+                  : 'Sign In'}
           </Button>
         </form>
 
-        <div className="text-center">
-          {mode === 'signin' ? (
-            <p className="text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <button
-                type="button"
-                onClick={() => { setMode('signup'); setError(''); setMessage(''); }}
-                className="text-primary hover:underline font-medium"
-              >
-                Sign Up
-              </button>
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Already have an account?{' '}
-              <button
-                type="button"
-                onClick={() => { setMode('signin'); setError(''); setMessage(''); }}
-                className="text-primary hover:underline font-medium"
-              >
-                Sign In
-              </button>
-            </p>
+        <div className="text-center space-y-2">
+          {mode === 'signin' && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Don't have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setMode('signup'); resetFeedback(); }}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Sign Up
+                </button>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                or{' '}
+                <button
+                  type="button"
+                  onClick={() => { setMode('guest'); resetFeedback(); }}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Continue as Guest
+                </button>
+              </p>
+            </>
+          )}
+
+          {mode === 'signup' && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setMode('signin'); resetFeedback(); }}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Sign In
+                </button>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                or{' '}
+                <button
+                  type="button"
+                  onClick={() => { setMode('guest'); resetFeedback(); }}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Continue as Guest
+                </button>
+              </p>
+            </>
+          )}
+
+          {mode === 'guest' && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setMode('signin'); resetFeedback(); }}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Sign In
+                </button>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Want a regular account?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setMode('signup'); resetFeedback(); }}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Sign Up
+                </button>
+              </p>
+            </>
           )}
         </div>
       </div>
