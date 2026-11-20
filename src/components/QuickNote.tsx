@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
+import { NOTE_CONTENT_LIMIT } from "@/lib/utils";
 
 interface QuickNoteProps {
   isOpen: boolean;
@@ -12,8 +13,8 @@ export function QuickNote({ isOpen, onClose }: QuickNoteProps) {
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
-    // Limit to 1500 characters
-    if (value.length <= 1500) {
+    // Limit to NOTE_CONTENT_LIMIT characters
+    if (value.length <= NOTE_CONTENT_LIMIT) {
       setContent(value);
     }
   };
@@ -70,7 +71,7 @@ export function QuickNote({ isOpen, onClose }: QuickNoteProps) {
           <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Ctrl+Enter</kbd> to save
         </div>
         <div className="px-4 pb-2 text-xs text-muted-foreground">
-          {content.length}/1500 characters
+          {content.length}/{NOTE_CONTENT_LIMIT} characters
         </div>
       </div>
     </div>

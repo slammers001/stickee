@@ -33,14 +33,14 @@ export const TermsOfService = ({ isOpen, onClose, onAgree }: TermsOfServiceProps
             <section className="mb-8">
               <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>1. Acceptance of Terms</h3>
               <p className="text-sm">
-                By downloading, installing, or using Stickee ("the Application"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not install or use the Application.
+                By accessing or using Stickee ("the Application"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not access or use the Application.
               </p>
             </section>
 
             <section className="mb-8">
               <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>2. Description of Service</h3>
               <p className="text-sm">
-                Stickee is a desktop application for creating, organizing, and managing digital sticky notes and tasks. The Application is provided "as is" for personal and non-commercial use.
+                Stickee is a web application, accessed through your web browser, for creating, organizing, and managing digital sticky notes and tasks. The Application is provided "as is" for personal and non-commercial use.
               </p>
             </section>
 
@@ -58,9 +58,9 @@ export const TermsOfService = ({ isOpen, onClose, onAgree }: TermsOfServiceProps
             </section>
 
             <section className="mb-8">
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>4. System Requirements and Compatibility</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>4. Compatibility</h3>
               <p className="text-sm">
-                Stickee v0.1.0 is currently available only for Windows operating systems. You are responsible for ensuring your system meets the minimum requirements for installation and operation.
+                Stickee is a browser-based application and runs on the operating system of your choice — Windows, macOS, Linux, or mobile — as long as you use a current, supported web browser. You are responsible for keeping your browser and device up to date so the Application can run correctly.
               </p>
             </section>
 
@@ -68,9 +68,9 @@ export const TermsOfService = ({ isOpen, onClose, onAgree }: TermsOfServiceProps
               <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>5. Data and Privacy</h3>
               <div className="space-y-3">
                 <div>
-                  <h4 className="font-semibold text-sm" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>5.1 Local Storage</h4>
+                  <h4 className="font-semibold text-sm" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>5.1 Your Data</h4>
                   <p className="text-sm">
-                    Stickee stores all note data locally on your device. No data is transmitted to external servers unless explicitly configured by you for backup purposes.
+                    Stickee stores your notes in your Stickee account, and your interface preferences (such as font and theme choices) in your browser's local storage. Your notes stay tied to your account and are not shared with other users.
                   </p>
                 </div>
                 <div>
@@ -152,8 +152,8 @@ export const TermsOfService = ({ isOpen, onClose, onAgree }: TermsOfServiceProps
               </p>
               <ul className="list-disc list-inside text-sm space-y-1">
                 <li>Fail to comply with these Terms</li>
-                <li>Destroy all copies of the Application</li>
-                <li>Request removal from your system</li>
+                <li>Stop using the Application and delete your account</li>
+                <li>Request removal of your account</li>
               </ul>
             </section>
 

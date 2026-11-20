@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, Mic, MicOff } from "lucide-react";
 import { NoteStatus } from "./StickyNote";
 import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
-import { cn, limitInsertedText } from "@/lib/utils";
+import { cn, limitInsertedText, NOTE_CONTENT_LIMIT, NOTE_TITLE_LIMIT } from "@/lib/utils";
 import { toast } from "sonner";
 import { soundEffects } from "@/utils/soundEffects";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
@@ -87,8 +87,8 @@ export const NoteDetailDialog = ({
   } = useVoiceRecognition();
 
   const hasUnsavedChanges = 
-    title.trim() !== (initialTitle || "") ||
-    content.trim() !== (note?.content || "") ||
+    title.trim() !== (initialTitle || "").trim() ||
+    content.trim() !== (note?.content || "").trim() ||
     status !== initialStatus ||
     color !== initialColor;
 
@@ -98,6 +98,10 @@ export const NoteDetailDialog = ({
       return;
     }
     onOpenChange(newOpen);
+  };
+
+  const handleCancel = () => {
+    handleOpenChange(false);
   };
 
   const handleSaveAndClose = () => {
@@ -111,6 +115,17 @@ export const NoteDetailDialog = ({
 
   const handleDiscardAndClose = () => {
     setShowUnsavedDialog(false);
+    // Restore the saved values right away so the discarded edits are gone even
+    // if the dialog is reopened before its state would be reset.
+    if (note) {
+      setTitle(note.title || "");
+      setContent(note.content);
+      setStatus(note.status);
+      setColor(note.color);
+      setInitialStatus(note.status);
+      setInitialColor(note.color);
+      setInitialTitle(note.title || "");
+    }
     onOpenChange(false);
   };
 
@@ -194,20 +209,20 @@ export const NoteDetailDialog = ({
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = e.target;
-    // Limit to 1500 characters
-    const { text, removed } = limitInsertedText(content, textarea.value, textarea.selectionEnd, 1500);
+    // Limit to NOTE_CONTENT_LIMIT characters
+    const { text, removed } = limitInsertedText(content, textarea.value, textarea.selectionEnd, NOTE_CONTENT_LIMIT);
     setContent(text);
     if (removed > 0) {
       const caret = textarea.selectionEnd - removed;
       requestAnimationFrame(() => textarea.setSelectionRange(caret, caret));
-      toast.info("Notes can have a maximum of 1500 characters", { id: "note-content-limit" });
+      toast.info(`Notes can have a maximum of ${NOTE_CONTENT_LIMIT} characters`, { id: "note-content-limit" });
     }
   };
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Limit to 20 characters
-    if (value.length <= 20) {
+    // Limit to NOTE_TITLE_LIMIT characters
+    if (value.length <= NOTE_TITLE_LIMIT) {
       setTitle(value);
     }
   };
@@ -226,9 +241,11 @@ export const NoteDetailDialog = ({
     }
   };
 
-  // Update local state when note prop changes
+  // Reset local state whenever the note changes (a different note is opened) or
+  // the dialog is reopened, so discarded edits never leak into the next session.
+  const noteId = note?.id;
   useEffect(() => {
-    if (note) {
+    if (note && open) {
       setTitle(note.title || "");
       setContent(note.content);
       setStatus(note.status);
@@ -237,7 +254,8 @@ export const NoteDetailDialog = ({
       setInitialColor(note.color);
       setInitialTitle(note.title || "");
     }
-  }, [note]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noteId, open]);
 
   // Keep the reminder field in sync with the saved reminder
   useEffect(() => {
@@ -291,7 +309,7 @@ export const NoteDetailDialog = ({
               className="font-title text-lg dark:text-white dark:placeholder:text-gray-400 max-w-md"
             />
             <div className="text-xs text-muted-foreground mt-1">
-              {title.length}/20 characters
+              {title.length}/{NOTE_TITLE_LIMIT} characters
             </div>
           </div>
           <div className="order-2 sm:order-3">
@@ -350,7 +368,7 @@ export const NoteDetailDialog = ({
               placeholder="Type your note here..."
             />
             <p className="text-xs text-muted-foreground mt-2">
-              Press Ctrl+Enter to save quickly • Maximum 1500 characters
+              Press Ctrl+Enter to save quickly • Maximum {NOTE_CONTENT_LIMIT} characters
             </p>
             
             {/* Voice Controls */}
@@ -418,7 +436,7 @@ export const NoteDetailDialog = ({
               </div>
             )}
             <div className="text-xs text-muted-foreground mt-1">
-              {content.length}/1500 characters
+              {content.length}/{NOTE_CONTENT_LIMIT} characters
             </div>
           </div>
           <div className="order-4">
@@ -450,7 +468,7 @@ export const NoteDetailDialog = ({
           >
             <Trash2 className="h-5 w-5" />
           </Button>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={!content.trim() && title === initialTitle && status === initialStatus && color === initialColor}>

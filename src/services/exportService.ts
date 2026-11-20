@@ -118,16 +118,97 @@ export const downloadExportFile = (data: ExportData, filename?: string) => {
   URL.revokeObjectURL(url);
 };
 
+/**
+ * Error whose message is already safe to show to the user (unlike generic
+ * "check the file format" failures).
+ */
+export class ImportError extends Error {}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * Validates a parsed export file. Rejects malformed notes/items (e.g.
+ * `notes: [{}]`) so an import can never report success while adding nothing.
+ */
+export const validateImportData = (data: unknown): ExportData => {
+  if (!isRecord(data)) {
+    throw new ImportError('Invalid export file format');
+  }
+
+  if (!isRecord(data.user)) {
+    throw new ImportError('Invalid export file format: missing "user"');
+  }
+
+  if (!Array.isArray(data.notes)) {
+    throw new ImportError('Invalid export file format: "notes" must be a list');
+  }
+
+  if (!Array.isArray(data.checklistItems)) {
+    throw new ImportError('Invalid export file format: "checklistItems" must be a list');
+  }
+
+  if (data.reactions !== undefined && !Array.isArray(data.reactions)) {
+    throw new ImportError('Invalid export file format: "reactions" must be a list');
+  }
+
+  data.notes.forEach((note, index) => {
+    if (!isRecord(note)) {
+      throw new ImportError(`Invalid export file format: note #${index + 1} is not an object`);
+    }
+    if (typeof note.content !== 'string') {
+      throw new ImportError(`Invalid export file format: note #${index + 1} is missing "content"`);
+    }
+    if (note.title !== undefined && note.title !== null && typeof note.title !== 'string') {
+      throw new ImportError(`Invalid export file format: note #${index + 1} has an invalid "title"`);
+    }
+    if (note.color !== undefined && note.color !== null && typeof note.color !== 'string') {
+      throw new ImportError(`Invalid export file format: note #${index + 1} has an invalid "color"`);
+    }
+    if (note.status !== undefined && note.status !== null && typeof note.status !== 'string') {
+      throw new ImportError(`Invalid export file format: note #${index + 1} has an invalid "status"`);
+    }
+    if (note.pinned !== undefined && note.pinned !== null && typeof note.pinned !== 'boolean') {
+      throw new ImportError(`Invalid export file format: note #${index + 1} has an invalid "pinned"`);
+    }
+  });
+
+  data.checklistItems.forEach((item, index) => {
+    if (!isRecord(item)) {
+      throw new ImportError(`Invalid export file format: checklist item #${index + 1} is not an object`);
+    }
+    if (typeof item.text !== 'string' || item.text.trim().length === 0) {
+      throw new ImportError(`Invalid export file format: checklist item #${index + 1} is missing "text"`);
+    }
+    if (item.completed !== undefined && item.completed !== null && typeof item.completed !== 'boolean') {
+      throw new ImportError(`Invalid export file format: checklist item #${index + 1} has an invalid "completed"`);
+    }
+  });
+
+  return data as unknown as ExportData;
+};
+
 export const importUserData = async (file: File): Promise<void> => {
+  const failures: string[] = [];
+  let notesFailed = 0;
+  let checklistFailed = 0;
+  let totalNotes = 0;
+  let totalChecklistItems = 0;
+
   try {
     const text = await file.text();
-    const data: ExportData = JSON.parse(text);
-    
-    // Validate the data structure
-    if (!data.user || !data.notes || !data.checklistItems) {
-      throw new Error('Invalid export file format');
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      throw new Error('Invalid JSON file');
     }
-    
+
+    const data = validateImportData(parsed);
+    totalNotes = data.notes.length;
+    totalChecklistItems = data.checklistItems.length;
+
     const user = await getCurrentUser();
     
     // Import notes
@@ -148,57 +229,58 @@ export const importUserData = async (file: File): Promise<void> => {
         }
       } catch (error) {
         console.warn(`Failed to import note ${note.id}:`, error);
+        failures.push(`note "${note.title || note.id || 'untitled'}"`);
+        notesFailed += 1;
       }
     }
     
-    // Import checklist items
+    // Import checklist items, preserving their completion status
     for (const item of data.checklistItems) {
       try {
-        await checklistService.addItem(user.id, item.text);
-        // If the item was completed, toggle it
-        if (item.completed) {
-          // This is a simplified approach - in a real implementation,
-          // you'd want to get the newly created item's ID and toggle it
-        }
+        await checklistService.addItem(user.id, item.text, item.completed === true);
       } catch (error) {
         console.warn(`Failed to import checklist item ${item.id}:`, error);
+        failures.push(`checklist item "${item.text}"`);
+        checklistFailed += 1;
       }
     }
     
     // Note: Reactions are not imported as they require the actual note IDs
     // and the emoji reaction service might not have add methods
     
+    if (failures.length > 0) {
+      throw new ImportError(
+        `Import incomplete: ${totalNotes - notesFailed}/${totalNotes} notes and ` +
+        `${totalChecklistItems - checklistFailed}/${totalChecklistItems} checklist items imported. ` +
+        `Failed: ${failures.join(', ')}`
+      );
+    }
   } catch (error) {
     console.error('Error importing user data:', error);
-    throw new Error('Failed to import data. Please check the file format.');
+    if (error instanceof ImportError) {
+      throw error;
+    }
+    if (error instanceof Error && error.message === 'Invalid JSON file') {
+      throw new ImportError(error.message);
+    }
+    throw new ImportError('Failed to import data. Please check the file format.');
   }
 };
 
-export const validateImportFile = (file: File): Promise<ExportData> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    
-    reader.onload = (e) => {
-      try {
-        const text = e.target?.result as string;
-        const data: ExportData = JSON.parse(text);
-        
-        // Validate the data structure
-        if (!data.user || !data.notes || !data.checklistItems) {
-          reject(new Error('Invalid export file format'));
-          return;
-        }
-        
-        resolve(data);
-      } catch (error) {
-        reject(new Error('Invalid JSON file'));
-      }
-    };
-    
-    reader.onerror = () => {
-      reject(new Error('Failed to read file'));
-    };
-    
-    reader.readAsText(file);
-  });
+export const validateImportFile = async (file: File): Promise<ExportData> => {
+  let text: string;
+  try {
+    text = await file.text();
+  } catch {
+    throw new ImportError('Failed to read file');
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new ImportError('Invalid JSON file');
+  }
+
+  return validateImportData(parsed);
 };

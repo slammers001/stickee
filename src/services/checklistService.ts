@@ -20,13 +20,15 @@ export const checklistService = {
     }
   },
 
-  async addItem(userId: string, text: string): Promise<ChecklistItem> {
+  async addItem(userId: string, text: string, completed = false): Promise<ChecklistItem> {
     try {
+      const now = new Date().toISOString();
       const newItem = {
         user_id: userId,
         text: text.trim(),
-        completed: false,
-        created_at: new Date().toISOString(),
+        completed,
+        created_at: now,
+        updated_at: now,
       };
 
       const { data, error } = await supabase
