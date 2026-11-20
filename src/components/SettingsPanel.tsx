@@ -14,6 +14,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { TermsOfService } from "@/components/TermsOfService";
 import { applyAppFont, getCssFontFamily, getFontDisplayName as getSharedFontDisplayName } from "@/utils/fonts";
 import { useAuth } from "@/contexts/AuthContext";
+import { GUEST_EMAIL_DISPLAY, isGuestUser } from "@/lib/supabase";
 
 type FontFamily = "serif" | "sans-serif" | "monospace" | 
   "abeezee" | "aclonica" | "advent-pro" | "tenali-ramakrishna" | "truculenta" | "ubuntu-sans-mono" | "unbounded" | "nova-mono" | "orbitron" | "bahianita" | "syne-mono" | "vt323" | "xanh-mono" | "cutive-mono" | "arbutus-slab" | "nixie-one" | "noticia-text" | "arvo" | "oi" | "oldenburg" | "orelega-one" | "nova-oval" | "atma" | "butcherman" | "cherry-bomb-one" |
@@ -35,8 +36,12 @@ interface SettingsPanelProps {
 export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
+  const isGuest = isGuestUser(user);
   // Signed-in users' email comes from their auth account, not the editable profile.
+  // Guest accounts show a placeholder instead of their internal email.
   const authEmail = user?.email ?? '';
+  const displayedEmail = isGuest ? GUEST_EMAIL_DISPLAY : authEmail;
+  const emailReadOnly = !!authEmail || isGuest;
   const [profile, setProfile] = useState<UserProfile>({ name: '', email: '', avatarColor: '#fff1bf' });
   const [profileName, setProfileName] = useState('');
   const [profileEmail, setProfileEmail] = useState('');
@@ -157,9 +162,9 @@ export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
     const updated: UserProfile = {
       ...profile,
       name: profileName,
-      // Keep the local mirror in sync with the auth account; only guests get an
-      // editable email.
-      email: authEmail || profileEmail,
+      // Keep the local mirror in sync with the auth account; guests and other
+      // signed-in users have non-editable emails.
+      email: emailReadOnly ? '' : profileEmail,
     };
     await saveProfile(user.id, updated);
     setProfile(updated);
@@ -269,19 +274,23 @@ export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
               <Label htmlFor="profile-email">Email</Label>
               <Input
                 id="profile-email"
-                type="email"
-                value={authEmail || profileEmail}
+                type={isGuest ? 'text' : 'email'}
+                value={displayedEmail || profileEmail}
                 onChange={(e) => setProfileEmail(e.target.value)}
                 placeholder="Your email"
-                readOnly={!!authEmail}
-                aria-readonly={!!authEmail}
-                className={authEmail ? 'opacity-60 cursor-not-allowed' : undefined}
+                readOnly={emailReadOnly}
+                aria-readonly={emailReadOnly}
+                className={emailReadOnly ? 'opacity-60 cursor-not-allowed' : undefined}
               />
-              {authEmail && (
+              {isGuest ? (
+                <p className="text-xs text-muted-foreground">
+                  {GUEST_EMAIL_DISPLAY}
+                </p>
+              ) : authEmail ? (
                 <p className="text-xs text-muted-foreground">
                   Cannot be changed for now.
                 </p>
-              )}
+              ) : null}
             </div>
 
             <Button onClick={handleSaveProfile} disabled={profileSaving} className="w-full">
