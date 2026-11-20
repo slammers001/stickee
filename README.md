@@ -4,7 +4,7 @@ To learn about Stickee, go to [https://stickee-info.simicodes.xyz](https://stick
 You can also view it on vercel: https://stickee.vercel.app
 ## How has Stickee improved in the past versions?
 
-| v0.0.1 | v2.0.2 |
+| v0.0.1 | v2.0.2 (current) |
 |:---:|:---:|
 | <img src="https://github.com/user-attachments/assets/0eda383c-a591-4022-af64-114423d0dd00" width="400" /> | <img src="https://github.com/user-attachments/assets/4c7cd683-83bb-4e86-a236-0eb6e2fa6d71" width="400" /> |
 
@@ -22,7 +22,7 @@ You can also view it on vercel: https://stickee.vercel.app
     * Emoji Reactions
 * **Smart Features:**
     * Automatic URL Detection
-    * Keyboard Shortcuts (N for new note, Alt+P for quick note window)
+    * Keyboard Shortcuts (N for new note, Alt+P for quick note window -> in progress 😁)
     * Comprehensive Search Function (content, titles, colors, statuses)
 * **CRUD Operations:** Full Create, Read, Update, and Delete (CRUD) functionality for notes.
 * **Data Encryption:** Robust security with encryption of note content and titles in the Supabase database.
