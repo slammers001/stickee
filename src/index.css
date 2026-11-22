@@ -211,6 +211,7 @@ All colors MUST be HSL.
   }
 
   .dark button.bg-primary:hover {
+    background-color: rgb(255 255 255 / 0.05) !important;
     color: #ffffff !important;
   }
 
