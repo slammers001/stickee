@@ -210,6 +210,10 @@ All colors MUST be HSL.
     background-color: transparent !important;
   }
 
+  .dark button.bg-primary:hover {
+    color: #ffffff !important;
+  }
+
   /* Template cards stay paper-like in dark mode; hover only lightens the button. */
   .dark .template-use-button {
     background-color: rgb(255 255 255 / 0.65) !important;
