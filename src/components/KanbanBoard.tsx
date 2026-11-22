@@ -136,17 +136,17 @@ export function KanbanBoard({ notes, onStatusChange, onNoteClick }: KanbanBoardP
                       <div className="flex items-start gap-2">
                         <GripVertical
                           size={16}
-                          className="mt-0.5 shrink-0 text-foreground/50"
+                          className="mt-0.5 shrink-0 text-black/50"
                         />
                         <div className="min-w-0 flex-1">
                           {note.title && (
-                            <p className="text-base font-bold text-foreground truncate mb-1 font-handwriting">
+                            <p className="text-base font-bold text-black truncate mb-1 font-handwriting">
                               {note.title}
                             </p>
                           )}
                           <LinkableText
                             text={note.content.length > 80 ? note.content.slice(0, 80) + "..." : note.content}
-                            className="text-sm text-foreground/70 leading-relaxed line-clamp-3 font-handwriting"
+                            className="text-sm text-black/70 leading-relaxed line-clamp-3 font-handwriting"
                           />
                         </div>
                       </div>

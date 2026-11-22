@@ -261,7 +261,7 @@ export const StickyNote = memo(({
               title="Copy note"
               aria-label="Copy note"
             >
-              <Copy size={16} className="text-foreground/60 hover:text-foreground" />
+              <Copy size={16} className="text-black/60 hover:text-black" />
             </button>
 
             {/* Emoji Reaction Button */}
