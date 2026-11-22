@@ -6,11 +6,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -92,6 +87,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   const [isListening, setIsListening] = useState(false);
   const [remindAt, setRemindAt] = useState<string | null>(null);
   const [remindRepeat, setRemindRepeat] = useState<ReminderRepeat>("none");
+  const [reminderOpen, setReminderOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
@@ -113,6 +109,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     setColor(colors[0]);
     setRemindAt(null);
     setRemindRepeat("none");
+    setReminderOpen(false);
   };
 
   const handleSave = () => {
@@ -326,24 +323,25 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
                 </div>
               </div>
 
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label={`Reminder: ${formatReminder(remindAt, remindRepeat)}`}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-muted/50",
-                      remindAt && "border-primary bg-primary/5"
-                    )}
-                  >
-                    <Bell className="h-4 w-4 shrink-0" />
-                    Reminder
-                    <small className="ml-auto truncate text-xs font-normal text-muted-foreground">
-                      {formatReminder(remindAt, remindRepeat)}
-                    </small>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-72 max-w-[calc(100vw-2rem)] p-3">
+              <button
+                type="button"
+                aria-expanded={reminderOpen}
+                aria-controls="note-reminder-editor"
+                aria-label={`Reminder: ${formatReminder(remindAt, remindRepeat)}`}
+                onClick={() => setReminderOpen((current) => !current)}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-muted/50",
+                  remindAt && "border-primary bg-primary/5"
+                )}
+              >
+                <Bell className="h-4 w-4 shrink-0" />
+                Reminder
+                <small className="ml-auto truncate text-xs font-normal text-muted-foreground">
+                  {formatReminder(remindAt, remindRepeat)}
+                </small>
+              </button>
+              {reminderOpen && (
+                <div id="note-reminder-editor" className="border-t pt-3">
                   <ReminderEditor
                     value={remindAt}
                     repeat={remindRepeat}
@@ -352,8 +350,8 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
                       setRemindRepeat(repeat);
                     }}
                   />
-                </PopoverContent>
-              </Popover>
+                </div>
+              )}
             </div>
           </div>
 

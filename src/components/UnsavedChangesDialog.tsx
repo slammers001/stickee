@@ -31,14 +31,14 @@ export const UnsavedChangesDialog = ({
             You have unsaved changes. Would you like to save them before closing?
           </p>
         </div>
-        <DialogFooter className="flex gap-2">
-          <Button variant="outline" onClick={onCancel}>
+        <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" className="w-full sm:w-auto" onClick={onCancel}>
             Cancel
           </Button>
-          <Button variant="secondary" onClick={onDiscard}>
+          <Button variant="secondary" className="w-full sm:w-auto" onClick={onDiscard}>
             Discard Changes
           </Button>
-          <Button onClick={onSave}>
+          <Button className="w-full sm:w-auto" onClick={onSave}>
             Save Changes
           </Button>
         </DialogFooter>
