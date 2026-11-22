@@ -984,6 +984,7 @@ export default function Index() {
           notes={filteredNotes}
           onStatusChange={handleStatusChange}
           onNoteClick={handleNoteClick}
+          searchQuery={searchQuery}
         />
       ) : activeTab === "archive" ? (
         <ArchivedNotesPanel onNotesRefresh={loadNotes} />

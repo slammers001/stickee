@@ -42,9 +42,10 @@ interface KanbanBoardProps {
   notes: Note[];
   onStatusChange: (noteId: string, newStatus: NoteStatus) => void;
   onNoteClick: (note: Note) => void;
+  searchQuery?: string;
 }
 
-export function KanbanBoard({ notes, onStatusChange, onNoteClick }: KanbanBoardProps) {
+export function KanbanBoard({ notes, onStatusChange, onNoteClick, searchQuery = "" }: KanbanBoardProps) {
   const [dragOverColumn, setDragOverColumn] = useState<NoteStatus | null>(null);
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null);
 
@@ -82,9 +83,17 @@ export function KanbanBoard({ notes, onStatusChange, onNoteClick }: KanbanBoardP
     setDraggedNoteId(null);
   };
 
+  const hasSearch = searchQuery.trim().length > 0;
+  const searchLabel = searchQuery.trim();
+
   return (
     <div className="flex-1 overflow-x-auto p-6">
-      <div className="flex gap-6 h-full min-h-[calc(100vh-12rem)]">
+      {hasSearch && (
+        <p className="mb-4 text-sm text-muted-foreground font-handwriting">
+          Showing results for &quot;{searchLabel}&quot;
+        </p>
+      )}
+      <div className="flex gap-6 min-h-[calc(100vh-12rem)]">
         {COLUMNS.map((column) => {
           const columnNotes = getColumnNotes(column.id);
           const isOver = dragOverColumn === column.id;
@@ -112,8 +121,8 @@ export function KanbanBoard({ notes, onStatusChange, onNoteClick }: KanbanBoardP
 
               <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-card">
                 {columnNotes.length === 0 ? (
-                  <div className="flex items-center justify-center h-24 text-xs text-muted-foreground font-handwriting border-2 border-dashed border-foreground/20 p-2">
-                    Drop notes here
+                  <div className="flex items-center justify-center h-24 text-xs text-center break-words text-muted-foreground font-handwriting border-2 border-dashed border-foreground/20 p-2">
+                    {hasSearch ? `Nothing found matching "${searchLabel}"` : "Drop notes here"}
                   </div>
                 ) : (
                   columnNotes.map((note) => (
