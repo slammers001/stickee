@@ -299,7 +299,7 @@ export const StickyNote = memo(({
             }}
             className={cn(
               "absolute top-3 right-12 w-6 h-6 rounded-full transition-all flex items-center justify-center",
-              "hover:bg-foreground/5 active:scale-90 text-foreground/40 hover:text-foreground/70"
+              "hover:bg-foreground/5 active:scale-90 text-black/40 hover:text-black/70"
             )}
             aria-label="Archive note"
           >
