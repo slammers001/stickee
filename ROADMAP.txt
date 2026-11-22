@@ -16,7 +16,7 @@ StickeeQuick, StickeeDrag, StickeeIssue.
     questions about your notes. Uses OpenAI API or local LLM with streaming
     responses shown inline.
 
-➖2.  StickeeBoard — 3-4 weeks
+✅2.  StickeeBoard — 3-4 weeks
     Kanban board view that organizes notes into columns by status
     (To-Do / Doing / Done / Backlog). Drag notes between columns to change
     status. Built on existing drag-and-drop infrastructure. Toggle between
@@ -32,7 +32,7 @@ StickeeQuick, StickeeDrag, StickeeIssue.
     Supabase backend, type definitions, and business logic. Touch-optimized
     sticky-note interactions, swipe-to-archive, haptic feedback.
 
-5.  StickeeRemind — 2-3 weeks
+✅5.  StickeeRemind — 2-3 weeks
     Set date/time reminders on any note. Desktop notifications via Tauri
     notification plugin and Web Notification API. Optional email/SMS reminders
     via Supabase Edge Functions + Twilio/Resend. Snooze and recurring options.
@@ -81,7 +81,7 @@ StickeeQuick, StickeeDrag, StickeeIssue.
     reminders due today, and quick-add button. Uses Tauri plugins and native
     widget APIs.
 
-➖13. StickeeTemplates — 2-3 weeks
+❌ - removed 13. StickeeTemplates — 2-3 weeks
     Note templates for common use cases: meeting notes, project plan,
     daily journal, weekly review, bullet journal, gratitude log, habit
     tracker. Users can create and save their own templates too.
