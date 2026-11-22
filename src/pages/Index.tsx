@@ -248,9 +248,7 @@ export default function Index() {
         !e.metaKey &&
         !dialogOpen &&
         !detailDialogOpen &&
-        !stickyNoteWindowOpen &&
-        document.activeElement?.tagName !== 'INPUT' &&
-        document.activeElement?.tagName !== 'TEXTAREA'
+        !stickyNoteWindowOpen
       ) {
         e.preventDefault();
         setStickyNoteWindowOpen(true);

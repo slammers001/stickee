@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { getCssFontFamily, getGoogleFontStylesheetUrl } from "@/utils/fonts";
 // Utility functions can be added here if needed
 
@@ -25,9 +25,14 @@ const colorMap: Record<NoteColor, string> = {
 
 export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: StickyNoteWindowProps) {
   const windowRef = useRef<Window | null>(null);
+  const onCloseRef = useRef(onClose);
   const selectedColor = initialColor;
 
   useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useLayoutEffect(() => {
     if (isOpen && !windowRef.current) {
       const windowFeatures = 'width=350,height=450,left=100,top=100,toolbar=no,menubar=no,scrollbars=no,resizable=no,status=no';
 
@@ -42,7 +47,7 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
         windowRef.current = newWindow as unknown as Window;
         
         // Determine favicon path
-        const faviconPath = "/favicons/stickee.png";
+        const faviconPath = "/favicon.ico";
         
         // Get the current theme and font preference
         const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -180,13 +185,13 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
                 outline: none;
                 font-size: 1.125rem;
                 line-height: 1.5;
-                color: hsl(var(--foreground));
+                color: #000000;
                 font-family: ${fontFamily};
                 padding: 0.5rem 0;
               }
               
               .note-textarea::placeholder {
-                color: hsl(var(--foreground) / 0.5);
+                color: rgb(0 0 0 / 0.5);
               }
               
               .controls {
@@ -303,7 +308,7 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
               
               // Handle keydown events to prevent Enter at 10 lines
               const handleKeyDown = (e) => {
-                const currentLines = textarea.value.split('\n');
+                const currentLines = textarea.value.split('\\n');
                 const maxLines = 10;
                 
                 // Prevent Enter key if already at 10 lines
@@ -365,7 +370,19 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
                   isClosing = true;
                   window.opener.postMessage({ 
                     type: 'quickNote', 
-                    content: content,
+                    content: textarea.value,
+                    color: selectedColor
+                  }, '*');
+                  window.close();
+                }
+              };
+
+              const discardAndClose = () => {
+                if (!isClosing) {
+                  isClosing = true;
+                  window.opener.postMessage({ 
+                    type: 'quickNote', 
+                    content: '',
                     color: selectedColor
                   }, '*');
                   window.close();
@@ -379,16 +396,25 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
                   e.preventDefault();
                   saveAndClose();
                 }
-                // Close on Escape
+                // Discard on Escape
                 else if (e.key === 'Escape') {
                   e.preventDefault();
-                  saveAndClose();
+                  discardAndClose();
                 }
               });
               
-              // Save on window close - only save if user explicitly saves (Ctrl+Enter or Escape)
-              // Don't auto-save when window is closed via native X button
-              
+              // Notify the parent when the window is closed via the native X button
+              window.addEventListener('beforeunload', () => {
+                if (!isClosing) {
+                  isClosing = true;
+                  window.opener.postMessage({ 
+                    type: 'quickNote', 
+                    content: '',
+                    color: selectedColor
+                  }, '*');
+                }
+              });
+
               // Focus the textarea
               textarea.focus();
               updateCharCount();
@@ -397,11 +423,12 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
           </html>
         `);
         windowRef.current.document.close();
+        windowRef.current.focus();
 
         // Listen for messages from the popup window
         const handleMessage = (event: MessageEvent) => {
           if (event.data.type === 'quickNote') {
-            onClose(event.data.content, event.data.color);
+            onCloseRef.current(event.data.content, event.data.color);
             windowRef.current = null;
           }
         };
@@ -416,6 +443,8 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
           }
           windowRef.current = null;
         };
+      } else {
+        onCloseRef.current('', selectedColor);
       }
     }
 
@@ -426,7 +455,7 @@ export function StickyNoteWindow({ isOpen, onClose, initialColor = 'yellow' }: S
       }
       windowRef.current = null;
     };
-  }, [isOpen, onClose, selectedColor]);
+  }, [isOpen, selectedColor]);
 
   if (!isOpen) return null;
 
