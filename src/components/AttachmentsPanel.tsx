@@ -5,14 +5,20 @@ import {
   FileAudio,
   FileText,
   FileVideo,
-  Image as ImageIcon,
   Paperclip,
   RefreshCw,
   Search,
 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import type { NoteAttachment } from '@/types/attachment';
 
 type AttachmentKind = 'images' | 'documents' | 'other';
@@ -32,6 +38,13 @@ const formatSize = (bytes: number) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+const formatDate = (value: string) =>
+  new Date(value).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
 const getKind = (mimeType: string): AttachmentKind => {
   if (mimeType.startsWith('image/')) return 'images';
   if (
@@ -47,13 +60,12 @@ const getKind = (mimeType: string): AttachmentKind => {
 };
 
 const getIcon = (mimeType: string) => {
-  if (mimeType.startsWith('image/')) return <ImageIcon className="h-4 w-4 text-sky-500" />;
-  if (mimeType.startsWith('audio/')) return <FileAudio className="h-4 w-4 text-purple-500" />;
-  if (mimeType.startsWith('video/')) return <FileVideo className="h-4 w-4 text-rose-500" />;
+  if (mimeType.startsWith('audio/')) return <FileAudio className="h-10 w-10" />;
+  if (mimeType.startsWith('video/')) return <FileVideo className="h-10 w-10" />;
   if (mimeType.includes('zip') || mimeType.includes('compressed')) {
-    return <FileArchive className="h-4 w-4 text-amber-500" />;
+    return <FileArchive className="h-10 w-10" />;
   }
-  return <FileText className="h-4 w-4 text-muted-foreground" />;
+  return <FileText className="h-10 w-10" />;
 };
 
 export function AttachmentsPanel({
@@ -66,11 +78,7 @@ export function AttachmentsPanel({
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState<'all' | AttachmentKind>('all');
   const [sort, setSort] = useState<SortMode>('newest');
-
-  const totalSize = useMemo(
-    () => attachments.reduce((sum, attachment) => sum + attachment.size, 0),
-    [attachments],
-  );
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -93,15 +101,7 @@ export function AttachmentsPanel({
     });
   }, [attachments, kind, noteTitles, query, sort]);
 
-  const groups = useMemo(() => {
-    const byNote = new Map<string, NoteAttachment[]>();
-    for (const attachment of visible) {
-      const existing = byNote.get(attachment.note_id);
-      if (existing) existing.push(attachment);
-      else byNote.set(attachment.note_id, [attachment]);
-    }
-    return Array.from(byNote.entries());
-  }, [visible]);
+  const selected = attachments.find((attachment) => attachment.id === selectedId) ?? null;
 
   if (loading) {
     return (
@@ -115,16 +115,10 @@ export function AttachmentsPanel({
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <div className="space-y-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground font-handwriting">Attachments</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {attachments.length} {attachments.length === 1 ? 'file' : 'files'} attached to your notes
-              {attachments.length > 0 && ` · ${formatSize(totalSize)} used`}
-            </p>
-          </div>
-          <Button variant="outline" onClick={onRefresh}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-3xl font-bold text-foreground font-handwriting">Attachments</h1>
+          <Button variant="outline" size="sm" onClick={onRefresh}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -180,81 +174,98 @@ export function AttachmentsPanel({
             {visible.length === 0 ? (
               <p className="py-12 text-center text-muted-foreground">No files match those filters.</p>
             ) : (
-              <div className="space-y-8">
-                {groups.map(([noteId, files]) => (
-                  <section key={noteId} className="space-y-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <h2 className="truncate font-handwriting text-lg text-foreground">
-                        {noteTitles[noteId] || 'Untitled note'}
-                      </h2>
-                      <span className="text-xs text-muted-foreground shrink-0">
-                        {files.length} {files.length === 1 ? 'file' : 'files'}
-                      </span>
-                    </div>
-                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                      {files.map((attachment) => (
-                        <div
-                          key={attachment.id}
-                          className="flex items-start gap-3 rounded-lg border bg-card p-3 shadow-sm"
-                        >
-                          {attachment.mime_type.startsWith('image/') && attachment.url ? (
-                            <img
-                              src={attachment.url}
-                              alt=""
-                              className="h-12 w-12 shrink-0 rounded-md border object-cover"
-                            />
-                          ) : (
-                            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border bg-muted/40">
-                              {getIcon(attachment.mime_type)}
-                            </span>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate font-medium text-foreground" title={attachment.name}>
-                              {attachment.name}
-                            </p>
-                            <p className="mt-0.5 text-xs text-muted-foreground">
-                              {formatSize(attachment.size)} ·{' '}
-                              {new Date(attachment.created_at).toLocaleDateString(undefined, {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                              })}
-                            </p>
-                            <div className="mt-2 flex items-center gap-2">
-                              {attachment.url && (
-                                <a
-                                  href={attachment.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className={cn(
-                                    buttonVariants({ variant: 'outline', size: 'sm' }),
-                                    'h-7 px-2 text-xs',
-                                  )}
-                                >
-                                  Open
-                                </a>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 text-xs"
-                                onClick={() => onOpenNote(noteId)}
-                              >
-                                <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                                Open note
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                ))}
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                {visible.map((attachment) => {
+                  const isImage = attachment.mime_type.startsWith('image/') && Boolean(attachment.url);
+                  return (
+                    <button
+                      key={attachment.id}
+                      type="button"
+                      aria-label={`View ${attachment.name}`}
+                      title={attachment.name}
+                      onClick={() => setSelectedId(attachment.id)}
+                      className={
+                        isImage
+                          ? 'group relative aspect-square w-full overflow-hidden rounded-md focus:outline-none focus:ring-2 focus:ring-ring'
+                          : 'flex aspect-square w-full items-center justify-center rounded-md bg-muted/40 text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring'
+                      }
+                    >
+                      {isImage ? (
+                        <img
+                          src={attachment.url}
+                          alt=""
+                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                        />
+                      ) : (
+                        getIcon(attachment.mime_type)
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </>
         )}
       </div>
+
+      {selected && (
+        <Dialog open onOpenChange={(open) => { if (!open) setSelectedId(null); }}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="truncate">{selected.name}</DialogTitle>
+              <DialogDescription>Attachment details</DialogDescription>
+            </DialogHeader>
+
+            {selected.mime_type.startsWith('image/') && selected.url && (
+              <div className="flex justify-center rounded-md bg-muted/30 p-2">
+                <img
+                  src={selected.url}
+                  alt={selected.name}
+                  className="max-h-[55vh] max-w-full object-contain"
+                />
+              </div>
+            )}
+
+            <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+              {[
+                ['Note', noteTitles[selected.note_id] || 'Untitled note'],
+                ['Type', selected.mime_type || 'Unknown'],
+                ['Size', formatSize(selected.size)],
+                ['Uploaded', formatDate(selected.created_at)],
+              ].map(([label, value]) => (
+                <div key={label} className="min-w-0">
+                  <dt className="text-xs text-muted-foreground">{label}</dt>
+                  <dd className="mt-0.5 truncate font-medium text-foreground">{value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <DialogFooter>
+              {selected.url && (
+                <a
+                  href={selected.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={buttonVariants({ variant: 'outline' })}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Open file
+                </a>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const noteId = selected.note_id;
+                  setSelectedId(null);
+                  onOpenNote(noteId);
+                }}
+              >
+                Open note
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </main>
   );
 }

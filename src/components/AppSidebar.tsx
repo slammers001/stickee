@@ -25,8 +25,6 @@ interface AppSidebarProps {
   onCollapsedChange: (collapsed: boolean) => void;
   /** Number of reminders that need attention (overdue or due today) */
   reminderCount?: number;
-  /** Number of files attached to the user's notes */
-  attachmentCount?: number;
 }
 
 const NAV = [
@@ -95,7 +93,6 @@ export function AppSidebar({
   collapsed,
   onCollapsedChange,
   reminderCount = 0,
-  attachmentCount = 0,
 }: AppSidebarProps) {
   const { signOut } = useAuth();
 
@@ -189,12 +186,6 @@ export function AppSidebar({
           {NAV.map((item) => {
             const active = activeTab === item.id;
             const NavIcon = item.icon;
-            const badgeCount =
-              item.id === "reminders"
-                ? reminderCount
-                : item.id === "attachments"
-                  ? attachmentCount
-                  : 0;
             return (
               <div key={item.id}>
                 {item.divider && (
@@ -234,19 +225,16 @@ export function AppSidebar({
                       </span>
                     </span>
                   )}
-                  {badgeCount > 0 && (
+                  {item.id === "reminders" && reminderCount > 0 && (
                     <span
                       className={cn(
-                        "flex items-center justify-center rounded-full font-sans font-semibold",
-                        item.id === "reminders"
-                          ? "bg-red-500 text-white"
-                          : "bg-muted-foreground/20 text-foreground",
+                        "flex items-center justify-center rounded-full bg-red-500 text-white font-sans font-semibold",
                         collapsed
                           ? "absolute -top-1 -right-1 h-[18px] min-w-[18px] px-1 text-[10px]"
                           : "ml-auto h-5 min-w-[20px] px-1.5 text-xs"
                       )}
                     >
-                      {badgeCount}
+                      {reminderCount}
                     </span>
                   )}
                 </button>

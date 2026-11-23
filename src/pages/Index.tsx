@@ -911,7 +911,6 @@ export default function Index() {
         collapsed={sidebarCollapsed}
         onCollapsedChange={setSidebarCollapsed}
         reminderCount={dueCount}
-        attachmentCount={visibleAttachments.length}
       />
 
       <div className="flex-1 min-w-0 flex flex-col">
