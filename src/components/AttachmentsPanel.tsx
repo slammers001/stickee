@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-  ExternalLink,
   FileArchive,
   FileAudio,
   FileText,
@@ -9,7 +8,7 @@ import {
   RefreshCw,
   Search,
 } from 'lucide-react';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -174,7 +173,7 @@ export function AttachmentsPanel({
             {visible.length === 0 ? (
               <p className="py-12 text-center text-muted-foreground">No files match those filters.</p>
             ) : (
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="columns-2 gap-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6">
                 {visible.map((attachment) => {
                   const isImage = attachment.mime_type.startsWith('image/') && Boolean(attachment.url);
                   return (
@@ -184,20 +183,18 @@ export function AttachmentsPanel({
                       aria-label={`View ${attachment.name}`}
                       title={attachment.name}
                       onClick={() => setSelectedId(attachment.id)}
-                      className={
-                        isImage
-                          ? 'group relative aspect-square w-full overflow-hidden rounded-md focus:outline-none focus:ring-2 focus:ring-ring'
-                          : 'flex aspect-square w-full items-center justify-center rounded-md bg-muted/40 text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring'
-                      }
+                      className="mb-2 block w-full break-inside-avoid rounded-md text-left hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                       {isImage ? (
                         <img
                           src={attachment.url}
                           alt=""
-                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                          className="block h-auto w-full rounded-md"
                         />
                       ) : (
-                        getIcon(attachment.mime_type)
+                        <span className="flex aspect-square w-full items-center justify-center rounded-md bg-muted/40 text-muted-foreground">
+                          {getIcon(attachment.mime_type)}
+                        </span>
                       )}
                     </button>
                   );
@@ -241,17 +238,6 @@ export function AttachmentsPanel({
             </dl>
 
             <DialogFooter>
-              {selected.url && (
-                <a
-                  href={selected.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={buttonVariants({ variant: 'outline' })}
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open file
-                </a>
-              )}
               <Button
                 variant="outline"
                 onClick={() => {
