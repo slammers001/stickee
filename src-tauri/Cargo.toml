@@ -1,6 +1,6 @@
 [package]
 name = "stickee"
-version = "1.2.0"
+version = "2.1.0"
 description = "A fun way to keep things in mind"
 authors = ["slammers001"]
 license = "MIT"
@@ -23,6 +23,7 @@ serde = { version = "1.0", features = ["derive"], default-features = false }
 log = { version = "0.4", default-features = false }
 tauri = { version = "2.9.5", features = ["protocol-asset", "rustls-tls", "wry"], default-features = false }
 tauri-plugin-log = { version = "2", features = ["colored"], default-features = false }
+tauri-plugin-notification = "2"
 tauri-plugin-shell = "2"
 
 [profile.release]

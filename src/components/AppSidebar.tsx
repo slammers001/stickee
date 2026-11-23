@@ -23,6 +23,8 @@ interface AppSidebarProps {
   onTabChange: (tab: SidebarTab) => void;
   collapsed: boolean;
   onCollapsedChange: (collapsed: boolean) => void;
+  /** Number of reminders that need attention (overdue or due today) */
+  reminderCount?: number;
 }
 
 const NAV = [
@@ -90,6 +92,7 @@ export function AppSidebar({
   onTabChange,
   collapsed,
   onCollapsedChange,
+  reminderCount = 0,
 }: AppSidebarProps) {
   const { signOut } = useAuth();
 
@@ -198,7 +201,7 @@ export function AppSidebar({
                     if (window.innerWidth < 768) onCollapsedChange(true);
                   }}
                   className={cn(
-                    "w-full flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-colors",
+                    "w-full flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-colors relative",
                     "font-handwriting text-lg leading-none",
                     active
                       ? "border-border bg-muted text-foreground shadow-sm dark:bg-[hsl(var(--sidebar-accent))] dark:border-[hsl(var(--sidebar-border))]"
@@ -220,6 +223,18 @@ export function AppSidebar({
                       <span className="block text-xs text-muted-foreground font-sans mt-0.5 truncate">
                         {item.description}
                       </span>
+                    </span>
+                  )}
+                  {item.id === "reminders" && reminderCount > 0 && (
+                    <span
+                      className={cn(
+                        "flex items-center justify-center rounded-full bg-red-500 text-white font-sans font-semibold",
+                        collapsed
+                          ? "absolute -top-1 -right-1 h-[18px] min-w-[18px] px-1 text-[10px]"
+                          : "ml-auto h-5 min-w-[20px] px-1.5 text-xs"
+                      )}
+                    >
+                      {reminderCount}
                     </span>
                   )}
                 </button>

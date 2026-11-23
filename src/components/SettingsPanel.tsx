@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Heart, Download, Camera } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Heart, Download } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { TermsOfService } from "@/components/TermsOfService";
 import { applyAppFont, getCssFontFamily, getFontDisplayName as getSharedFontDisplayName } from "@/utils/fonts";
 import { useAuth } from "@/contexts/AuthContext";
+import { GUEST_EMAIL_DISPLAY, isGuestUser } from "@/lib/supabase";
 
 type FontFamily = "serif" | "sans-serif" | "monospace" | 
   "abeezee" | "aclonica" | "advent-pro" | "tenali-ramakrishna" | "truculenta" | "ubuntu-sans-mono" | "unbounded" | "nova-mono" | "orbitron" | "bahianita" | "syne-mono" | "vt323" | "xanh-mono" | "cutive-mono" | "arbutus-slab" | "nixie-one" | "noticia-text" | "arvo" | "oi" | "oldenburg" | "orelega-one" | "nova-oval" | "atma" | "butcherman" | "cherry-bomb-one" |
@@ -35,13 +36,16 @@ interface SettingsPanelProps {
 export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
+  const isGuest = isGuestUser(user);
   // Signed-in users' email comes from their auth account, not the editable profile.
+  // Guest accounts show a placeholder instead of their internal email.
   const authEmail = user?.email ?? '';
-  const [profile, setProfile] = useState<UserProfile>({ name: '', email: '', avatarColor: '#fff1bf', avatarImage: null });
+  const displayedEmail = isGuest ? GUEST_EMAIL_DISPLAY : authEmail;
+  const emailReadOnly = !!authEmail || isGuest;
+  const [profile, setProfile] = useState<UserProfile>({ name: '', email: '', avatarColor: '#fff1bf' });
   const [profileName, setProfileName] = useState('');
   const [profileEmail, setProfileEmail] = useState('');
   const [profileSaving, setProfileSaving] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [fontMode, setFontMode] = useState<FontMode>(() => 
     (localStorage.getItem("stickee-font-mode") as FontMode) || "basic"
   );
@@ -166,9 +170,9 @@ export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
     const updated: UserProfile = {
       ...profile,
       name: profileName,
-      // Keep the local mirror in sync with the auth account; only guests get an
-      // editable email.
-      email: authEmail || profileEmail,
+      // Keep the local mirror in sync with the auth account; guests and other
+      // signed-in users have non-editable emails.
+      email: emailReadOnly ? '' : profileEmail,
     };
     await saveProfile(user.id, updated);
     setProfile(updated);
@@ -176,35 +180,7 @@ export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
     toast.success('Profile saved!');
   };
 
-  const handleAvatarColorChange = async (color: string) => {
-    if (!user?.id) return;
-    const updated = { ...profile, avatarColor: color };
-    await saveProfile(user.id, updated);
-    setProfile(updated);
-  };
-
-  const handleAvatarImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user?.id) return;
-    
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64 = reader.result as string;
-      const updated = { ...profile, avatarImage: base64 };
-      await saveProfile(user.id!, updated);
-      setProfile(updated);
-      toast.success('Profile picture updated!');
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleRemoveAvatarImage = async () => {
-    if (!user?.id) return;
-    const updated = { ...profile, avatarImage: null };
-    await saveProfile(user.id, updated);
-    setProfile(updated);
-    toast.success('Profile picture removed!');
-  };
+  
 
   const handleDisagreeTerms = () => {
     localStorage.removeItem("stickee-terms-agreed");
@@ -283,36 +259,16 @@ export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
       <div className="space-y-6">
         {activeTab === "profile" && (
           <div className="space-y-6">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="relative">
-                <UserAvatar
-                  name={profileName || profile.name}
-                  color={profile.avatarColor}
-                  image={profile.avatarImage}
-                  size="xl"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors"
-                  title="Change profile picture"
-                >
-                  <Camera className="h-4 w-4" />
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarImageUpload}
-                  className="hidden"
-                />
-              </div>
-              
-              {profile.avatarImage && (
-                <Button variant="outline" size="sm" onClick={handleRemoveAvatarImage}>
-                  Remove picture
-                </Button>
-              )}
+            <div className="flex flex-col items-center gap-5 rounded-2xl border border-border/60 bg-card/40 p-6 shadow-sm">
+              <UserAvatar
+                name={profileName || profile.name}
+                color={profile.avatarColor}
+                size="xl"
+                className="ring-4 ring-background shadow-md"
+              />
+              <p className="text-xs text-muted-foreground">
+                Your avatar color is set automatically and can't be changed.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -329,39 +285,23 @@ export const SettingsPanel = ({ onFontChange }: SettingsPanelProps) => {
               <Label htmlFor="profile-email">Email</Label>
               <Input
                 id="profile-email"
-                type="email"
-                value={authEmail || profileEmail}
+                type={isGuest ? 'text' : 'email'}
+                value={displayedEmail || profileEmail}
                 onChange={(e) => setProfileEmail(e.target.value)}
                 placeholder="Your email"
-                readOnly={!!authEmail}
-                aria-readonly={!!authEmail}
-                className={authEmail ? 'opacity-60 cursor-not-allowed' : undefined}
+                readOnly={emailReadOnly}
+                aria-readonly={emailReadOnly}
+                className={emailReadOnly ? 'opacity-60 cursor-not-allowed' : undefined}
               />
-              {authEmail && (
+              {isGuest ? (
                 <p className="text-xs text-muted-foreground">
-                  Managed by your sign-in account and can't be changed here.
+                  {GUEST_EMAIL_DISPLAY}
                 </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Avatar Color</Label>
-              <div className="flex gap-2">
-                {['#FFF1BF', '#735C40', '#FFC2CC'].map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => handleAvatarColorChange(color)}
-                    className={`h-8 w-8 rounded-full border-2 transition-all ${
-                      profile.avatarColor === color
-                        ? 'border-foreground scale-110'
-                        : 'border-transparent hover:scale-105'
-                    }`}
-                    style={{ backgroundColor: color }}
-                    title={color}
-                  />
-                ))}
-              </div>
+              ) : authEmail ? (
+                <p className="text-xs text-muted-foreground">
+                  Cannot be changed for now.
+                </p>
+              ) : null}
             </div>
 
             <Button onClick={handleSaveProfile} disabled={profileSaving} className="w-full">

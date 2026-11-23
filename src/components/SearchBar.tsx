@@ -24,6 +24,7 @@ export function SearchBar({ onSearch, placeholder = "Search notes...", disabled 
       <IconSearch stroke={2} className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <Input
         type="text"
+        maxLength={64}
         placeholder={disabled ? "Agree to Terms of Service to search" : placeholder}
         value={query}
         onChange={handleChange}

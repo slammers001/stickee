@@ -210,6 +210,11 @@ All colors MUST be HSL.
     background-color: transparent !important;
   }
 
+  .dark button.bg-primary:hover {
+    background-color: rgb(255 255 255 / 0.05) !important;
+    color: #ffffff !important;
+  }
+
   /* Template cards stay paper-like in dark mode; hover only lightens the button. */
   .dark .template-use-button {
     background-color: rgb(255 255 255 / 0.65) !important;
@@ -686,5 +691,36 @@ All colors MUST be HSL.
     
     .user-info {
         max-width: 100px !important;
+    }
+}
+
+/* Keep the new-note composer compact despite the global mobile button/input rules */
+@media (max-width: 768px) {
+    .note-composer-field {
+        border: 0 !important;
+        padding: 0 !important;
+        background: transparent !important;
+        font-size: 16px !important;
+    }
+
+    .note-composer-swatch,
+    .note-composer-mic,
+    .note-composer-status {
+        min-width: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+    }
+
+    .note-composer-swatch {
+        width: 1.75rem !important;
+        height: 1.75rem !important;
+    }
+
+    .note-composer-mic {
+        padding: 4px 10px !important;
+    }
+
+    .note-composer-status {
+        padding: 4px 10px !important;
     }
 }
