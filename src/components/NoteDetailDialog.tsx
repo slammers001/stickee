@@ -368,7 +368,7 @@ export const NoteDetailDialog = ({
               placeholder="Type your note here..."
             />
             <p className="text-xs text-muted-foreground mt-2">
-              Press Ctrl+Enter to save quickly • Maximum {NOTE_CONTENT_LIMIT} characters
+               Press Ctrl+Enter to save quickly • {content.length}/{NOTE_CONTENT_LIMIT}
             </p>
             
             {/* Voice Controls */}
@@ -435,8 +435,6 @@ export const NoteDetailDialog = ({
                 )}
               </div>
             )}
-            <div className="text-xs text-muted-foreground mt-1">
-              {content.length}/{NOTE_CONTENT_LIMIT} characters
             </div>
           </div>
           <div className="order-4">

@@ -242,7 +242,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               />
               <div className="mt-2 flex items-center justify-between gap-2 border-t border-foreground/10 pt-2">
                 <small className="text-[11px] text-muted-foreground">
-                  {content.length}/1500 · Title {title.length}/20
+                   Title {title.length}/20
                 </small>
                 {isSupported && (
                   <button
