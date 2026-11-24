@@ -208,8 +208,10 @@ export function AttachmentsPanel({
       {selected && (
         <Dialog open onOpenChange={(open) => { if (!open) setSelectedId(null); }}>
           <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="truncate">{selected.name}</DialogTitle>
+            <DialogHeader className="pr-8">
+              <DialogTitle className="line-clamp-2 break-all leading-snug" title={selected.name}>
+                {selected.name}
+              </DialogTitle>
               <DialogDescription>Attachment details</DialogDescription>
             </DialogHeader>
 
