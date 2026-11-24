@@ -51,6 +51,11 @@ export default defineConfig(({ mode }) => {
     define: {
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL || ''),
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || ''),
+      'import.meta.env.VITE_NEON_ATTACHMENTS_FUNCTION_URL': JSON.stringify(
+        env.NEON_BRANCH_ID && env.NEON_FUNCTION_HOST_SUFFIX
+          ? `https://${env.NEON_BRANCH_ID}-attach${env.NEON_FUNCTION_HOST_SUFFIX}`
+          : ''
+      ),
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
     },
     plugins: [

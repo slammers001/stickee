@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Stickee",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "identifier": "xyz.simicodes.stickee",
   "build": {
     "frontendDist": "../dist",
@@ -23,7 +23,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co ws://localhost:*; img-src 'self' data: https: http:;",
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co https://*.aws.neon.tech ws://localhost:*; img-src 'self' data: https: http:;",
       "dangerousDisableAssetCspModification": true,
       "assetProtocol": {
         "enable": true,

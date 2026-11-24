@@ -55,6 +55,13 @@ import { requestNotificationPermission } from "@/utils/notifications";
 import type { ReminderDraft } from "@/components/AddNoteDialog";
 import type { ReminderRepeat } from "@/types/note";
 import type { ReminderItem } from "@/services/reminderService";
+import {
+  getAllAttachments as fetchAttachments,
+  uploadAttachments,
+  deleteAttachment as deleteAttachmentService,
+} from "@/services/attachmentsService";
+import { AttachmentsPanel } from "@/components/AttachmentsPanel";
+import type { NoteAttachment } from "@/types/attachment";
 
 // Using the Note interface from types/note.ts
 
@@ -81,6 +88,8 @@ export default function Index() {
   const [issueDialogOpen, setIssueDialogOpen] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [noteReactions, setNoteReactions] = useState<Record<string, ReactionSummary[]>>({});
+  const [attachments, setAttachments] = useState<NoteAttachment[]>([]);
+  const [attachmentsLoading, setAttachmentsLoading] = useState(true);
   const [showMassDeleteDialog, setShowMassDeleteDialog] = useState(false);
   const [activeTab, setActiveTab] = useState<SidebarTab>("notes");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -324,10 +333,28 @@ export default function Index() {
     }
   };
 
+  const loadAttachments = async () => {
+    try {
+      setAttachmentsLoading(true);
+      setAttachments(await fetchAttachments());
+    } catch (error) {
+      console.error('Error loading attachments:', error);
+    } finally {
+      setAttachmentsLoading(false);
+    }
+  };
+
   // Load notes on component mount
   useEffect(() => {
     loadNotes();
+    loadAttachments();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "attachments") {
+      loadAttachments();
+    }
+  }, [activeTab]);
 
   // Filter notes based on search query
   useEffect(() => {
@@ -362,7 +389,8 @@ export default function Index() {
     content: string,
     status: StickyNoteStatus,
     color: string,
-    reminder?: ReminderDraft
+    reminder?: ReminderDraft,
+    files: File[] = []
   ) => {
     try {
       // Ask for notification permission while we are still in the click handler
@@ -418,6 +446,16 @@ export default function Index() {
       // Load reactions for the new note
       await loadReactions([newNote]);
 
+      if (files.length > 0) {
+        try {
+          const uploaded = await uploadAttachments(newNote.id, files);
+          setAttachments((previous) => [...uploaded, ...previous]);
+        } catch (attachmentError) {
+          console.error('Error attaching files:', attachmentError);
+          toast.error(attachmentError instanceof Error ? attachmentError.message : 'Note saved, but files could not be attached');
+        }
+      }
+
       // Attach the reminder, if one was picked in the dialog
       if (reminder?.remindAt) {
         try {
@@ -453,7 +491,14 @@ export default function Index() {
     }
   };
 
-  const updateNote = async (id: string, title: string, content: string, status: StickyNoteStatus, color: string) => {
+  const updateNote = async (
+    id: string,
+    title: string,
+    content: string,
+    status: StickyNoteStatus,
+    color: string,
+    files: File[] = []
+  ) => {
     try {
       const updatedNote = await updateNoteService(id, { 
         title: title || undefined,
@@ -475,6 +520,16 @@ export default function Index() {
         );
         setDetailDialogOpen(false);
         // Note updated silently - no notification
+      }
+
+      if (files.length > 0) {
+        try {
+          const uploaded = await uploadAttachments(id, files);
+          setAttachments((previous) => [...uploaded, ...previous]);
+        } catch (attachmentError) {
+          console.error('Error attaching files:', attachmentError);
+          toast.error(attachmentError instanceof Error ? attachmentError.message : 'Note saved, but files could not be attached');
+        }
       }
     } catch (error) {
       console.error('Error updating note:', error);
@@ -711,6 +766,26 @@ export default function Index() {
     setDetailDialogOpen(true);
   };
 
+  const handleOpenAttachmentNote = (noteId: string) => {
+    const note = notes.find(n => n.id === noteId);
+    if (!note) return;
+    setActiveTab("notes");
+    setSelectedNote(note);
+    setDetailDialogOpen(true);
+  };
+
+  const handleRemoveAttachment = async (attachment: NoteAttachment) => {
+    if (!window.confirm(`Remove "${attachment.name}" from this note?`)) return;
+    try {
+      await deleteAttachmentService(attachment);
+      setAttachments(previous => previous.filter(item => item.id !== attachment.id));
+      toast.success('Attachment removed');
+    } catch (error) {
+      console.error('Error removing attachment:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to remove attachment');
+    }
+  };
+
   const handleSnoozeReminder = async (reminder: ReminderItem, minutes: number) => {
     try {
       await snoozeReminder(reminder, minutes);
@@ -819,6 +894,14 @@ export default function Index() {
   }
 
   const showEmptyStateIcon = activeTab === "notes" && filteredNotes.length === 0 && !searchQuery;
+
+  const activeNotes = notes.filter(note => !note.archived && !note.deleted_at);
+  const visibleAttachments = attachments.filter(attachment =>
+    activeNotes.some(note => note.id === attachment.note_id),
+  );
+  const attachmentNoteTitles = Object.fromEntries(
+    activeNotes.map(note => [note.id, note.title || 'Untitled note']),
+  );
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -1003,12 +1086,20 @@ export default function Index() {
           onCreate={handleCreateReminder}
           onUpdate={handleUpdateReminder}
         />
-      ) : activeTab === "attachments" || activeTab === "shared" ? (
+      ) : activeTab === "attachments" ? (
+        <AttachmentsPanel
+          attachments={visibleAttachments}
+          noteTitles={attachmentNoteTitles}
+          loading={attachmentsLoading}
+          onRefresh={loadAttachments}
+          onOpenNote={handleOpenAttachmentNote}
+        />
+      ) : activeTab === "shared" ? (
         <main className="container mx-auto px-4 py-8">
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
             <IconSettings stroke={1.5} className="h-16 w-16 text-muted-foreground mb-6" />
             <h2 className="text-2xl font-semibold text-foreground mb-2 font-handwriting">
-              {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} is currently under development
+              Shared is currently under development
             </h2>
             <p className="text-muted-foreground max-w-md">
               Stay tuned!
@@ -1132,6 +1223,7 @@ export default function Index() {
             open={detailDialogOpen}
             onOpenChange={setDetailDialogOpen}
             note={selectedNote}
+            existingAttachments={attachments.filter(item => item.note_id === selectedNote?.id)}
             onSave={updateNote}
             onDelete={deleteNote}
             onAddNote={addNote}
@@ -1140,6 +1232,7 @@ export default function Index() {
               if (!selectedNote) return;
               return handleSaveReminder(selectedNote.id, remindAt, repeat);
             }}
+            onRemoveAttachment={handleRemoveAttachment}
           />
         </Suspense>
       )}
@@ -1187,7 +1280,7 @@ export default function Index() {
 
       {/* Version Display */}
       <div className="fixed bottom-4 left-4 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded shadow-sm" style={{ fontFamily: 'var(--font-family-handwriting)' }}>
-        Version 2.1.0
+        Version 2.2.0
       </div>
       </div>
     </div>

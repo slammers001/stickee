@@ -17,6 +17,7 @@ import { soundEffects } from "@/utils/soundEffects";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
 import { Bell, Mic, MicOff } from "lucide-react";
 import { ReminderEditor } from "@/components/ReminderEditor";
+import { AttachmentPicker } from "@/components/AttachmentPicker";
 import type { ReminderRepeat } from "@/types/note";
 
 export interface ReminderDraft {
@@ -32,7 +33,8 @@ interface AddNoteDialogProps {
     content: string,
     status: NoteStatus,
     color: string,
-    reminder?: ReminderDraft
+    reminder?: ReminderDraft,
+    files?: File[]
   ) => void;
 }
 
@@ -88,6 +90,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   const [remindAt, setRemindAt] = useState<string | null>(null);
   const [remindRepeat, setRemindRepeat] = useState<ReminderRepeat>("none");
   const [reminderOpen, setReminderOpen] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
@@ -100,7 +103,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     setCallbacks
   } = useVoiceRecognition();
 
-  const hasUnsavedChanges = title.trim() !== "" || content.trim() !== "";
+  const hasUnsavedChanges = title.trim() !== "" || content.trim() !== "" || attachments.length > 0;
 
   const resetForm = () => {
     setTitle("");
@@ -110,12 +113,13 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     setRemindAt(null);
     setRemindRepeat("none");
     setReminderOpen(false);
+    setAttachments([]);
   };
 
   const handleSave = () => {
     if (!content.trim()) return;
     soundEffects.playNewNoteSound();
-    onSave(title.trim(), content, status, color, { remindAt, repeat: remindRepeat });
+    onSave(title.trim(), content, status, color, { remindAt, repeat: remindRepeat }, attachments);
     resetForm();
     setShowUnsavedDialog(false);
     onOpenChange(false);
@@ -352,6 +356,16 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
                   />
                 </div>
               )}
+
+              <div className="border-t pt-3">
+                <label className="mb-2 block text-xs font-medium text-muted-foreground">
+                  Attachments
+                </label>
+                <AttachmentPicker
+                  pending={attachments}
+                  onChange={setAttachments}
+                />
+              </div>
             </div>
           </div>
 
