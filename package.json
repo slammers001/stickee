@@ -22,6 +22,10 @@
     "clean": "rm -rf dist release"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1176.0",
+    "@aws-sdk/s3-request-presigner": "^3.1176.0",
+    "@neon/config": "^1.14.6",
+    "@neon/env": "^2.1.9",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-popover": "^1.1.15",

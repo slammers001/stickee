@@ -1,8 +1,8 @@
 import { supabase } from '@/lib/supabase';
+import { neonAttachments } from '@/lib/neonAttachments';
 import { getUserId } from './userService';
 import type { NoteAttachment } from '@/types/attachment';
 
-const BUCKET = 'attachments';
 const SIGNED_URL_TTL_SECONDS = 60 * 60;
 const ATTACHMENT_COLUMNS = 'id,note_id,user_id,name,path,mime_type,size,created_at';
 
@@ -23,15 +23,13 @@ const isMissingSetupError = (error: unknown): boolean => {
 };
 
 const withSignedUrl = async (row: NoteAttachment): Promise<NoteAttachment> => {
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .createSignedUrl(row.path, SIGNED_URL_TTL_SECONDS);
-
-  if (error || !data?.signedUrl) {
+  try {
+    const url = await neonAttachments.signedUrl(row.path, SIGNED_URL_TTL_SECONDS);
+    return { ...row, url };
+  } catch (error) {
     console.error('Could not create attachment link:', error);
     return row;
   }
-  return { ...row, url: data.signedUrl };
 };
 
 export const getAttachments = async (noteId: string): Promise<NoteAttachment[]> => {
@@ -80,12 +78,7 @@ export const uploadAttachments = async (noteId: string, files: File[]): Promise<
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const path = `${userId}/${noteId}/${crypto.randomUUID()}-${safeName}`;
 
-    const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file, {
-      cacheControl: '3600',
-      upsert: false,
-      contentType: file.type || 'application/octet-stream',
-    });
-    if (uploadError) throw uploadError;
+    await neonAttachments.upload(path, file, file.type || 'application/octet-stream');
 
     const { data, error } = await supabase
       .from('attachments')
@@ -101,7 +94,7 @@ export const uploadAttachments = async (noteId: string, files: File[]): Promise<
       .single();
 
     if (error) {
-      await supabase.storage.from(BUCKET).remove([path]);
+      await neonAttachments.remove(path);
       throw error;
     }
     uploaded.push(await withSignedUrl(data));
@@ -119,6 +112,5 @@ export const deleteAttachment = async (attachment: NoteAttachment): Promise<void
     .eq('user_id', userId);
   if (rowError) throw rowError;
 
-  const { error: fileError } = await supabase.storage.from(BUCKET).remove([attachment.path]);
-  if (fileError) throw fileError;
+  await neonAttachments.remove(attachment.path);
 };
