@@ -18,7 +18,9 @@ import { toast } from "sonner";
 import { soundEffects } from "@/utils/soundEffects";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
 import { ReminderEditor } from "@/components/ReminderEditor";
+import { AttachmentPicker } from "@/components/AttachmentPicker";
 import type { ReminderRepeat } from "@/types/note";
+import type { NoteAttachment } from "@/types/attachment";
 
 interface NoteDetailDialogProps {
   open: boolean;
@@ -32,8 +34,18 @@ interface NoteDetailDialogProps {
     lastUpdated: number;
     pinned: boolean;
   } | null;
-  onSave: (id: string, title: string, content: string, status: NoteStatus, color: string) => void;
+  /** Files already attached to this note. */
+  existingAttachments?: NoteAttachment[];
+  onSave: (
+    id: string,
+    title: string,
+    content: string,
+    status: NoteStatus,
+    color: string,
+    files?: File[]
+  ) => void;
   onDelete: (id: string) => void;
+  onRemoveAttachment?: (attachment: NoteAttachment) => void | Promise<void>;
   onAddNote?: (title: string, content: string, status: NoteStatus, color: string) => void;
   /** The note's current reminder (if it has one) */
   reminder?: { remindAt: string | null; repeat: ReminderRepeat } | null;
@@ -56,11 +68,13 @@ export const NoteDetailDialog = ({
   open,
   onOpenChange,
   note,
+  existingAttachments = [],
   onSave,
   onDelete,
   onAddNote,
   reminder,
   onSaveReminder,
+  onRemoveAttachment,
 }: NoteDetailDialogProps) => {
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
@@ -74,6 +88,7 @@ export const NoteDetailDialog = ({
   const [remindAt, setRemindAt] = useState<string | null>(reminder?.remindAt ?? null);
   const [remindRepeat, setRemindRepeat] = useState<ReminderRepeat>(reminder?.repeat ?? "none");
   const [savingReminder, setSavingReminder] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
@@ -90,7 +105,8 @@ export const NoteDetailDialog = ({
     title.trim() !== (initialTitle || "") ||
     content.trim() !== (note?.content || "") ||
     status !== initialStatus ||
-    color !== initialColor;
+    color !== initialColor ||
+    attachments.length > 0;
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen && hasUnsavedChanges) {
@@ -103,7 +119,7 @@ export const NoteDetailDialog = ({
   const handleSaveAndClose = () => {
     if (note && content.trim()) {
       soundEffects.playSaveSound();
-      onSave(note.id, title.trim(), content, status, color);
+      onSave(note.id, title.trim(), content, status, color, attachments);
       setShowUnsavedDialog(false);
       onOpenChange(false);
     }
@@ -236,6 +252,7 @@ export const NoteDetailDialog = ({
       setInitialStatus(note.status);
       setInitialColor(note.color);
       setInitialTitle(note.title || "");
+      setAttachments([]);
     }
   }, [note]);
 
@@ -258,7 +275,7 @@ export const NoteDetailDialog = ({
   const handleSave = () => {
     if (note && content.trim()) {
       soundEffects.playSaveSound();
-      onSave(note.id, title.trim(), content, status, color);
+      onSave(note.id, title.trim(), content, status, color, attachments);
       onOpenChange(false);
     }
   };
@@ -439,6 +456,15 @@ export const NoteDetailDialog = ({
                 </Badge>
               ))}
             </div>
+          </div>
+          <div className="order-5">
+            <label className="text-sm font-medium mb-2 block">Attachments</label>
+            <AttachmentPicker
+              pending={attachments}
+              existing={existingAttachments}
+              onChange={setAttachments}
+              onRemoveExisting={onRemoveAttachment}
+            />
           </div>
         </div>
         <DialogFooter className="flex gap-2">
