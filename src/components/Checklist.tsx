@@ -100,15 +100,12 @@ export function Checklist({
   return (
     <div className="fixed right-4 bottom-4 z-50">
       <Button
-        variant="outline"
         size="icon"
         onClick={handleToggleOpen}
         disabled={!termsAgreed}
         className={`
           h-12 w-12 flex items-center justify-center
-          bg-[hsl(var(--note-pink))] hover:bg-[hsl(var(--note-pink))]
-          text-white rounded-lg transition-all duration-200
-          hover:scale-105
+          rounded-lg transition-all duration-200
           ${isOpen ? 'rotate-180 rounded-full' : 'rotate-0 rounded-lg'}
           transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]
           ${!termsAgreed ? 'opacity-50 cursor-not-allowed' : ''}`
@@ -122,7 +119,7 @@ export function Checklist({
               <div className="absolute w-6 h-0.5 bg-current transform -rotate-45"></div>
             </>
           ) : (
-            <List className="w-5 h-5 text-black" />
+            <List className="w-5 h-5" />
           )}
         </div>
       </Button>
