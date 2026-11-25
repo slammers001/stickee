@@ -187,15 +187,15 @@ All colors MUST be HSL.
   }
 
   .dark .sticky-note .pin-icon {
-    color: #000000 !important;
+    color: rgb(0 0 0 / 0.6) !important;
   }
 
   .dark .pin-icon {
-    color: #ffffff !important;
+    color: rgb(0 0 0 / 0.6) !important;
   }
 
   .dark .emoji-react-icon {
-    color: #000000 !important;
+    color: rgb(0 0 0 / 0.6) !important;
   }
 
   .dark .emoji-react-icon:hover {
