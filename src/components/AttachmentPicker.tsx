@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { FileText, Paperclip, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import type { NoteAttachment } from '@/types/attachment';
 
 interface AttachmentPickerProps {
@@ -9,6 +10,7 @@ interface AttachmentPickerProps {
   onChange: (files: File[]) => void;
   onRemoveExisting?: (attachment: NoteAttachment) => void;
   busy?: boolean;
+  buttonClassName?: string;
 }
 
 export function AttachmentPicker({
@@ -17,6 +19,7 @@ export function AttachmentPicker({
   onChange,
   onRemoveExisting,
   busy = false,
+  buttonClassName,
 }: AttachmentPickerProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [previews, setPreviews] = useState<Record<string, string>>({});
@@ -70,7 +73,7 @@ export function AttachmentPicker({
         type="button"
         variant="outline"
         size="sm"
-        className="w-fit"
+        className={cn("w-fit", buttonClassName)}
         disabled={busy}
         onClick={() => inputRef.current?.click()}
       >

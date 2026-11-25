@@ -434,12 +434,13 @@ export const NoteDetailDialog = ({
                 </>
               )}
 
-              <div className="border-t pt-3">
+              <div className="pt-3">
                 <AttachmentPicker
                   pending={attachments}
                   existing={existingAttachments}
                   onChange={setAttachments}
                   onRemoveExisting={onRemoveAttachment}
+                  buttonClassName="w-full justify-start"
                 />
               </div>
             </div>

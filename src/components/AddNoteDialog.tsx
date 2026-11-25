@@ -357,10 +357,11 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
                 </div>
               )}
 
-              <div className="border-t pt-3">
+              <div className="pt-3">
                 <AttachmentPicker
                   pending={attachments}
                   onChange={setAttachments}
+                  buttonClassName="w-full justify-start"
                 />
               </div>
             </div>
