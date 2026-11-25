@@ -205,6 +205,17 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     }
   }, [open, resetTranscript]);
 
+  useEffect(() => {
+    if (!reminderOpen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest('[data-reminder-dropdown]')) {
+        setReminderOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [reminderOpen]);
+
   const toggleListening = () => {
     if (isListening) {
       stopListening();
@@ -327,35 +338,42 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
                 </div>
               </div>
 
-              <button
-                type="button"
-                aria-expanded={reminderOpen}
-                aria-controls="note-reminder-editor"
-                aria-label={`Reminder: ${formatReminder(remindAt, remindRepeat)}`}
-                onClick={() => setReminderOpen((current) => !current)}
-                className={cn(
-                  "flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-muted/50",
-                  remindAt && "border-primary bg-primary/5"
+              <div className="relative" data-reminder-dropdown>
+                <button
+                  type="button"
+                  aria-haspopup="dialog"
+                  aria-expanded={reminderOpen}
+                  aria-label={`Reminder: ${formatReminder(remindAt, remindRepeat)}`}
+                  onClick={() => setReminderOpen((current) => !current)}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-muted/50",
+                    remindAt && "border-primary bg-primary/5"
+                  )}
+                >
+                  <Bell className="h-4 w-4 shrink-0" />
+                  Reminder
+                  <small className="ml-auto truncate text-xs font-normal text-muted-foreground">
+                    {formatReminder(remindAt, remindRepeat)}
+                  </small>
+                </button>
+                {reminderOpen && (
+                  <div
+                    role="dialog"
+                    aria-label="Reminder"
+                    className="absolute left-0 top-full z-50 mt-1 w-full rounded-lg border bg-popover p-3 shadow-lg"
+                  >
+                    <ReminderEditor
+                      compact
+                      value={remindAt}
+                      repeat={remindRepeat}
+                      onChange={(value, repeat) => {
+                        setRemindAt(value);
+                        setRemindRepeat(repeat);
+                      }}
+                    />
+                  </div>
                 )}
-              >
-                <Bell className="h-4 w-4 shrink-0" />
-                Reminder
-                <small className="ml-auto truncate text-xs font-normal text-muted-foreground">
-                  {formatReminder(remindAt, remindRepeat)}
-                </small>
-              </button>
-              {reminderOpen && (
-                <div id="note-reminder-editor" className="border-t pt-3">
-                  <ReminderEditor
-                    value={remindAt}
-                    repeat={remindRepeat}
-                    onChange={(value, repeat) => {
-                      setRemindAt(value);
-                      setRemindRepeat(repeat);
-                    }}
-                  />
-                </div>
-              )}
+              </div>
 
               <div className="pt-3">
                 <AttachmentPicker

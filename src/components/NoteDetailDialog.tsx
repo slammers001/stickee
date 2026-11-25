@@ -200,6 +200,17 @@ export const NoteDetailDialog = ({
     }
   }, [open, resetTranscript]);
 
+  useEffect(() => {
+    if (!reminderOpen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest('[data-reminder-dropdown]')) {
+        setReminderOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [reminderOpen]);
+
   const toggleListening = () => {
     if (isListening) {
       stopListening();
@@ -399,11 +410,11 @@ export const NoteDetailDialog = ({
               </div>
 
               {onSaveReminder && (
-                <>
+                <div className="relative" data-reminder-dropdown>
                   <button
                     type="button"
+                    aria-haspopup="dialog"
                     aria-expanded={reminderOpen}
-                    aria-controls="note-reminder-editor"
                     aria-label={`Reminder: ${formatReminder(remindAt, remindRepeat)}`}
                     onClick={() => setReminderOpen((current) => !current)}
                     className={cn(
@@ -418,8 +429,13 @@ export const NoteDetailDialog = ({
                     </small>
                   </button>
                   {reminderOpen && (
-                    <div id="note-reminder-editor" className="border-t pt-3">
+                    <div
+                      role="dialog"
+                      aria-label="Reminder"
+                      className="absolute left-0 top-full z-50 mt-1 w-full rounded-lg border bg-popover p-3 shadow-lg"
+                    >
                       <ReminderEditor
+                        compact
                         value={remindAt}
                         repeat={remindRepeat}
                         saving={savingReminder}
@@ -427,11 +443,14 @@ export const NoteDetailDialog = ({
                           setRemindAt(value);
                           setRemindRepeat(repeat);
                         }}
-                        onSave={handleSaveReminder}
+                        onSave={async (value, repeat) => {
+                          await handleSaveReminder(value, repeat);
+                          setReminderOpen(false);
+                        }}
                       />
                     </div>
                   )}
-                </>
+                </div>
               )}
 
               <div className="pt-3">
