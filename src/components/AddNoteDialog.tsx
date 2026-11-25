@@ -358,9 +358,6 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
               )}
 
               <div className="border-t pt-3">
-                <label className="mb-2 block text-xs font-medium text-muted-foreground">
-                  Attachments
-                </label>
                 <AttachmentPicker
                   pending={attachments}
                   onChange={setAttachments}
