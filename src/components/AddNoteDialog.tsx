@@ -15,7 +15,7 @@ import { cn, limitInsertedText } from "@/lib/utils";
 import { toast } from "sonner";
 import { soundEffects } from "@/utils/soundEffects";
 import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
-import { Bell, Mic, MicOff } from "lucide-react";
+import { Mic, MicOff } from "lucide-react";
 import { ReminderEditor } from "@/components/ReminderEditor";
 import { AttachmentPicker } from "@/components/AttachmentPicker";
 import type { ReminderRepeat } from "@/types/note";
@@ -62,24 +62,6 @@ const statusColors: Record<NoteStatus, string> = {
   "Backlog": "bg-gray-200 text-gray-800 border-gray-300 hover:bg-gray-300",
 };
 
-const repeatLabels: Record<ReminderRepeat, string> = {
-  none: "Once",
-  daily: "Daily",
-  weekly: "Weekly",
-  monthly: "Monthly",
-};
-
-function formatReminder(value: string | null, repeat: ReminderRepeat) {
-  if (!value) return "None";
-  const date = new Date(value).toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-  return repeat === "none" ? date : `${repeatLabels[repeat]} · ${date}`;
-}
-
 export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -89,7 +71,6 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
   const [isListening, setIsListening] = useState(false);
   const [remindAt, setRemindAt] = useState<string | null>(null);
   const [remindRepeat, setRemindRepeat] = useState<ReminderRepeat>("none");
-  const [reminderOpen, setReminderOpen] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -112,7 +93,6 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
     setColor(colors[0]);
     setRemindAt(null);
     setRemindRepeat("none");
-    setReminderOpen(false);
     setAttachments([]);
   };
 
@@ -204,17 +184,6 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
       resetTranscript();
     }
   }, [open, resetTranscript]);
-
-  useEffect(() => {
-    if (!reminderOpen) return;
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!(event.target instanceof Element) || !event.target.closest('[data-reminder-dropdown]')) {
-        setReminderOpen(false);
-      }
-    };
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [reminderOpen]);
 
   const toggleListening = () => {
     if (isListening) {
@@ -338,42 +307,15 @@ export const AddNoteDialog = ({ open, onOpenChange, onSave }: AddNoteDialogProps
                 </div>
               </div>
 
-              <div className="relative" data-reminder-dropdown>
-                <button
-                  type="button"
-                  aria-haspopup="dialog"
-                  aria-expanded={reminderOpen}
-                  aria-label={`Reminder: ${formatReminder(remindAt, remindRepeat)}`}
-                  onClick={() => setReminderOpen((current) => !current)}
-                  className={cn(
-                    "flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-muted/50",
-                    remindAt && "border-primary bg-primary/5"
-                  )}
-                >
-                  <Bell className="h-4 w-4 shrink-0" />
-                  Reminder
-                  <small className="ml-auto truncate text-xs font-normal text-muted-foreground">
-                    {formatReminder(remindAt, remindRepeat)}
-                  </small>
-                </button>
-                {reminderOpen && (
-                  <div
-                    role="dialog"
-                    aria-label="Reminder"
-                    className="absolute left-0 top-full z-50 mt-1 w-full rounded-lg border bg-popover p-3 shadow-lg"
-                  >
-                    <ReminderEditor
-                      compact
-                      value={remindAt}
-                      repeat={remindRepeat}
-                      onChange={(value, repeat) => {
-                        setRemindAt(value);
-                        setRemindRepeat(repeat);
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
+              <ReminderEditor
+                compact
+                value={remindAt}
+                repeat={remindRepeat}
+                onChange={(value, repeat) => {
+                  setRemindAt(value);
+                  setRemindRepeat(repeat);
+                }}
+              />
 
               <div className="pt-3">
                 <AttachmentPicker
