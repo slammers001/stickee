@@ -2,7 +2,8 @@ export interface ChecklistItem {
   id: string;
   text: string;
   completed: boolean;
-  createdAt: number;
+  created_at?: string;
+  createdAt?: string | number;
 }
 
 export interface ChecklistState {

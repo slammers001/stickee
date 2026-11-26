@@ -5,10 +5,10 @@ import {
   IconBell,
   IconLayoutBoard,
   IconLayoutKanban,
+  IconListCheck,
   IconLogout,
   IconPaperclip,
   IconSettings,
-  IconTemplate,
   IconTrash,
   IconUsers,
 } from "@tabler/icons-react";
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
-export type SidebarTab = "notes" | "stickeeboard" | "templates" | "reminders" | "attachments" | "shared" | "archive" | "trash" | "settings";
+export type SidebarTab = "notes" | "stickeeboard" | "templates" | "stickelist" | "reminders" | "attachments" | "shared" | "archive" | "trash" | "settings";
 
 interface AppSidebarProps {
   activeTab: SidebarTab;
@@ -47,11 +47,17 @@ const NAV = [
   //   description: "Ready-made note layouts",
   // },
   {
+    id: "stickelist" as const,
+    label: "StickeeList",
+    icon: IconListCheck,
+    description: "Tasks on a calendar",
+    divider: true,
+  },
+  {
     id: "reminders" as const,
     label: "Reminders",
     icon: IconBell,
     description: "Set note reminders",
-    divider: true,
   },
   {
     id: "attachments" as const,

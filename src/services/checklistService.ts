@@ -13,20 +13,23 @@ export const checklistService = {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map((row) => ({
+        ...row,
+        createdAt: row.created_at,
+      }));
     } catch (error) {
       console.error('Error fetching checklist items:', error);
       throw error;
     }
   },
 
-  async addItem(userId: string, text: string): Promise<ChecklistItem> {
+  async addItem(userId: string, text: string, date?: string): Promise<ChecklistItem> {
     try {
       const newItem = {
         user_id: userId,
         text: text.trim(),
         completed: false,
-        created_at: new Date().toISOString(),
+        created_at: date || new Date().toISOString(),
       };
 
       const { data, error } = await supabase
@@ -36,7 +39,7 @@ export const checklistService = {
         .single();
 
       if (error) throw error;
-      return data;
+      return { ...data, createdAt: data.created_at };
     } catch (error) {
       console.error('Error adding checklist item:', error);
       throw error;

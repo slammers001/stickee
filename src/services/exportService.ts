@@ -90,7 +90,9 @@ export const exportUserData = async (): Promise<ExportData> => {
         id: item.id,
         text: item.text,
         completed: item.completed,
-        created_at: item.createdAt ? new Date(item.createdAt).toISOString() : new Date().toISOString()
+        created_at: item.createdAt || item.created_at
+          ? new Date(item.createdAt || item.created_at!).toISOString()
+          : new Date().toISOString()
       })),
       reactions
     };

@@ -39,7 +39,7 @@ import type { Note } from "@/types/note";
 import type { StickyNoteStatus } from "@/types/note";
 import { analytics, AnalyticsEvents } from "@/utils/analytics";
 import { NoteDetailDialog } from "@/components/NoteDetailDialog";
-import { Checklist } from "@/components/Checklist";
+import { StickelistPanel } from "@/components/StickelistPanel";
 import { StickyNoteWindow } from "@/components/StickyNoteWindow";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { ArchivedNotesPanel } from "@/components/ArchivedNotesPanel";
@@ -100,12 +100,11 @@ export default function Index() {
   // Checklist state and handlers
   const {
     items: checklistItems,
-    isOpen: isChecklistOpen,
+    isLoading: checklistLoading,
     addItem: addChecklistItem,
     toggleItem: toggleChecklistItem,
     updateItem: updateChecklistItem,
     deleteItem: deleteChecklistItem,
-    toggleChecklist,
   } = useChecklist();
 
   // Reminders
@@ -1073,6 +1072,15 @@ export default function Index() {
         <ArchivedNotesPanel onNotesRefresh={loadNotes} />
       ) : activeTab === "trash" ? (
         <TrashedNotesPanel onNotesRefresh={loadNotes} />
+      ) : activeTab === "stickelist" ? (
+        <StickelistPanel
+          items={checklistItems}
+          loading={checklistLoading}
+          onAdd={addChecklistItem}
+          onToggle={toggleChecklistItem}
+          onUpdate={updateChecklistItem}
+          onDelete={deleteChecklistItem}
+        />
       ) : activeTab === "reminders" ? (
         <RemindersPanel
           reminders={reminders}
@@ -1251,17 +1259,6 @@ export default function Index() {
       <StickyNoteWindow
         isOpen={stickyNoteWindowOpen}
         onClose={handleQuickNote}
-      />
-
-      {/* Checklist */}
-      <Checklist
-        items={checklistItems}
-        isOpen={isChecklistOpen}
-        onAdd={addChecklistItem}
-        onToggle={toggleChecklistItem}
-        onUpdate={updateChecklistItem}
-        onDelete={deleteChecklistItem}
-        onToggleOpen={toggleChecklist}
       />
 
       {/* Mass Delete Dialog */}

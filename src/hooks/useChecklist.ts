@@ -67,42 +67,41 @@ export const useChecklist = () => {
     loadItems();
   }, [loadItems]);
 
-  const addItem = useCallback(async (text: string) => {
-    // Check if terms are agreed
+  const addItem = useCallback(async (text: string, date?: string): Promise<boolean> => {
     const termsAgreed = localStorage.getItem("stickee-terms-agreed") === "true";
     if (!termsAgreed) {
       toast.error("You must agree to the Terms of Service to use the checklist");
-      return;
+      return false;
     }
-    
+
     const user = await getCurrentUser();
     if (!text.trim() || !user?.id) {
-      console.warn('Invalid input or no user ID');
-      return;
+      toast.error('Sign in to add tasks');
+      return false;
     }
-    
+
     try {
       setIsLoading(true);
-      
-      // Check if we have a session
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        // Since anonymous auth is disabled, we'll try without auth
         console.log('No session found, attempting to add item without auth');
       }
-      
-      const newItem = await checklistService.addItem(user.id, text);
+
+      const newItem = await checklistService.addItem(user.id, text, date);
       setItems(prev => [...prev, newItem]);
+      return true;
     } catch (error) {
       console.error('Failed to add item:', error);
-      // If there's an auth error, we'll handle it gracefully
-      if ((error as SupabaseError)?.status === 401 || (error as any)?.message?.includes('Anonymous sign-ins are disabled')) {
-        console.warn('Authentication disabled, cannot add item to database');
-        // For now, we'll just show an error to the user
-        throw new Error('Authentication is required to save items. Please enable anonymous authentication in Supabase or sign in.');
+      if (
+        (error as SupabaseError)?.status === 401 ||
+        (error as { message?: string })?.message?.includes('Anonymous sign-ins are disabled')
+      ) {
+        toast.error('Authentication is required to save tasks. Please sign in.');
       } else {
-        throw error;
+        toast.error(error instanceof Error ? error.message : 'Failed to add task');
       }
+      return false;
     } finally {
       setIsLoading(false);
     }
