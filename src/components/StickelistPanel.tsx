@@ -67,20 +67,6 @@ export function StickelistPanel({
 
   const selectedTasks = tasksByDay.get(dateKey(selectedDate)) ?? [];
 
-  const allTaskGroups = useMemo(
-    () =>
-      [...tasksByDay.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([key, dayTasks]) => ({
-          key,
-          date: new Date(`${key}T12:00:00`),
-          tasks: [...dayTasks].sort((a, b) => a.text.localeCompare(b.text)),
-        })),
-    [tasksByDay]
-  );
-
-  const allTaskCount = allTaskGroups.reduce((total, group) => total + group.tasks.length, 0);
-
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(viewMonth);
     const gridStart = new Date(monthStart);
@@ -247,17 +233,15 @@ export function StickelistPanel({
 
         <aside className="flex h-fit flex-col rounded-xl border bg-card p-4 shadow-sm">
           <div className="mb-4">
-            <h2 className="font-semibold">All tasks</h2>
-            <p className="text-xs text-muted-foreground">
-              {allTaskCount} {allTaskCount === 1 ? "task" : "tasks"} across all dates
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Adding for {selectedDate.toLocaleDateString(undefined, {
-                weekday: "short",
-                month: "short",
+            <h2 className="font-semibold">
+              {selectedDate.toLocaleDateString(undefined, {
+                weekday: "long",
+                month: "long",
                 day: "numeric",
-              })}{" "}
-              ({selectedTasks.length} {selectedTasks.length === 1 ? "task" : "tasks"})
+              })}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {selectedTasks.length} {selectedTasks.length === 1 ? "task" : "tasks"} on this date
             </p>
           </div>
 
@@ -273,118 +257,88 @@ export function StickelistPanel({
             </Button>
           </form>
 
-          <div className="max-h-[520px] space-y-3 overflow-y-auto pr-1">
+          <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1">
             {loading ? (
               <p className="py-6 text-center text-sm text-muted-foreground">Loading tasks...</p>
-            ) : allTaskGroups.length === 0 ? (
+            ) : selectedTasks.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
-                No tasks yet. Add one for the selected day.
+                No tasks on this date.
               </p>
             ) : (
-              allTaskGroups.map((group) => (
+              selectedTasks.map((task) => (
                 <div
-                  key={group.key}
-                  className={cn(
-                    "rounded-lg border p-2",
-                    sameLocalDay(group.date, selectedDate) && "border-primary bg-primary/5"
-                  )}
+                  key={task.id}
+                  className="flex items-center gap-2 rounded-lg border bg-background p-2"
                 >
                   <button
                     type="button"
-                    onClick={() => handleSelectDay(group.date)}
-                    className="mb-2 flex w-full items-center justify-between gap-2 text-left"
+                    aria-label={task.completed ? "Mark task incomplete" : "Mark task complete"}
+                    onClick={() => void onToggle(task.id)}
+                    className={cn(
+                      "flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors",
+                      task.completed
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input hover:border-primary"
+                    )}
                   >
-                    <span className="text-xs font-semibold">
-                      {group.date.toLocaleDateString(undefined, {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">
-                      {group.tasks.length} {group.tasks.length === 1 ? "task" : "tasks"}
-                    </span>
+                    {task.completed && <Check className="h-3 w-3" />}
                   </button>
 
-                  <div className="space-y-2">
-                    {group.tasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className="flex items-center gap-2 rounded-lg border bg-background p-2"
+                  {editingId === task.id ? (
+                    <>
+                      <Input
+                        autoFocus
+                        value={editingText}
+                        onChange={(event) => setEditingText(event.target.value)}
+                        onKeyDown={(event) => handleEditKeyDown(event, task.id)}
+                        className="h-8 flex-1"
+                        aria-label="Edit task"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Cancel edit"
+                        onClick={() => {
+                          setEditingId(null);
+                          setEditingText("");
+                        }}
                       >
-                        <button
-                          type="button"
-                          aria-label={task.completed ? "Mark task incomplete" : "Mark task complete"}
-                          onClick={() => void onToggle(task.id)}
-                          className={cn(
-                            "flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors",
-                            task.completed
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-input hover:border-primary"
-                          )}
-                        >
-                          {task.completed && <Check className="h-3 w-3" />}
-                        </button>
-
-                        {editingId === task.id ? (
-                          <>
-                            <Input
-                              autoFocus
-                              value={editingText}
-                              onChange={(event) => setEditingText(event.target.value)}
-                              onKeyDown={(event) => handleEditKeyDown(event, task.id)}
-                              className="h-8 flex-1"
-                              aria-label="Edit task"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label="Cancel edit"
-                              onClick={() => {
-                                setEditingId(null);
-                                setEditingText("");
-                              }}
-                            >
-                              <X />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => handleStartEdit(task)}
-                              className={cn(
-                                "flex-1 truncate text-left text-sm hover:text-primary",
-                                task.completed && "text-muted-foreground line-through"
-                              )}
-                            >
-                              {task.text}
-                            </button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label="Edit task"
-                              onClick={() => handleStartEdit(task)}
-                            >
-                              <Pencil />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label="Delete task"
-                              onClick={() => void onDelete(task.id)}
-                            >
-                              <Trash2 />
-                            </Button>
-                          </>
+                        <X />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(task)}
+                        className={cn(
+                          "flex-1 truncate text-left text-sm hover:text-primary",
+                          task.completed && "text-muted-foreground line-through"
                         )}
-                      </div>
-                    ))}
-                  </div>
+                      >
+                        {task.text}
+                      </button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Edit task"
+                        onClick={() => handleStartEdit(task)}
+                      >
+                        <Pencil />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Delete task"
+                        onClick={() => void onDelete(task.id)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </>
+                  )}
                 </div>
               ))
             )}
