@@ -136,7 +136,7 @@ If any provision of these Terms is found invalid or unenforceable, the remaining
 
 ## 14. Contact Information
 
-For questions about these Terms, contact: [github.com/slammers001](github.com/slammers001)
+For questions about these Terms, please email me at hi@simicodes.xyz. My GitHub is [github.com/slammers001](github.com/slammers001)
 
 ---
 
