@@ -1076,10 +1076,13 @@ export default function Index() {
         <StickelistPanel
           items={checklistItems}
           loading={checklistLoading}
+          reminders={reminders}
+          remindersLoading={remindersLoading}
           onAdd={addChecklistItem}
           onToggle={toggleChecklistItem}
           onUpdate={updateChecklistItem}
           onDelete={deleteChecklistItem}
+          onOpenReminderNote={handleOpenReminderNote}
         />
       ) : activeTab === "reminders" ? (
         <RemindersPanel
