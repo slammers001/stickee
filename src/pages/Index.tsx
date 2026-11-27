@@ -92,6 +92,7 @@ export default function Index() {
   const [attachmentsLoading, setAttachmentsLoading] = useState(true);
   const [showMassDeleteDialog, setShowMassDeleteDialog] = useState(false);
   const [activeTab, setActiveTab] = useState<SidebarTab>("notes");
+  const [focusedReminderId, setFocusedReminderId] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.innerWidth < 768;
@@ -765,6 +766,16 @@ export default function Index() {
     setDetailDialogOpen(true);
   };
 
+  const handleTabChange = (tab: SidebarTab) => {
+    setActiveTab(tab);
+    setFocusedReminderId(null);
+  };
+
+  const handleOpenReminder = (reminder: ReminderItem) => {
+    setFocusedReminderId(reminder.id);
+    setActiveTab("reminders");
+  };
+
   const handleOpenAttachmentNote = (noteId: string) => {
     const note = notes.find(n => n.id === noteId);
     if (!note) return;
@@ -906,7 +917,7 @@ export default function Index() {
     <div className="min-h-screen bg-background flex">
       <AppSidebar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         collapsed={sidebarCollapsed}
         onCollapsedChange={setSidebarCollapsed}
         reminderCount={dueCount}
@@ -1082,12 +1093,13 @@ export default function Index() {
           onToggle={toggleChecklistItem}
           onUpdate={updateChecklistItem}
           onDelete={deleteChecklistItem}
-          onOpenReminderNote={handleOpenReminderNote}
+          onOpenReminder={handleOpenReminder}
         />
       ) : activeTab === "reminders" ? (
         <RemindersPanel
           reminders={reminders}
           loading={remindersLoading}
+          focusedReminderId={focusedReminderId}
           onRefresh={refreshReminders}
           onOpenNote={handleOpenReminderNote}
           onSnooze={handleSnoozeReminder}

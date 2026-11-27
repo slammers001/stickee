@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Bell, BellRing, Check, Clock, ExternalLink, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -16,6 +16,7 @@ const SNOOZE_OPTIONS = [
 interface RemindersPanelProps {
   reminders: ReminderItem[];
   loading: boolean;
+  focusedReminderId?: string | null;
   onRefresh: () => void;
   onOpenNote?: (noteId: string) => void;
   onSnooze: (reminder: ReminderItem, minutes: number) => Promise<void>;
@@ -29,6 +30,7 @@ interface RemindersPanelProps {
 export function RemindersPanel({
   reminders,
   loading,
+  focusedReminderId,
   onRefresh,
   onOpenNote,
   onSnooze,
@@ -42,6 +44,12 @@ export function RemindersPanel({
   const [snoozeOpen, setSnoozeOpen] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editingReminder, setEditingReminder] = useState<ReminderItem | null>(null);
+  const rowRefs = useRef(new Map<string, HTMLDivElement>());
+
+  useEffect(() => {
+    if (!focusedReminderId || loading) return;
+    rowRefs.current.get(focusedReminderId)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusedReminderId, loading]);
 
   const groups = useMemo(() => {
     const pending = reminders.filter((reminder) => reminder.state === "pending");
@@ -71,13 +79,20 @@ export function RemindersPanel({
     const overdue = reminder.state === "pending" && isOverdue(reminder.effectiveAt);
     const dueToday = reminder.state === "pending" && isToday(reminder.effectiveAt);
     const isBusy = busyNoteId === reminder.id;
+    const isFocused = focusedReminderId === reminder.id;
 
     return (
       <div
         key={reminder.id}
+        ref={(node) => {
+          if (node) rowRefs.current.set(reminder.id, node);
+          else rowRefs.current.delete(reminder.id);
+        }}
+        aria-current={isFocused ? "true" : undefined}
         className={cn(
           "flex items-start justify-between gap-4 rounded-lg border bg-card p-4 shadow-sm transition-colors",
-          overdue ? "border-red-300 dark:border-red-900" : "border-border"
+          overdue ? "border-red-300 dark:border-red-900" : "border-border",
+          isFocused && "border-primary bg-primary/5 ring-2 ring-primary"
         )}
       >
         <div className="min-w-0 flex-1">

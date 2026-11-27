@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  ExternalLink,
   Pencil,
   Plus,
   Trash2,
@@ -29,7 +28,7 @@ interface StickelistPanelProps {
   onToggle: (id: string) => Promise<void> | void;
   onUpdate: (id: string, text: string) => Promise<void> | void;
   onDelete: (id: string) => Promise<void> | void;
-  onOpenReminderNote?: (noteId: string) => void;
+  onOpenReminder: (reminder: ReminderItem) => void;
 }
 
 const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -69,7 +68,7 @@ export function StickelistPanel({
   onToggle,
   onUpdate,
   onDelete,
-  onOpenReminderNote,
+  onOpenReminder,
 }: StickelistPanelProps) {
   const today = new Date();
   const [viewMonth, setViewMonth] = useState(() => startOfMonth(new Date()));
@@ -344,12 +343,14 @@ export function StickelistPanel({
                     </h3>
                     {selectedReminders.map((reminder) => {
                       const tone = reminderTone(reminder);
-                      const noteId = reminder.noteId;
                       return (
-                        <div
+                        <button
                           key={`reminder-${reminder.id}`}
+                          type="button"
+                          aria-label={`Show "${reminderTitle(reminder)}" in Reminders`}
+                          onClick={() => onOpenReminder(reminder)}
                           className={cn(
-                            "flex items-start gap-2 rounded-lg border bg-background p-2",
+                            "flex w-full items-start gap-2 rounded-lg border bg-background p-2 text-left transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                             tone === "overdue" && "border-red-300 dark:border-red-900",
                             tone === "today" && "border-amber-300 dark:border-amber-900",
                             tone === "completed" && "opacity-70"
@@ -393,20 +394,8 @@ export function StickelistPanel({
                               </span>
                             </div>
                           </div>
-                          {onOpenReminderNote && noteId && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 shrink-0"
-                              title="Open note"
-                              aria-label="Open note"
-                              onClick={() => onOpenReminderNote(noteId)}
-                            >
-                              <ExternalLink />
-                            </Button>
-                          )}
-                        </div>
+                          <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                        </button>
                       );
                     })}
                   </section>
